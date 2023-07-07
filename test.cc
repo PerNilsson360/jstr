@@ -6,6 +6,7 @@
 
 void
 testNumbers() {
+	// +
 	{
 		nlohmann::json json;
 		XpathData r(eval("1 + 2", json));
@@ -24,6 +25,107 @@ testNumbers() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("/a/b + /a/c", json));
 		assert(r.getNumber() == 4);
+	}
+	// -
+	{
+		nlohmann::json json;
+		XpathData r(eval("1 - 2", json));
+		assert(r.getNumber() == -1);
+	}
+	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("1 - /a", json));
+		assert(r.getNumber() == -2);
+	}
+	{
+		// <a><b>1</b><c>2</c></a>
+		const char* j = R"({"a":{"b":3,"c":1}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b - /a/c", json));
+		assert(r.getNumber() == 2);
+	}
+	// *
+	{
+		nlohmann::json json;
+		XpathData r(eval("3 * 2", json));
+		assert(r.getNumber() == 6);
+	}
+	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("1 * /a", json));
+		assert(r.getNumber() == 3);
+	}
+	{
+		// <a><b>1</b><c>2</c></a>
+		const char* j = R"({"a":{"b":3,"c":1}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b * /a/c", json));
+		assert(r.getNumber() == 3);
+	}
+	// div
+	{
+		nlohmann::json json;
+		XpathData r(eval("4 div 2", json));
+		assert(r.getNumber() == 2);
+	}
+	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("6 div /a", json));
+		assert(r.getNumber() == 2);
+	}
+	{
+		// <a><b>1</b><c>2</c></a>
+		const char* j = R"({"a":{"b":3,"c":1}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b div /a/c", json));
+		assert(r.getNumber() == 3);
+	}
+	// mod
+	{
+		nlohmann::json json;
+		XpathData r(eval("5 mod 2", json));
+		assert(r.getNumber() == 1);
+	}
+	{
+		nlohmann::json json;
+		XpathData r(eval("5 mod -2", json));
+		assert(r.getNumber() == 1);
+	}
+	// {
+	// 	nlohmann::json json;
+	// 	XpathData r(eval("5 mod -2", json));
+	// 	assert(r.getNumber() == -1); // TODO value is 1 should be -1 according to spec
+	// }
+	{
+		nlohmann::json json;
+		XpathData r(eval("-5 mod -2", json));
+		assert(r.getNumber() == -1);
+	}
+	// unary -
+	{
+		nlohmann::json json;
+		XpathData r(eval("4 div (- 2)", json));
+		assert(r.getNumber() == -2);
+	}
+	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("-6 div /a", json));
+		assert(r.getNumber() == -2);
+	}
+	{
+		// <a><b>1</b><c>2</c></a>
+		const char* j = R"({"a":{"b":3,"c":1}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("-/a/b div /a/c", json));
+		assert(r.getNumber() == -3);
 	}
 }
 

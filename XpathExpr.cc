@@ -361,7 +361,12 @@ Minus::Minus(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Minus::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	if (!_r) {
+		return XpathData(-l.getNumber());
+	}
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l.getNumber() - r.getNumber());
 }
 
 // Mul
@@ -369,7 +374,9 @@ Mul::Mul(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Mul::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l.getNumber() * r.getNumber());
 }
 
 // Div
@@ -377,7 +384,9 @@ Div::Div(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Div::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l.getNumber() / r.getNumber());
 }
 
 // Mod
@@ -385,6 +394,9 @@ Mod::Mod(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Mod::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	double result = static_cast<int64_t>(l.getNumber()) % static_cast<int64_t>(r.getNumber());
+	return XpathData(result);
 }
 
