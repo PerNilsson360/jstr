@@ -25,5 +25,5 @@ test: lex.yy.c xpath10_parser.tab.cpp xpath10_parser.tab.h xpath10_driver.cc tes
 	g++ -g -o test test.cc xpath10_parser.tab.cpp lex.yy.c xpath10_driver.cc XpathData.o XpathExpr.o Node.o nljp.o
 
 clean:
-	rm test xpath10_parser.tab.cpp lex.yy.c xpath10_parser.tab.h xpath10_parser.output XpathData.o Node.o nljp.o
+	rm test xpath10_parser.tab.cpp lex.yy.c xpath10_parser.tab.h xpath10_parser.output location.hh position.hh stack.hh XpathData.o XpathExpr.o Node.o nljp.o *~
 
