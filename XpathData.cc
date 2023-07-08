@@ -54,12 +54,26 @@ XpathData::~XpathData() {
 	clear();
 }
 
+bool XpathData::isValue() const {
+	return _type != NodeSet || (_d.ns->size() == 1 && (*_d.ns)[0].isValue());
+}
+
 double
 XpathData::getNumber() const {
 	switch (_type) {
 	case Number: return _d.n;
 	case Bool: return _d.b;
-	case String: return _d.s->empty() ? NAN : std::stod(*_d.s);
+	case String: {
+		if (_d.s->empty()) {
+			return NAN;
+		} else {
+			try {
+				std::stod(*_d.s);
+			} catch (const std::exception& e) {
+				return NAN;
+			}
+		}
+	}
 	case NodeSet: {
 		const std::string& s = getString();
 		return s.empty() ? NAN : std::stod(s);
@@ -84,7 +98,13 @@ XpathData::getBool() const {
 std::string
 XpathData::getString() const {
 	switch (_type) {
-	case Number: return std::to_string(_d.n);
+	case Number: {
+		if (std::isnan(_d.n)) {
+			return "NaN";
+		} else {
+			std::to_string(_d.n);
+		}
+	}
 	case Bool: return _d.b ? "true" : "false";
 	case String: return *(_d.s);
 	case NodeSet: {
@@ -172,7 +192,62 @@ XpathData::operator==(const XpathData& xd) const {
 
 bool
 XpathData::operator!=(const XpathData& xd) const {
-	return false;
+	if (_type == NodeSet && xd._type == NodeSet) {
+		for (const Node& l : getNodeSet()) {
+			if (xd != l.getString()) {
+				return true;
+			}
+		}
+		return false;
+	} else if (_type == NodeSet) {
+		switch (xd._type) {
+		case Number: return *this != xd.getNumber();
+		case Bool: return *this != xd.getBool();
+		case String: return *this != xd.getString();
+		default: throw std::runtime_error("XpathData::operator!=, unkown type _type==NodeSet");
+		}
+	} else if (xd._type == NodeSet){
+		switch (_type) {
+		case Number: return xd != getNumber();
+		case Bool: return xd != getBool();
+		case String: return xd != getString();
+		default: throw std::runtime_error("XpathData::operator!=, unkown type xd._type==NodeSet");
+		}
+	} else if (_type == Bool || xd._type == Bool) {
+		return getBool() != xd.getBool();
+	} else if (_type == Number || xd._type == Number) {
+		return getNumber() != xd.getNumber();
+	} else {
+		return getString() != xd.getString();
+	}
+}
+
+bool XpathData::operator<(const XpathData& xd) const {
+	checkOrderingRelationArgs(xd);
+	return getNumber() < xd.getNumber();
+}
+
+bool XpathData::operator<=(const XpathData& xd) const {
+	checkOrderingRelationArgs(xd);
+	return getNumber() <= xd.getNumber();
+}
+
+bool XpathData::operator>(const XpathData& xd) const {
+	checkOrderingRelationArgs(xd);
+	return getNumber() > xd.getNumber();
+}
+
+bool XpathData::operator>=(const XpathData& xd) const {
+	checkOrderingRelationArgs(xd);
+	return getNumber() >= xd.getNumber();
+}
+
+void
+XpathData::checkOrderingRelationArgs(const XpathData& xd) const {
+	if (!isValue() || !xd.isValue()) {
+		std::string m("XpathData::checkOrderingRelationArgs, can not compare node sets");
+		throw std::runtime_error(m);
+	}
 }
 
 void

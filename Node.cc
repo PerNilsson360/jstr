@@ -39,8 +39,13 @@ Node::getParent() const {
 
 const nlohmann::json&
 Node::getJson() const {
-	//std::cerr << "getJson: " << _json->dump() << std::endl;
 	return _i == -1 ? *_json : (*_json)[_i];
+}
+
+bool
+Node::isValue() const {
+	const nlohmann::json& j = getJson();
+	return j.is_primitive();
 }
 
 double

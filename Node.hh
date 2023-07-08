@@ -4,8 +4,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-// TODO Rename this to Element
-
 class Node {
 public:
 	Node();
@@ -16,6 +14,7 @@ public:
 	Node getRoot() const;
 	const Node* getParent() const;
 	const nlohmann::json& getJson() const;
+	bool isValue() const;
 	double getNumber() const;
 	bool getBool() const;
 	std::string getString() const;

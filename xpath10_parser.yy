@@ -221,7 +221,7 @@ RelationalExpr :
 | RelationalExpr "<" AdditiveExpr	             { $$ = new Lt($1, $3); }
 | RelationalExpr ">" AdditiveExpr	             { $$ = new Gt($1, $3); }
 | RelationalExpr "<=" AdditiveExpr	             { $$ = new Le($1, $3); }
-| RelationalExpr ">=" AdditiveExpr               { $$ = new Le($1, $3); }
+| RelationalExpr ">=" AdditiveExpr               { $$ = new Ge($1, $3); }
 
 AdditiveExpr :
   MultiplicativeExpr	                         { $$ = $1; }

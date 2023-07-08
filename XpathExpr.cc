@@ -311,7 +311,9 @@ Ne::Ne(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Ne::eval(const XpathData& d, size_t pos) const {
-  return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return l != r;
 }
 
 // Lt
@@ -319,7 +321,9 @@ Lt::Lt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Lt::eval(const XpathData& d, size_t pos) const {
-  return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l < r);
 }
 
 // Gt
@@ -327,7 +331,9 @@ Gt::Gt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Gt::eval(const XpathData& d, size_t pos) const {
-  return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l > r);
 }
 
 // Le
@@ -335,7 +341,9 @@ Le::Le(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Le::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l <= r);
 }
 
 // Ge
@@ -343,7 +351,10 @@ Ge::Ge(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
 Ge::eval(const XpathData& d, size_t pos) const {
-	return XpathData();
+	XpathData l = _l->eval(d, pos);
+	XpathData r = _r->eval(d, pos);
+	return XpathData(l >= r);
+
 }
 
 // Plus

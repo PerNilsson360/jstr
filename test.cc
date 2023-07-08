@@ -6,6 +6,12 @@
 
 void
 testNumbers() {
+	// NaN
+	{
+		nlohmann::json json;
+		XpathData r(eval("'NO'", json));
+		assert(std::isnan(r.getNumber()));
+	}
 	// +
 	{
 		nlohmann::json json;
@@ -305,7 +311,7 @@ testPaths() {
 
 void
 testRelations() {
-	// Equal
+	// =
 	{
 		nlohmann::json json;
 		XpathData r(eval("1 = 1", json));
@@ -343,6 +349,197 @@ testRelations() {
 		assert(r.getBool());
 		r = eval("/a/b/c = /a/d", json);
 		assert(r.getBool());
+	}
+	// !=
+	{
+		nlohmann::json json;
+		XpathData r(eval("1 != 1", json));
+		assert(!r.getBool());
+		r = (eval("1 != 2", json));
+		assert(r.getBool());
+		r = eval("true() != true()", json);
+		assert(!r.getBool());
+		r = eval("false() != false()", json);
+		assert(!r.getBool());
+		r = eval("true() != false()", json);
+		assert(r.getBool());
+		r = eval("'a' != 'a'", json);
+		assert(!r.getBool());
+		r = eval("\"a\" != \"a\"", json);
+		assert(!r.getBool());
+		r = eval("'a' != 'b'", json);
+		assert(r.getBool());
+	}
+	{
+		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b/c/e != 1", json));
+		assert(!r.getBool());
+		r = eval("/a/b/c/e != '1'", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e != '2'", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e != true()", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e != false()", json);
+		assert(r.getBool());
+		r = eval("/a/b/c != /a/d/c", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c != /a/d", json);
+		assert(!r.getBool());
+	}
+	// <
+	{
+		nlohmann::json json;
+		XpathData r(eval("1 < 1", json));
+		assert(!r.getBool());
+		r = (eval("1 < 2", json));
+		assert(r.getBool());
+		r = eval("true()  < true()", json);
+		assert(!r.getBool());
+		r = eval("false() < false()", json);
+		assert(!r.getBool());
+		r = eval("false() < true()", json);
+		assert(r.getBool());
+		r = eval("'a' < 1", json);
+		assert(!r.getBool());
+	}
+	{
+		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b/c/e < 2", json));
+		assert(r.getBool());
+		r = eval("/a/b/c/e < '1'", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e < '2'", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e < true()", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e < false()", json);
+		assert(!r.getBool());
+		bool exception(false);
+		try {
+			r = eval("/a/b/c < /a/d/c", json);
+		} catch (const std::runtime_error& e) {
+			exception = true;
+		}
+		assert(exception);
+	}
+	// <=
+	{
+		nlohmann::json json;
+		XpathData r(eval("1 <= 1", json));
+		assert(r.getBool());
+		r = (eval("1 <= 2", json));
+		assert(r.getBool());
+		r = eval("true()  <= true()", json);
+		assert(r.getBool());
+		r = eval("false() <= false()", json);
+		assert(r.getBool());
+		r = eval("true() <= false()", json);
+		assert(!r.getBool());
+		r = eval("'a' <= 1", json);
+		assert(!r.getBool());
+	}
+	{
+		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b/c/e <= 2", json));
+		assert(r.getBool());
+		r = eval("/a/b/c/e <= '0.5'", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e <= '2'", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e <= true()", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e <= false()", json);
+		assert(!r.getBool());
+		bool exception(false);
+		try {
+			r = eval("/a/b/c <= /a/d/c", json);
+		} catch (const std::runtime_error& e) {
+			exception = true;
+		}
+		assert(exception);
+	}
+	// >
+		{
+		nlohmann::json json;
+		XpathData r(eval("1 > 1", json));
+		assert(!r.getBool());
+		r = (eval("2 > 1", json));
+		assert(r.getBool());
+		r = eval("true()  > true()", json);
+		assert(!r.getBool());
+		r = eval("false() > false()", json);
+		assert(!r.getBool());
+		r = eval("true() > false()", json);
+		assert(r.getBool());
+		r = eval("'a' > 1", json);
+		assert(!r.getBool());
+	}
+	{
+		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b/c/e > 2", json));
+		assert(!r.getBool());
+		r = eval("/a/b/c/e > '0.5'", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e > '2'", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e > true()", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e > false()", json);
+		assert(r.getBool());
+		bool exception(false);
+		try {
+			r = eval("/a/b/c > /a/d/c", json);
+		} catch (const std::runtime_error& e) {
+			exception = true;
+		}
+		assert(exception);
+	}
+	// >=
+		{
+		nlohmann::json json;
+		XpathData r(eval("1 >= 1", json));
+		assert(r.getBool());
+		r = (eval("2 >= 1", json));
+		assert(r.getBool());
+		r = eval("true()  >= true()", json);
+		assert(r.getBool());
+		r = eval("false() >= false()", json);
+		assert(r.getBool());
+		r = eval("false() >= true()", json);
+		assert(!r.getBool());
+		r = eval("'a' >= 1", json);
+		assert(!r.getBool());
+	}
+	{
+		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a/b/c/e >= 0.5", json));
+		assert(r.getBool());
+		r = eval("/a/b/c/e >= '2'", json);
+		assert(!r.getBool());
+		r = eval("/a/b/c/e >= '0.5'", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e >= true()", json);
+		assert(r.getBool());
+		r = eval("/a/b/c/e >= false()", json);
+		assert(r.getBool());
+		bool exception(false);
+		try {
+			r = eval("/a/b/c >= /a/d/c", json);
+		} catch (const std::runtime_error& e) {
+			exception = true;
+		}
+		assert(exception);
 	}
 }
 

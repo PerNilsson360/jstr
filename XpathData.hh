@@ -23,6 +23,10 @@ public:
 	XpathData(const std::vector<Node>& ns);
 	XpathData& operator=(const XpathData& xd);
 	~XpathData();
+	/**
+	 * @return true if this object represents a literal or a node with a value.
+	 */
+	bool isValue() const;
 	double getNumber() const;
 	bool getBool() const;
 	/**
@@ -40,7 +44,12 @@ public:
 	XpathData getRoot() const;
 	bool operator==(const XpathData& xd) const;
 	bool operator!=(const XpathData& xd) const;
+	bool operator<(const XpathData& xd) const;
+	bool operator<=(const XpathData& xd) const;
+	bool operator>(const XpathData& xd) const;
+	bool operator>=(const XpathData& xd) const;
 private:
+	void checkOrderingRelationArgs(const XpathData& xd) const;
 	void assign(const XpathData& xd);
 	void clear();
 	Type _type;
@@ -82,6 +91,42 @@ bool
 operator==(const XpathData& xd, bool b) {
 	for (const Node& l : xd.getNodeSet()) {
 		if (l.getBool() == b) {
+			return true;
+		}
+	}
+	return false;
+}
+
+inline
+bool
+operator!=(const XpathData& xd, double d) {
+	const std::vector<Node>& ns = xd.getNodeSet();
+	for (const Node& l : xd.getNodeSet()) {
+		if (l.getNumber() != d) {
+			return true;
+		}
+	}
+	return false;
+}
+
+inline
+bool
+operator!=(const XpathData& xd, const std::string& s) {
+	const std::vector<Node>& ns = xd.getNodeSet();
+	for (const Node& l : xd.getNodeSet()) {
+		const std::string& ls = l.getString();
+		if (ls != s) {
+			return true;
+		}
+	}
+	return false;
+}
+
+inline
+bool
+operator!=(const XpathData& xd, bool b) {
+	for (const Node& l : xd.getNodeSet()) {
+		if (l.getBool() != b) {
 			return true;
 		}
 	}
