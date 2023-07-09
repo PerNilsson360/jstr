@@ -54,6 +54,11 @@ XpathData::~XpathData() {
 	clear();
 }
 
+XpathData::Type
+XpathData::getType() const {
+	return _type;
+}
+
 bool XpathData::isValue() const {
 	return _type != NodeSet || (_d.ns->size() == 1 && (*_d.ns)[0].isValue());
 }

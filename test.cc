@@ -600,6 +600,8 @@ testFilter() {
 		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"f":{"e":1}}}})";
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(/a/*[count(c) > 0])", json));
+ 		assert(r.getNumber() == 1);
+		r  = eval("count(/a/*/*[local-name(..) = 'b'])", json);
 		assert(r.getNumber() == 1);
 	}
 }

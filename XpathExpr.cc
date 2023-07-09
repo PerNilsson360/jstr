@@ -123,11 +123,18 @@ Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 		return XpathData(result);
 	}
 	if (_s == "..") {			// TODO avoid string comparison
-		// TODO testcase for first step 
-		for (const Node& n : ns) {
+		if (firstStep) {
+			const Node& n = ns[pos];
 			const Node* parent = n.getParent();
 			if (parent != nullptr) {
 				addIfUnique(result, Node(*parent));
+			}
+		} else {
+			for (const Node& n : ns) {
+				const Node* parent = n.getParent();
+				if (parent != nullptr) {
+					addIfUnique(result, Node(*parent));
+				}
 			}
 		}
 	} else if (_s == ".") {

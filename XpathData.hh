@@ -23,6 +23,7 @@ public:
 	XpathData(const std::vector<Node>& ns);
 	XpathData& operator=(const XpathData& xd);
 	~XpathData();
+	Type getType() const;
 	/**
 	 * @return true if this object represents a literal or a node with a value.
 	 */
@@ -132,5 +133,41 @@ operator!=(const XpathData& xd, bool b) {
 	}
 	return false;
 }
+
+inline
+std::ostream&
+operator<<(std::ostream& os, const XpathData& xd) {
+	XpathData::Type type = xd.getType();
+	switch(type) {
+	case XpathData::Number:
+		os << "Number: " << xd.getNumber();
+		break;
+	case XpathData::Bool:
+		os << "Bool: " << xd.getBool();
+		break;
+	case XpathData::String:
+		os << "String: " << xd.getString();
+		break;
+	case XpathData::NodeSet: {
+		const std::vector<Node>& ns = xd.getNodeSet();
+		os << "[";
+		bool first(true);
+		std::string separator;
+		for (const Node& n : ns) {
+			os << separator << n;
+			if (first) {
+				separator = " ,";
+			}
+		}
+		os << "]";
+	}
+		break;
+	default:
+		os << "Uknown type";
+		break;
+	}
+	return os;
+}
+
 
 #endif

@@ -33,4 +33,11 @@ private:
 	int64_t _i;
 };
 
+inline
+std::ostream&
+operator<<(std::ostream& os, const Node& n) {
+	os << "Node : " << n.getJson().dump();
+	return os;
+}
+
 #endif
