@@ -595,6 +595,13 @@ testFilter() {
 		r = eval("count(/a/b[not(. = 1)][not(. = 2)][not(. = 3)][not(. = 4)])", json);
 		assert(r.getNumber() == 0);
 	}
+	{
+		//<a><b><c><e>1</e></c></b><d><f><e>1</e></f></d></a>
+		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"f":{"e":1}}}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("count(/a/*[count(c) > 0])", json));
+		assert(r.getNumber() == 1);
+	}
 }
 
 void

@@ -83,7 +83,6 @@ namespace {
 	
 void
 getString(const nlohmann::json& json, std::string& r) {
-	//std::cerr << "Node::getString before " << r << " json: " << json.dump() << std::endl;
 	if (json.is_string()) {
 		r += json.get<std::string>(); // Dont want quotation marks you get with dump
 	}else if (json.is_primitive()) {
@@ -93,7 +92,6 @@ getString(const nlohmann::json& json, std::string& r) {
 			getString(j, r);
 		}
 	}
-	//std::cerr << "Node::getString after " << r << " json: " << json.dump() << std::endl;
 }
 
 }
@@ -141,6 +139,21 @@ search(Node parent, const nlohmann::json& j, const std::string& name, std::vecto
 	}
 }
 
+}
+
+void
+Node::getChild(const std::string& name , std::vector<Node>& result) const {
+	const nlohmann::json& j = getJson();
+	if (j.is_object() && j.contains(name)) {
+		const nlohmann::json& child = j[name];
+		if (child.is_array()) {
+			for (size_t i = 0, size = child.size(); i < size; i++) {
+				result.emplace_back(Node(new Node(*this), name, child, i));
+			}
+		} else {
+			result.emplace_back(Node(new Node(*this), name, child));
+		}
+	}
 }
 
 void

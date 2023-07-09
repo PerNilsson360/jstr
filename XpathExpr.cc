@@ -63,7 +63,7 @@ MultiExpr::getExprs() const {
 
 // Root
 XpathData
-Root::eval(const XpathData& d, size_t pos) const {
+Root::eval(const XpathData& d, size_t pos, bool firstStep) const {
   	return d.getRoot();
 }
 
@@ -95,40 +95,13 @@ void addIfUnique(std::vector<Node>& ns, Node&& node) {
 RelPath::RelPath(const XpathExpr* e) : MultiExpr(e) {}
 
 XpathData
-RelPath::eval(const XpathData& d, size_t pos) const {
+RelPath::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	std::vector<Node> result = d.getNodeSet();
 	bool first(true);
 	for (const XpathExpr* e : _exprs) {
-		if (first) {			// Special handling for context-item/parent
-			const Step* step = dynamic_cast<const Step*>(e);
-			if (step != nullptr) {
-				const std::string& stepName = step->getString();
-				const std::vector<Node>& ns = d.getNodeSet();
-				if (stepName == "..") {
-					std::vector<Node> tmp;
-					for (const Node& n : ns) {
-						// TODO implement getParent
-						const Node* parent = n.getParent();
-						if (parent != nullptr) {
-							addIfUnique(tmp, Node(*parent));
-						}
-					}
-					result = tmp;
-				} else if (stepName == ".") {
-					result = std::vector<Node>(1, ns[pos]);
-				} else {
-					const XpathData& tmp = e->eval(result, pos);
-					result = tmp.getNodeSet();
-				}
-			} else {
-				const XpathData& tmp = e->eval(result, pos);
-				result = tmp.getNodeSet();
-			}
-			first = false;
-		} else {
-			const XpathData& tmp = e->eval(result, pos);
-			result = tmp.getNodeSet();
-		}
+		const XpathData& tmp = e->eval(result, pos, first);
+		result = tmp.getNodeSet();
+		first = false;
 	}
 	return XpathData(result);
 }
@@ -143,39 +116,38 @@ Step::~Step() {
 }
 
 XpathData
-Step::eval(const XpathData& d, size_t pos) const {
+Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	std::vector<Node> result;
 	const std::vector<Node>& ns = d.getNodeSet();
 	if (ns.empty()) {
 		return XpathData(result);
 	}
 	if (_s == "..") {			// TODO avoid string comparison
+		// TODO testcase for first step 
 		for (const Node& n : ns) {
-			// TODO implement getParent
 			const Node* parent = n.getParent();
 			if (parent != nullptr) {
 				addIfUnique(result, Node(*parent));
 			}
 		}
 	} else if (_s == ".") {
-		result = ns;
+		if (firstStep) {
+			result = std::vector<Node>(1, ns[pos]);
+		} else {
+			result = ns;
+		}
 	} else if (_s == "*") {
+		// TODO testcase for first step
 		for (const Node& n : ns) {
 			n.getChildren(result);
 		}
 	} else {
-		for (const Node& n : ns) {
-			// TODO implement getchild(name, result) in node
-			const nlohmann::json& child = n.getJson();
-			if (child.is_object() && child.contains(_s)) {
-				const nlohmann::json& j = child[_s];
-				if (j.is_array()) {
-					for (size_t i = 0, size = j.size(); i < size; i++) {
-						result.emplace_back(Node(new Node(n), _s, j, i)); // One item for each array item
-					}
-				} else {
-					result.emplace_back(Node(new Node(n),_s, j));
-				}
+		if (firstStep) {
+			const Node& n = ns[pos];
+			n.getChild(_s, result);
+		} else {
+			for (const Node& n : ns) {
+				n.getChild(_s, result);
 			}
 		}
 	}
@@ -199,7 +171,7 @@ Step::eval(const XpathData& d, size_t pos) const {
 Predicate::Predicate(const XpathExpr* e) : UnaryExpr(e) {}
 
 XpathData
-Predicate::eval(const XpathData& d, size_t pos) const {
+Predicate::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	return _e->eval(d, pos);
 }
 
@@ -208,7 +180,7 @@ Descendant::Descendant(const RelPath* relPath) : _relPath(relPath) {
 }
 
 XpathData
-Descendant::eval(const XpathData& d, size_t pos) const {
+Descendant::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	const std::list<const XpathExpr*>& es = _relPath->getExprs();
 	std::list<const XpathExpr*>::const_iterator i = es.begin();
 	const Step* s = static_cast<const Step*>(*i);
@@ -240,7 +212,7 @@ Descendant::eval(const XpathData& d, size_t pos) const {
 Literal::Literal(const std::string& l) : StrExpr(l) {}
 
 XpathData
-Literal::eval(const XpathData& d, size_t pos) const {
+Literal::eval(const XpathData& d, size_t pos, bool firstStep) const {
   return XpathData(_s);
 }
 
@@ -248,7 +220,7 @@ Literal::eval(const XpathData& d, size_t pos) const {
 Number::Number(double d) : _d(d) {}
 
 XpathData
-Number::eval(const XpathData& d, size_t pos) const {
+Number::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	return XpathData(_d);
 }
 
@@ -262,7 +234,7 @@ Fun::~Fun() {
 }
 
 XpathData
-Fun::eval(const XpathData& d, size_t pos) const {
+Fun::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	if (_name == "count") {
 		checkArgs(1);
 		std::list<const XpathExpr*>::const_iterator i = _args->begin();
@@ -311,7 +283,7 @@ Fun::checkArgs(size_t expectedSize) const {
 Union::Union(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Union::eval(const XpathData& d, size_t pos) const {
+Union::eval(const XpathData& d, size_t pos, bool firstStep) const {
   return XpathData();
 }
 
@@ -319,7 +291,7 @@ Union::eval(const XpathData& d, size_t pos) const {
 Or::Or(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Or::eval(const XpathData& d, size_t pos) const {
+Or::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l.getBool() || r.getBool());
@@ -329,7 +301,7 @@ Or::eval(const XpathData& d, size_t pos) const {
 And::And(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-And::eval(const XpathData& d, size_t pos) const {
+And::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l.getBool() && r.getBool());
@@ -339,7 +311,7 @@ And::eval(const XpathData& d, size_t pos) const {
 Eq::Eq(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Eq::eval(const XpathData& d, size_t pos) const {
+Eq::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return l == r;
@@ -350,7 +322,7 @@ Eq::eval(const XpathData& d, size_t pos) const {
 Ne::Ne(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Ne::eval(const XpathData& d, size_t pos) const {
+Ne::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return l != r;
@@ -360,7 +332,7 @@ Ne::eval(const XpathData& d, size_t pos) const {
 Lt::Lt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Lt::eval(const XpathData& d, size_t pos) const {
+Lt::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l < r);
@@ -370,7 +342,7 @@ Lt::eval(const XpathData& d, size_t pos) const {
 Gt::Gt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Gt::eval(const XpathData& d, size_t pos) const {
+Gt::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l > r);
@@ -380,7 +352,7 @@ Gt::eval(const XpathData& d, size_t pos) const {
 Le::Le(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Le::eval(const XpathData& d, size_t pos) const {
+Le::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l <= r);
@@ -390,7 +362,7 @@ Le::eval(const XpathData& d, size_t pos) const {
 Ge::Ge(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Ge::eval(const XpathData& d, size_t pos) const {
+Ge::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l >= r);
@@ -401,7 +373,7 @@ Ge::eval(const XpathData& d, size_t pos) const {
 Plus::Plus(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Plus::eval(const XpathData& d, size_t pos) const {
+Plus::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l.getNumber() + r.getNumber());
@@ -411,7 +383,7 @@ Plus::eval(const XpathData& d, size_t pos) const {
 Minus::Minus(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Minus::eval(const XpathData& d, size_t pos) const {
+Minus::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	if (!_r) {
 		return XpathData(-l.getNumber());
@@ -424,7 +396,7 @@ Minus::eval(const XpathData& d, size_t pos) const {
 Mul::Mul(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Mul::eval(const XpathData& d, size_t pos) const {
+Mul::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l.getNumber() * r.getNumber());
@@ -434,7 +406,7 @@ Mul::eval(const XpathData& d, size_t pos) const {
 Div::Div(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Div::eval(const XpathData& d, size_t pos) const {
+Div::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	return XpathData(l.getNumber() / r.getNumber());
@@ -444,7 +416,7 @@ Div::eval(const XpathData& d, size_t pos) const {
 Mod::Mod(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
 
 XpathData
-Mod::eval(const XpathData& d, size_t pos) const {
+Mod::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	XpathData l = _l->eval(d, pos);
 	XpathData r = _r->eval(d, pos);
 	double result = static_cast<int64_t>(l.getNumber()) % static_cast<int64_t>(r.getNumber());
