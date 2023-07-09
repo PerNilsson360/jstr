@@ -55,9 +55,9 @@ public:
 private:
 };
 
-class RelPath : public XpathExpr, public MultiExpr {
+class Path : public XpathExpr, public MultiExpr {
 public:
-	RelPath(const XpathExpr* e);
+	Path(const XpathExpr* e);
 	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
  private:
 };
@@ -80,10 +80,10 @@ private:
 
 class Descendant : public XpathExpr {
 public:
-	Descendant(const RelPath* relPath);
+	Descendant(const Path* relPath);
 	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
-	std::unique_ptr<const RelPath> _relPath;
+	std::unique_ptr<const Path> _path;
 };
 
 class ContextItem : public XpathExpr {

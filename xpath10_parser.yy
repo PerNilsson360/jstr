@@ -64,16 +64,16 @@ inline std::string stripLiteral(const std::string& s) {
 %type  <std::string> DOT
 %type  <std::string> DOUBLE_DOT
 
-%type  <RelPath*> LocationPath
-%type  <RelPath*> AbsoluteLocationPath
-%type  <RelPath*> RelativeLocationPath
+%type  <Path*> LocationPath
+%type  <Path*> AbsoluteLocationPath
+%type  <Path*> RelativeLocationPath
 %type  <XpathExpr*> Step
 %type  <std::string> NodeTest
 %type  <std::list<const XpathExpr*>*> Predicates
 %type  <const XpathExpr*> Predicate
 %type  <XpathExpr*> PredicateExpr
-%type  <RelPath*> AbbreviatedAbsoluteLocationPath
-%type  <RelPath*> AbbreviatedRelativeLocationPath
+%type  <Path*> AbbreviatedAbsoluteLocationPath
+%type  <Path*> AbbreviatedRelativeLocationPath
 %type  <std::string> AbbreviatedStep
 %type  <XpathExpr*> Expr
 %type  <XpathExpr*> PrimaryExpr
@@ -104,12 +104,12 @@ LocationPath :
 | AbsoluteLocationPath                          { $$ = $1; }
 
 AbsoluteLocationPath :
-  "/"                                           { $$ = new RelPath(new Root()); }
+  "/"                                           { $$ = new Path(new Root()); }
 | "/" RelativeLocationPath                      { static_cast<MultiExpr*>($2)->addFront(new Root()); $$ = $2; } 
 | AbbreviatedAbsoluteLocationPath               { $$ = $1; };
 
 RelativeLocationPath :
-  Step	                                        { $$ = new RelPath($1); } 
+  Step	                                        { $$ = new Path($1); } 
 | RelativeLocationPath "/" Step	                { $1->addBack($3); $$ = $1; }
 | AbbreviatedRelativeLocationPath               { $$ = $1; };
 
@@ -155,11 +155,11 @@ PredicateExpr:
 
 // AbbreviatedAbsoluteLocationPath	   ::=   	'//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
-"//" RelativeLocationPath	                     { $$ = new RelPath(new Root()); $$->addBack(new Descendant($2)); }
+"//" RelativeLocationPath	                     { $$ = new Path(new Root()); $$->addBack(new Descendant($2)); }
 
 // AbbreviatedRelativeLocationPath	   ::=   	RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
-  RelativeLocationPath "//" Step	             { static_cast<MultiExpr*>($1)->addBack(new Descendant(new RelPath($3))); $$ = $1; }
+  RelativeLocationPath "//" Step	             { $1->addBack(new Descendant(new Path($3))); $$ = $1; }
 
 AbbreviatedStep:
   "."                                            { $$ = $1; }

@@ -91,11 +91,11 @@ void addIfUnique(std::vector<Node>& ns, Node&& node) {
 	
 }
 
-// RelPath
-RelPath::RelPath(const XpathExpr* e) : MultiExpr(e) {}
+// Path
+Path::Path(const XpathExpr* e) : MultiExpr(e) {}
 
 XpathData
-RelPath::eval(const XpathData& d, size_t pos, bool firstStep) const {
+Path::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	std::vector<Node> result = d.getNodeSet();
 	bool first(true);
 	for (const XpathExpr* e : _exprs) {
@@ -187,12 +187,12 @@ Predicate::eval(const XpathData& d, size_t pos, bool firstStep) const {
 }
 
 // Descendant
-Descendant::Descendant(const RelPath* relPath) : _relPath(relPath) {
+Descendant::Descendant(const Path* path) : _path(path) {
 }
 
 XpathData
 Descendant::eval(const XpathData& d, size_t pos, bool firstStep) const {
-	const std::list<const XpathExpr*>& es = _relPath->getExprs();
+	const std::list<const XpathExpr*>& es = _path->getExprs();
 	std::list<const XpathExpr*>::const_iterator i = es.begin();
 	const Step* s = static_cast<const Step*>(*i);
 	const std::string& stepName = s->getString();
