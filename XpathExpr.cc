@@ -67,19 +67,6 @@ Root::eval(const XpathData& d, size_t pos) const {
   	return d.getRoot();
 }
 
-// RelPath
-RelPath::RelPath(const XpathExpr* e) : MultiExpr(e) {}
-
-XpathData
-RelPath::eval(const XpathData& d, size_t pos) const {
-	std::vector<Node> result = d.getNodeSet();
-	for (const XpathExpr* e : _exprs) {
-		const XpathData& tmp = e->eval(result, pos);
-		result = tmp.getNodeSet();
-	}
-	return XpathData(result);
-}
-
 namespace {
 	
 std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>& keepIndexes) {
@@ -102,6 +89,48 @@ void addIfUnique(std::vector<Node>& ns, Node&& node) {
 	}
 }
 	
+}
+
+// RelPath
+RelPath::RelPath(const XpathExpr* e) : MultiExpr(e) {}
+
+XpathData
+RelPath::eval(const XpathData& d, size_t pos) const {
+	std::vector<Node> result = d.getNodeSet();
+	bool first(true);
+	for (const XpathExpr* e : _exprs) {
+		if (first) {			// Special handling for context-item/parent
+			const Step* step = dynamic_cast<const Step*>(e);
+			if (step != nullptr) {
+				const std::string& stepName = step->getString();
+				const std::vector<Node>& ns = d.getNodeSet();
+				if (stepName == "..") {
+					std::vector<Node> tmp;
+					for (const Node& n : ns) {
+						// TODO implement getParent
+						const Node* parent = n.getParent();
+						if (parent != nullptr) {
+							addIfUnique(tmp, Node(*parent));
+						}
+					}
+					result = tmp;
+				} else if (stepName == ".") {
+					result = std::vector<Node>(1, ns[pos]);
+				} else {
+					const XpathData& tmp = e->eval(result, pos);
+					result = tmp.getNodeSet();
+				}
+			} else {
+				const XpathData& tmp = e->eval(result, pos);
+				result = tmp.getNodeSet();
+			}
+			first = false;
+		} else {
+			const XpathData& tmp = e->eval(result, pos);
+			result = tmp.getNodeSet();
+		}
+	}
+	return XpathData(result);
 }
 
 // Step
@@ -129,7 +158,7 @@ Step::eval(const XpathData& d, size_t pos) const {
 			}
 		}
 	} else if (_s == ".") {
-		result.emplace_back(ns[pos]);
+		result = ns;
 	} else if (_s == "*") {
 		for (const Node& n : ns) {
 			n.getChildren(result);
@@ -183,12 +212,23 @@ Descendant::eval(const XpathData& d, size_t pos) const {
 	const std::list<const XpathExpr*>& es = _relPath->getExprs();
 	std::list<const XpathExpr*>::const_iterator i = es.begin();
 	const Step* s = static_cast<const Step*>(*i);
-	const std::string stepName = s->getString();
+	const std::string& stepName = s->getString();
 	std::vector<Node> searchResult;
-	for (const Node& n : d.getNodeSet()) {
-		n.search(stepName, searchResult);
+	if (stepName == "*") {
+		for (const Node& n : d.getNodeSet()) {
+			n.getSubTreeNodes(searchResult);
+		}
+		i++;
+	} else if (stepName == "." || stepName == "..") {
+		for (const Node& n : d.getNodeSet()) {
+			n.getSubTreeNodes(searchResult);
+		}
+	} else {
+		for (const Node& n : d.getNodeSet()) {
+			n.search(stepName, searchResult);
+		}
+		i++;
 	}
-	i++;
 	XpathData result(searchResult);
 	for (;i != es.end(); ++i) {
 		result = (*i)->eval(result, pos);

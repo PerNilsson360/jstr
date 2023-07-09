@@ -21,6 +21,7 @@ public:
 	const std::string& getLocalName() const;
 	bool isArrayChild() const;
 	void getChildren(std::vector<Node>& result) const;
+	void getSubTreeNodes(std::vector<Node>& result) const;
 	void search(const std::string& name, std::vector<Node>& result) const;
 	bool operator==(const Node& r) const;
 private:

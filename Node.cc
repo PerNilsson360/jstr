@@ -161,6 +161,32 @@ Node::getChildren(std::vector<Node>& result) const {
 }
 
 void
+Node::getSubTreeNodes(std::vector<Node>& result) const {
+	const nlohmann::json& j = getJson();
+	if (j.is_object()) {
+		for (const auto& item : j.items()) {
+			const nlohmann::json& value = item.value();
+			const std::string& name = item.key();
+			if (value.is_array()) {
+				std::vector<Node> tmp;
+				for (size_t i = 0, size = value.size(); i < size; i++) {
+					const Node& n = Node(new Node(*this), name, value, i);
+					result.emplace_back(n);
+					tmp.emplace_back(n);
+				}
+				for (const Node& n : tmp) {
+					n.getSubTreeNodes(result);
+				}
+			} else {
+				const Node& n = Node(new Node(*this), name, value);
+				result.emplace_back(n);
+				n.getSubTreeNodes(result);
+			}
+		}
+	}
+}
+
+void
 Node::search(const std::string& name, std::vector<Node>& result) const {
 	::search(*this, getJson(), name, result);
 }

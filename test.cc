@@ -255,6 +255,29 @@ testPaths() {
 	}
 	// Descendant tests
 	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("count(//a)", json));
+		assert(r.getNumber() == 1);
+		r = eval("count(//*)", json);
+		assert(r.getNumber() == 1);
+		r = eval("count(//.)", json);
+		assert(r.getNumber() == 1);
+	}
+	{
+		// <a><b>1</b><c>2</c></a>
+		const char* j = R"({"a":{"b":3,"c":1}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("count(//a)", json));
+		assert(r.getNumber() == 1);
+		r = eval("count(//*)", json);
+		assert(r.getNumber() == 3);
+		r = eval("count(//.)", json);
+		assert(r.getNumber() == 3);
+		
+	}	
+	{
 		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
 		const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
 		nlohmann::json json = nlohmann::json::parse(j);
@@ -285,6 +308,10 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//b)", json));
 		assert(r.getNumber() == 4);
+		r = eval("count(//*)", json);
+		assert(r.getNumber() == 5);
+		r = eval("count(//.)", json);
+		assert(r.getNumber() == 5);
 	}
 	{
 		// <a><a><a></a>1</a></a>
@@ -294,12 +321,20 @@ testPaths() {
 		assert(r.getNumber() == 3);
 		r = eval("count(//a/a)", json);
 		assert(r.getNumber() == 2);
+		r = eval("count(//*)", json);
+		assert(r.getNumber() == 3);
+		r = eval("count(//.)", json);
+		assert(r.getNumber() == 3);
 	}
 	{
 		const char* j = R"({"a":[{"a":1},{"a":2},{"b":3}]})";
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//a)", json));
 		assert(r.getNumber() == 5);
+		r = eval("count(//*)", json);
+		assert(r.getNumber() == 6);
+		r = eval("count(//.)", json);
+		assert(r.getNumber() == 6);
 		r = eval("//a", json);
 		assert(r.getString() == "12312");
 	}
