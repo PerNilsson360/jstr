@@ -603,6 +603,8 @@ testFilter() {
  		assert(r.getNumber() == 1);
 		r  = eval("count(/a/*/*[local-name(..) = 'b'])", json);
 		assert(r.getNumber() == 1);
+		r = eval("count(/a/*[count(*[local-name(.) = 'c']) > 0])", json);
+		assert(r.getNumber() == 1);
 	}
 }
 

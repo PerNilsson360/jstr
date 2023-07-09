@@ -144,9 +144,13 @@ Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 			result = ns;
 		}
 	} else if (_s == "*") {
-		// TODO testcase for first step
-		for (const Node& n : ns) {
+		if (firstStep) {
+			const Node& n = ns[pos];
 			n.getChildren(result);
+		} else {
+			for (const Node& n : ns) {
+				n.getChildren(result);
+			}
 		}
 	} else {
 		if (firstStep) {

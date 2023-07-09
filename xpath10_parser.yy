@@ -155,7 +155,7 @@ PredicateExpr:
 
 // AbbreviatedAbsoluteLocationPath	   ::=   	'//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
-"//" RelativeLocationPath	                     { $$ = new RelPath(new Descendant($2)); }
+"//" RelativeLocationPath	                     { $$ = new RelPath(new Root()); $$->addBack(new Descendant($2)); }
 
 // AbbreviatedRelativeLocationPath	   ::=   	RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
