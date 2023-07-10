@@ -253,11 +253,15 @@ testPaths() {
 		assert(r.getNumber() == 1);
 		r = eval("count(/a/b)", json);
 		assert(r.getNumber() == 1);
+		r = eval("count(/a/b/parent::d)", json);
+		assert(r.getNumber() == 1);
 		r = eval("count(/a/b/c)", json);
 		assert(r.getNumber() == 1);
 		r = eval("count(/a/b/c/e)", json);
 		assert(r.getNumber() == 1);
 		r = eval("count(//e)", json);
+		assert(r.getNumber() == 2);
+		r = eval("count(/descendant::e)", json);
 		assert(r.getNumber() == 2);
 	}
 	// * tests
@@ -292,6 +296,8 @@ testPaths() {
 		assert(r.getNumber() == 1);
 		r = eval("count(//*)", json);
 		assert(r.getNumber() == 1);
+		r = eval("count(/descendant::*)", json);
+		assert(r.getNumber() == 1);
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 1);
 	}
@@ -301,7 +307,11 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//a)", json));
 		assert(r.getNumber() == 1);
+		r = eval("count(/descendant::a)", json);
+		assert(r.getNumber() == 1);
 		r = eval("count(//*)", json);
+		assert(r.getNumber() == 3);
+		r = eval("count(/descendant::*)", json);
 		assert(r.getNumber() == 3);
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 3);
@@ -315,21 +325,35 @@ testPaths() {
 		assert(r.getNumber() == 1);
 		r = eval("count(//b)", json);
 		assert(r.getNumber() == 1);
+		r = eval("count(/descendant::b)", json);
+		assert(r.getNumber() == 1);
 		r = eval("count(//b/c)", json);
+		assert(r.getNumber() == 1);
+		r = eval("count(/descendant::b/c)", json);
 		assert(r.getNumber() == 1);
 		r = eval("count(//c)", json);
 		assert(r.getNumber() == 2);
+		r = eval("count(/descendant::c)", json);
+		assert(r.getNumber() == 2);
 		r = eval("count(//c/e)", json);
 		assert(r.getNumber() == 2);
-		r = eval("count(//e)", json);
+		r = eval("count(/descendant::c/e)", json);
+		assert(r.getNumber() == 2);
+ 		r = eval("count(//e)", json);
+		assert(r.getNumber() == 2);
+		r = eval("count(/descendant::e)", json);
 		assert(r.getNumber() == 2);
 		r = eval("count(/a//e)", json);
 		assert(r.getNumber() == 2);
-		r = eval("count(//e)", json);
+		r = eval("count(/a/descendant::e)", json);
 		assert(r.getNumber() == 2);
 		r = eval("count(//e/..)", json);
 		assert(r.getNumber() == 2);
+		r = eval("count(/descendant::e/..)", json);
+		assert(r.getNumber() == 2);
 		r = eval("count(//e/../../..)", json);
+		assert(r.getNumber() == 1);
+		r = eval("count(/descendant::e/../../..)", json);
 		assert(r.getNumber() == 1);
 	}
 	{
@@ -338,7 +362,11 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//b)", json));
 		assert(r.getNumber() == 4);
+		r = eval("count(/descendant::b)", json);
+		assert(r.getNumber() == 4);
 		r = eval("count(//*)", json);
+		assert(r.getNumber() == 5);
+		r = eval("count(/descendant::*)", json);
 		assert(r.getNumber() == 5);
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 5);
@@ -349,9 +377,15 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//a)", json));
 		assert(r.getNumber() == 3);
+		 r = eval("count(/descendant::a)", json);
+		assert(r.getNumber() == 3);
 		r = eval("count(//a/a)", json);
 		assert(r.getNumber() == 2);
+		r = eval("count(/descendant::a/a)", json);
+		assert(r.getNumber() == 2);
 		r = eval("count(//*)", json);
+		assert(r.getNumber() == 3);
+		r = eval("count(/descendant::*)", json);
 		assert(r.getNumber() == 3);
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 3);
@@ -361,11 +395,17 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(//a)", json));
 		assert(r.getNumber() == 5);
+		r = eval("count(/descendant::a)", json);
+		assert(r.getNumber() == 5);
 		r = eval("count(//*)", json);
+		assert(r.getNumber() == 6);
+		r = eval("count(/descendant::*)", json);
 		assert(r.getNumber() == 6);
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 6);
 		r = eval("//a", json);
+		assert(r.getStringValue() == "12312");
+		r = eval("/descendant::a", json);
 		assert(r.getStringValue() == "12312");
 	}
 	{

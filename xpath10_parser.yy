@@ -257,12 +257,18 @@ UnionExpr :
   PathExpr	                                     { $$ = $1; }
 | UnionExpr "|" PathExpr	                     { $$ = new Union($1, $3); }
 
+//[19]   	PathExpr	   ::=   	LocationPath	
+//                                  | FilterExpr	
+//                                  | FilterExpr '/' RelativeLocationPath	
+//                                  | FilterExpr '//' RelativeLocationPath	
 PathExpr :
   LocationPath	                                 { $$ = $1; }
 | FilterExpr	                                 { $$ = $1; }
 //| FilterExpr "/" RelativeLocationPath	         {}
 //| FilterExpr "//" RelativeLocationPath	         {};
 
+//[20]   	FilterExpr	   ::=   	PrimaryExpr	
+//                                  | FilterExpr Predicate
 FilterExpr :
   PrimaryExpr	                                 { $$ = $1; }
 //| FilterExpr Predicate                           {};

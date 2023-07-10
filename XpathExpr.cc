@@ -129,6 +129,18 @@ Path::eval(const XpathData& d, size_t pos, bool firstStep) const {
 }
 
 // Step
+
+namespace {
+Step*
+createChildAllStep(const std::string& nodeTest, std::list<const XpathExpr*>* predicates) {
+	if (nodeTest == "*") {
+		return new AllStep(nodeTest, predicates);
+	} else {
+		return new ChildStep(nodeTest, predicates);
+	}
+}
+}
+
 Step::Step(const std::string& s, const std::list<const XpathExpr*>* preds) :
 	StrExpr(s), _preds(preds) {
 }
@@ -142,7 +154,7 @@ Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	std::vector<Node> result;
 	const std::vector<Node>& ns = d.getNodeSet();
 	if (!ns.empty()) {
-		evalStep(d, pos, firstStep, ns, result);
+		evalStep(pos, firstStep, ns, result);
 		evalFilter(result);
 	}
 	return XpathData(result);
@@ -169,30 +181,40 @@ Step::evalFilter(std::vector<Node>& result) const {
 		}
 	}
 }
-
-Step*
+	
+XpathExpr*
 Step::create(const std::string& axisName,
 				   const std::string& nodeTest,
 				   std::list<const XpathExpr*>* predicates) {
 	if (axisName.empty()) {
 		if (nodeTest == "..") {
-			return new ParentStep(nodeTest, predicates);
+			return new ParentStep("", predicates);
 		} else if (nodeTest == ".") {
-			return new SelfStep(nodeTest, predicates);
+			return new SelfStep("", predicates);
 		} else if (nodeTest == "*") {
-			return new AllStep(nodeTest, predicates);
+			return new AllStep("", predicates);
 		} else {
 			return new ChildStep(nodeTest, predicates);
 		}
 	} else if (axisName == "child") {
-		if (nodeTest == "*") {
-			return new AllStep(nodeTest, predicates);
-		} else {
-			return new ChildStep(nodeTest, predicates);
-		}
+		return createChildAllStep(nodeTest, predicates);
+	} else if (axisName == "descendant") {
+		Step* step = createChildAllStep(nodeTest, predicates);
+		return new Descendant(new Path(step));
+	} else if (axisName == "parent") {
+		return new ParentStep(nodeTest, predicates);
 	} else {
 		throw std::runtime_error("Step::create not a supported step");
 	}
+}
+
+bool Step::isAllStep(const XpathExpr* step) {
+	return dynamic_cast<const AllStep*>(step) != nullptr;
+}
+bool Step::isSelfOrParentStep(const XpathExpr* step) {
+	return
+		dynamic_cast<const SelfStep*>(step) != nullptr ||
+		dynamic_cast<const ParentStep*>(step) != nullptr;
 }
 
 AllStep::AllStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
@@ -200,11 +222,10 @@ AllStep::AllStep(const std::string& s, const std::list<const XpathExpr*>* preds)
 }
 
 void
-AllStep::evalStep(const XpathData& d,
-					size_t pos,
-					bool firstStep,
-					const std::vector<Node>& nodeSet,
-					std::vector<Node>& result) const {
+AllStep::evalStep(size_t pos,
+				  bool firstStep,
+				  const std::vector<Node>& nodeSet,
+				  std::vector<Node>& result) const {
 	if (firstStep) {
 		const Node& n = nodeSet[pos];
 		n.getChildren(result);
@@ -220,8 +241,7 @@ ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* pr
 }
 
 void
-ChildStep::evalStep(const XpathData& d,
-					size_t pos,
+ChildStep::evalStep(size_t pos,
 					bool firstStep,
 					const std::vector<Node>& nodeSet,
 					std::vector<Node>& result) const {
@@ -236,28 +256,33 @@ ChildStep::evalStep(const XpathData& d,
 }
 
 ParentStep::ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
-	Step(s, preds) {
+	ChildStep(s, preds) {
 }
 
 void
-ParentStep::evalStep(const XpathData& d,
-					size_t pos,
-					bool firstStep,
-					const std::vector<Node>& nodeSet,
-					std::vector<Node>& result) const {
+ParentStep::evalStep(size_t pos,
+					 bool firstStep,
+					 const std::vector<Node>& nodeSet,
+					 std::vector<Node>& result) const {
+	std::vector<Node> tmp;
 	if (firstStep) {
 		const Node& n = nodeSet[pos];
 		const Node* parent = n.getParent();
 		if (parent != nullptr) {
-			addIfUnique(result, Node(*parent));
+			addIfUnique(tmp, Node(*parent));
 		}
 	} else {
 		for (const Node& n : nodeSet) {
 			const Node* parent = n.getParent();
 			if (parent != nullptr) {
-				addIfUnique(result, Node(*parent));
+				addIfUnique(tmp, Node(*parent));
 			}
 		}
+	}
+	if (_s.empty()) {
+		result = tmp;
+	} else {
+		ChildStep::evalStep(pos, firstStep, tmp, result);
 	}
 }
 
@@ -266,8 +291,7 @@ SelfStep::SelfStep(const std::string& s, const std::list<const XpathExpr*>* pred
 }
 
 void
-SelfStep::evalStep(const XpathData& d,
-				   size_t pos,
+SelfStep::evalStep(size_t pos,
 				   bool firstStep,
 				   const std::vector<Node>& nodeSet,
 				   std::vector<Node>& result) const {
@@ -294,19 +318,19 @@ XpathData
 Descendant::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	const std::list<const XpathExpr*>& es = _path->getExprs();
 	std::list<const XpathExpr*>::const_iterator i = es.begin();
-	const Step* s = static_cast<const Step*>(*i);
-	const std::string& stepName = s->getString();
 	std::vector<Node> searchResult;
-	if (stepName == "*") {
+	if (Step::isAllStep(*i)) {
 		for (const Node& n : d.getNodeSet()) {
 			n.getSubTreeNodes(searchResult);
 		}
 		i++;
-	} else if (stepName == "." || stepName == "..") {
+	} else if (Step::isSelfOrParentStep(*i)) {
 		for (const Node& n : d.getNodeSet()) {
 			n.getSubTreeNodes(searchResult);
 		}
 	} else {
+		const Step* s = static_cast<const Step*>(*i);
+		const std::string& stepName = s->getString();
 		for (const Node& n : d.getNodeSet()) {
 			n.search(stepName, searchResult);
 		}
