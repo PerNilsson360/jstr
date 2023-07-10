@@ -53,30 +53,42 @@ inline std::string stripLiteral(const std::string& s) {
 }
 %define api.token.prefix {TOK_}
 %token
-  END  0       "end of file"
-  EQ           "="
-  NE           "!="
-  LT           "<"
-  LE           "<="
-  GT           ">"
-  GE           ">="
-  MINUS        "-"
-  PLUS         "+"
-  STAR         "*"
-  SLASH        "/"
-  DOUBLE_SLASH "//"
-  BAR          "|"
-  LPAREN       "("
-  RPAREN       ")"
-  LSQUARE      "["
-  RSQUARE      "]"
-  DOT          "."
-  DOUBLE_DOT   ".."
-  COMMA        ","
-  AND          "and"
-  OR           "or"
-  DIV          "div"
-  MOD          "mod"
+  END  0             "end of file"
+  EQ                 "="
+  NE                 "!="
+  LT                 "<"
+  LE                 "<="
+  GT                 ">"
+  GE                 ">="
+  MINUS              "-"
+  PLUS               "+"
+  STAR               "*"
+  SLASH              "/"
+  DOUBLE_SLASH       "//"
+  BAR                "|"
+  LPAREN             "("
+  RPAREN             ")"
+  LSQUARE            "["
+  RSQUARE            "]"
+  DOT                "."
+  DOUBLE_DOT         ".."
+  COMMA              ","
+  DOUBLE_COLON       "::"
+  AND                "and"
+  OR                 "or"
+  DIV                "div"
+  MOD                "mod"
+  ANCESTOR           "ancestor"	     
+  ANCESTOR_OR_SELF   "ancestor-or-self" 
+  CHILD              "child"	         
+  DESCENDANT         "descendant"	     
+  DESCENDANT_OR_SELF "descendant-or-self"
+  FOLLOWING          "following"	     
+  FOLLOWING_SIBLING  "following-sibling"
+  PARENT             "parent"	         
+  PRECEDING          "preceding"	     
+  PRECEDING_SIBLING  "preceding-sibling"
+  SELF               "self"             
 ;
 %token <std::string> IDENTIFIER "identifier"
 %token <std::string> LITERAL "literal"
@@ -85,6 +97,17 @@ inline std::string stripLiteral(const std::string& s) {
 %type  <std::string> STAR
 %type  <std::string> DOT
 %type  <std::string> DOUBLE_DOT
+%type  <std::string> ANCESTOR           
+%type  <std::string> ANCESTOR_OR_SELF   
+%type  <std::string> CHILD              
+%type  <std::string> DESCENDANT         
+%type  <std::string> DESCENDANT_OR_SELF 
+%type  <std::string> FOLLOWING          
+%type  <std::string> FOLLOWING_SIBLING  
+%type  <std::string> PARENT             
+%type  <std::string> PRECEDING          
+%type  <std::string> PRECEDING_SIBLING  
+%type  <std::string> SELF               
 
 %type  <Path*> LocationPath
 %type  <Path*> AbsoluteLocationPath
@@ -97,6 +120,8 @@ inline std::string stripLiteral(const std::string& s) {
 %type  <Path*> AbbreviatedAbsoluteLocationPath
 %type  <Path*> AbbreviatedRelativeLocationPath
 %type  <std::string> AbbreviatedStep
+%type  <std::string> AxisSpecifier
+%type  <std::string> AxisName
 %type  <XpathExpr*> Expr
 %type  <XpathExpr*> PrimaryExpr
 %type  <Fun*> FunctionCall
@@ -135,30 +160,48 @@ RelativeLocationPath :
 | RelativeLocationPath "/" Step	                { $1->addBack($3); $$ = $1; }
 | AbbreviatedRelativeLocationPath               { $$ = $1; };
 
+
+// [4] Step	   ::=   AxisSpecifier NodeTest Predicate*	
+//			       | AbbreviatedStep
 Step :
-/* AxisSpecifier*/
-  NodeTest                                      { $$ = new Step($1, nullptr);} 
-| NodeTest Predicates                           { $$ = new Step($1, $2); }    // Predicate*
-| AbbreviatedStep                               { $$ = new Step($1, nullptr); }
+  NodeTest                                      { $$ = Step::create("", $1, nullptr);} 
+| NodeTest Predicates                           { $$ = Step::create("", $1, $2); }
+| AxisSpecifier NodeTest                        { $$ = Step::create($1, $2, nullptr); }
+| AxisSpecifier NodeTest Predicates             { $$ = Step::create($1, $2, $3); }
+| AbbreviatedStep                               { $$ = Step::create("", $1, nullptr); }
 
-//AxisSpecifier :
-// AxisName "::"	
-//AbbreviatedAxisSpecifier           {};
+//[5] AxisSpecifier ::=   AxisName "::"	
+//                        | AbbreviatedAxisSpecifier
+AxisSpecifier :
+  AxisName "::"                                 { $$ = $1; }
 
-//  AxisName :
-//   "ancestor"	                     
-// | "ancestor-or-self"	
-// | "attribute"	
-// | "child"	
-// | "descendant"	
-// | "descendant-or-self"	
-// | "following"	
-// | "following-sibling"	
-// | "namespace"	
-// | "parent"	
-// | "preceding"	
-// | "preceding-sibling"	
-// | "self"
+// [6] AxisName	   ::=      'ancestor'	
+//                        | 'ancestor-or-self'	
+//                        | 'attribute'	
+//                        | 'child'	
+//                        | 'descendant'	
+//                        | 'descendant-or-self'	
+//                        | 'following'	
+//                        | 'following-sibling'	
+//                        | 'namespace'	
+//                        | 'parent'	
+//                        | 'preceding'	
+//                        | 'preceding-sibling'	
+//                        | 'self'
+
+
+AxisName :
+  "ancestor"	                                 { $$ = $1; }
+| "ancestor-or-self"	                         { $$ = $1; }
+| "child"	                                     { $$ = $1; }
+| "descendant"	                                 { $$ = $1; }
+| "descendant-or-self"	                         { $$ = $1; }
+| "following"	                                 { $$ = $1; }
+| "following-sibling"	                         { $$ = $1; }
+| "parent"	                                     { $$ = $1; }
+| "preceding"	                                 { $$ = $1; }
+| "preceding-sibling"	                         { $$ = $1; }
+| "self"                                         { $$ = $1; }
 
 NodeTest :
   NameTest	                                     { $$ = $1; }

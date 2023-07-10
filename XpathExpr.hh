@@ -87,10 +87,63 @@ public:
 class Step : public XpathExpr, public StrExpr {
 public:
 	Step(const std::string& s, const std::list<const XpathExpr*>* preds);
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 	~Step();
-private:
+	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+	static Step* create(const std::string& axisName,
+						const std::string& nodeTest,
+						std::list<const XpathExpr*>* predicates);
+protected:
+	virtual void evalStep(const XpathData& d,
+						  size_t pos,
+						  bool firstStep,
+						  const std::vector<Node>& nodeSet,
+						  std::vector<Node>& result) const = 0;
+	void evalFilter(std::vector<Node>& result) const;
 	const std::list<const XpathExpr*>* _preds;
+};
+
+class AllStep : public Step {
+public:
+	AllStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+	void evalStep(const XpathData& d,
+				  size_t pos,
+				  bool firstStep,
+				  const std::vector<Node>& nodeSet,
+				  std::vector<Node>& result) const;
+};
+
+class ChildStep : public Step {
+public:
+	ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+	void evalStep(const XpathData& d,
+				  size_t pos,
+				  bool firstStep,
+				  const std::vector<Node>& nodeSet,
+				  std::vector<Node>& result) const;
+};
+
+class ParentStep : public Step {
+public:
+	ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+	void evalStep(const XpathData& d,
+				  size_t pos,
+				  bool firstStep,
+				  const std::vector<Node>& nodeSet,
+				  std::vector<Node>& result) const;
+};
+
+class SelfStep : public Step {
+public:
+	SelfStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+	void evalStep(const XpathData& d,
+				  size_t pos,
+				  bool firstStep,
+				  const std::vector<Node>& nodeSet,
+				  std::vector<Node>& result) const;
 };
 
 class Predicate : public XpathExpr, UnaryExpr {

@@ -141,50 +141,15 @@ XpathData
 Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	std::vector<Node> result;
 	const std::vector<Node>& ns = d.getNodeSet();
-	if (ns.empty()) {
-		return XpathData(result);
+	if (!ns.empty()) {
+		evalStep(d, pos, firstStep, ns, result);
+		evalFilter(result);
 	}
-	if (_s == "..") {			// TODO avoid string comparison
-		if (firstStep) {
-			const Node& n = ns[pos];
-			const Node* parent = n.getParent();
-			if (parent != nullptr) {
-				addIfUnique(result, Node(*parent));
-			}
-		} else {
-			for (const Node& n : ns) {
-				const Node* parent = n.getParent();
-				if (parent != nullptr) {
-					addIfUnique(result, Node(*parent));
-				}
-			}
-		}
-	} else if (_s == ".") {
-		if (firstStep) {
-			result = std::vector<Node>(1, ns[pos]);
-		} else {
-			result = ns;
-		}
-	} else if (_s == "*") {
-		if (firstStep) {
-			const Node& n = ns[pos];
-			n.getChildren(result);
-		} else {
-			for (const Node& n : ns) {
-				n.getChildren(result);
-			}
-		}
-	} else {
-		if (firstStep) {
-			const Node& n = ns[pos];
-			n.getChild(_s, result);
-		} else {
-			for (const Node& n : ns) {
-				n.getChild(_s, result);
-			}
-		}
-	}
-	// Apply filter
+	return XpathData(result);
+}
+
+void
+Step::evalFilter(std::vector<Node>& result) const {
 	if (_preds != nullptr) {
 		for (const XpathExpr* e : *_preds) {
 			std::vector<size_t> keepIndexes;
@@ -203,7 +168,114 @@ Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 			result = filter(result, keepIndexes);
 		}
 	}
-	return XpathData(result);
+}
+
+Step*
+Step::create(const std::string& axisName,
+				   const std::string& nodeTest,
+				   std::list<const XpathExpr*>* predicates) {
+	if (axisName.empty()) {
+		if (nodeTest == "..") {
+			return new ParentStep(nodeTest, predicates);
+		} else if (nodeTest == ".") {
+			return new SelfStep(nodeTest, predicates);
+		} else if (nodeTest == "*") {
+			return new AllStep(nodeTest, predicates);
+		} else {
+			return new ChildStep(nodeTest, predicates);
+		}
+	} else if (axisName == "child") {
+		if (nodeTest == "*") {
+			return new AllStep(nodeTest, predicates);
+		} else {
+			return new ChildStep(nodeTest, predicates);
+		}
+	} else {
+		throw std::runtime_error("Step::create not a supported step");
+	}
+}
+
+AllStep::AllStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+	Step(s, preds) {
+}
+
+void
+AllStep::evalStep(const XpathData& d,
+					size_t pos,
+					bool firstStep,
+					const std::vector<Node>& nodeSet,
+					std::vector<Node>& result) const {
+	if (firstStep) {
+		const Node& n = nodeSet[pos];
+		n.getChildren(result);
+	} else {
+		for (const Node& n : nodeSet) {
+			n.getChildren(result);
+		}
+	}
+}
+
+ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+	Step(s, preds) {
+}
+
+void
+ChildStep::evalStep(const XpathData& d,
+					size_t pos,
+					bool firstStep,
+					const std::vector<Node>& nodeSet,
+					std::vector<Node>& result) const {
+	if (firstStep) {
+		const Node& n = nodeSet[pos];
+		n.getChild(_s, result);
+	} else {
+		for (const Node& n : nodeSet) {
+			n.getChild(_s, result);
+		}
+	}
+}
+
+ParentStep::ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+	Step(s, preds) {
+}
+
+void
+ParentStep::evalStep(const XpathData& d,
+					size_t pos,
+					bool firstStep,
+					const std::vector<Node>& nodeSet,
+					std::vector<Node>& result) const {
+	if (firstStep) {
+		const Node& n = nodeSet[pos];
+		const Node* parent = n.getParent();
+		if (parent != nullptr) {
+			addIfUnique(result, Node(*parent));
+		}
+	} else {
+		for (const Node& n : nodeSet) {
+			const Node* parent = n.getParent();
+			if (parent != nullptr) {
+				addIfUnique(result, Node(*parent));
+			}
+		}
+	}
+}
+
+SelfStep::SelfStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+	Step(s, preds) {
+}
+
+void
+SelfStep::evalStep(const XpathData& d,
+				   size_t pos,
+				   bool firstStep,
+				   const std::vector<Node>& nodeSet,
+				   std::vector<Node>& result) const {
+	if (firstStep) {
+		result = std::vector<Node>(1, nodeSet[pos]);
+	} else {
+		result = nodeSet;
+	}
 }
 
 // Predicate

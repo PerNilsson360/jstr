@@ -230,12 +230,20 @@ testPaths() {
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("count(/a/b)", json));
 		assert(r.getNumber() == 3);
+		r = eval("count(/child::a/child::b)", json);
+		assert(r.getNumber() == 3);
 		r = eval("count(/a/..)", json);
+		assert(r.getNumber() == 1);
+		r = eval("count(/child::a/..)", json);
 		assert(r.getNumber() == 1);
 		r = eval("local-name(/a)", json);
 		assert(r.getString() == "a");
+		r = eval("local-name(/child::a)", json);
+		assert(r.getString() == "a");
 		r = eval("local-name(/a/.)", json);
 		assert(r.getString() == "a");
+		r = eval("count(/a/child::*)", json);
+		assert(r.getNumber() == 3);
 	}
 	{
 		//<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
