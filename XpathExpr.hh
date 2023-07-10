@@ -31,274 +31,274 @@
 
 class XpathExpr {
 public:
-	XpathExpr() = default;
-	virtual ~XpathExpr() = default;
-	virtual XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const = 0;
+    XpathExpr() = default;
+    virtual ~XpathExpr() = default;
+    virtual XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const = 0;
 private:
 };
 
 class UnaryExpr {
 public:
-	UnaryExpr(const XpathExpr* e);
+    UnaryExpr(const XpathExpr* e);
 protected:
-  std::unique_ptr<const XpathExpr> _e;
+    std::unique_ptr<const XpathExpr> _e;
 };
 
 class BinaryExpr {
 public:
-	BinaryExpr(const XpathExpr* l, const XpathExpr* r);
+    BinaryExpr(const XpathExpr* l, const XpathExpr* r);
 protected:
-  std::unique_ptr<const XpathExpr> _l;
-  std::unique_ptr<const XpathExpr> _r;
+    std::unique_ptr<const XpathExpr> _l;
+    std::unique_ptr<const XpathExpr> _r;
 };
 
 class MultiExpr {
 public:
-	MultiExpr(const XpathExpr* e);
-	virtual ~MultiExpr();
-	void addFront(const XpathExpr* e);
-	void addBack(const XpathExpr* e);
-	const std::list<const XpathExpr*>& getExprs() const;
+    MultiExpr(const XpathExpr* e);
+    virtual ~MultiExpr();
+    void addFront(const XpathExpr* e);
+    void addBack(const XpathExpr* e);
+    const std::list<const XpathExpr*>& getExprs() const;
 protected:
-	std::list<const XpathExpr*> _exprs;
+    std::list<const XpathExpr*> _exprs;
 };
 
 class StrExpr {
 public:
-	StrExpr(const std::string& s);
-	const std::string& getString() const;
+    StrExpr(const std::string& s);
+    const std::string& getString() const;
 protected:
-  std::string _s;
+    std::string _s;
 };
 
 class Root : public XpathExpr {
 public:
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const;
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const;
 private:
 };
 
 class Path : public XpathExpr, public MultiExpr {
 public:
-	Path(const XpathExpr* e);
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
- private:
+    Path(const XpathExpr* e);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+private:
 };
 
 class Step : public XpathExpr, public StrExpr {
 public:
-	Step(const std::string& s, const std::list<const XpathExpr*>* preds);
-	~Step();
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
-	static XpathExpr* create(const std::string& axisName,
-							 const std::string& nodeTest,
-							 std::list<const XpathExpr*>* predicates);
-	// TODO make this better
-	static bool isAllStep(const XpathExpr* step);
-	static bool isSelfOrParentStep(const XpathExpr* step);
+    Step(const std::string& s, const std::list<const XpathExpr*>* preds);
+    ~Step();
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    static XpathExpr* create(const std::string& axisName,
+                             const std::string& nodeTest,
+                             std::list<const XpathExpr*>* predicates);
+    // TODO make this better
+    static bool isAllStep(const XpathExpr* step);
+    static bool isSelfOrParentStep(const XpathExpr* step);
 protected:
-	virtual void evalStep(size_t pos,
-						  bool firstStep,
-						  const std::vector<Node>& nodeSet,
-						  std::vector<Node>& result) const = 0;
-	void evalFilter(std::vector<Node>& result) const;
-	const std::list<const XpathExpr*>* _preds;
+    virtual void evalStep(size_t pos,
+                          bool firstStep,
+                          const std::vector<Node>& nodeSet,
+                          std::vector<Node>& result) const = 0;
+    void evalFilter(std::vector<Node>& result) const;
+    const std::list<const XpathExpr*>* _preds;
 };
 
 class AllStep : public Step {
 public:
-	AllStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+    AllStep(const std::string& s, const std::list<const XpathExpr*>* preds);
 protected:
-	void evalStep(size_t pos,
-				  bool firstStep,
-				  const std::vector<Node>& nodeSet,
-				  std::vector<Node>& result) const;
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
 };
 
 class ChildStep : public Step {
 public:
-	ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+    ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds);
 protected:
-	void evalStep(size_t pos,
-				  bool firstStep,
-				  const std::vector<Node>& nodeSet,
-				  std::vector<Node>& result) const;
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
 };
 
 class ParentStep : public ChildStep {
 public:
-	ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+    ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds);
 protected:
-	void evalStep(size_t pos,
-				  bool firstStep,
-				  const std::vector<Node>& nodeSet,
-				  std::vector<Node>& result) const;
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
 };
 
 class SelfStep : public Step {
 public:
-	SelfStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+    SelfStep(const std::string& s, const std::list<const XpathExpr*>* preds);
 protected:
-	void evalStep(size_t pos,
-				  bool firstStep,
-				  const std::vector<Node>& nodeSet,
-				  std::vector<Node>& result) const;
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
 };
 
 class Predicate : public XpathExpr, UnaryExpr {
 public:
-  Predicate(const XpathExpr* e);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Predicate(const XpathExpr* e);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Descendant : public XpathExpr {
 public:
-	Descendant(const Path* path);
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Descendant(const Path* path);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
-	std::unique_ptr<const Path> _path;
+    std::unique_ptr<const Path> _path;
 };
 
 class ContextItem : public XpathExpr {
 public:
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Parent : public XpathExpr {
 public:
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Literal : public XpathExpr, StrExpr {
 public:
-  Literal(const std::string& l);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Literal(const std::string& l);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Number : public XpathExpr {
 public:
-  Number(double d);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Number(double d);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
-  double _d;
+    double _d;
 };
 
-class Fun : public XpathExpr {	// TODO StrExp
+class Fun : public XpathExpr {  // TODO StrExp
 public:
-	Fun(const std::string& name, const std::list<const XpathExpr*>* args);
-	~Fun();
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Fun(const std::string& name, const std::list<const XpathExpr*>* args);
+    ~Fun();
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
-	void checkArgs(size_t expectedSize) const;
-	std::string _name;
-	const std::list<const XpathExpr*>* _args;
+    void checkArgs(size_t expectedSize) const;
+    std::string _name;
+    const std::list<const XpathExpr*>* _args;
 };
 
 class Args : public XpathExpr, public MultiExpr {
 public:
-	Args(const XpathExpr* e);
-	XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Args(const XpathExpr* e);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Union : public XpathExpr, BinaryExpr {
 public:
-  Union(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Union(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
   
 class Or : public XpathExpr, BinaryExpr {
 public:
-  Or(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Or(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class And : public XpathExpr, BinaryExpr {
 public:
-  And(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    And(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Eq : public XpathExpr, BinaryExpr {
 public:
-  Eq(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Eq(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Ne : public XpathExpr, BinaryExpr {
 public:
-  Ne(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Ne(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Lt : public XpathExpr, BinaryExpr {
 public:
-  Lt(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Lt(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Gt : public XpathExpr, BinaryExpr {
 public:
-  Gt(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Gt(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Le : public XpathExpr, BinaryExpr {
 public:
-  Le(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Le(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Ge : public XpathExpr, BinaryExpr {
 public:
-  Ge(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Ge(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Plus : public XpathExpr, BinaryExpr {
 public:
-  Plus(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Plus(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Minus : public XpathExpr, BinaryExpr {
 public:
-  Minus(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Minus(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Mul : public XpathExpr, BinaryExpr {
 public:
-  Mul(const XpathExpr* l, const XpathExpr* r);
-   XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Mul(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Div : public XpathExpr, BinaryExpr {
 public:
-  Div(const XpathExpr* l, const XpathExpr* r);
-  XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Div(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
 class Mod : public XpathExpr, BinaryExpr {
 public:
-  Mod(const XpathExpr* l, const XpathExpr* r);
-   XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    Mod(const XpathExpr* l, const XpathExpr* r);
+    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
 private:
 };
 
