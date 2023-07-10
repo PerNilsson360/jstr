@@ -1,3 +1,25 @@
+// MIT license
+//
+// Copyright 2023 Per Nilsson
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the “Software”), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 #include <memory>
 #include <cassert>
 #include <iostream>
@@ -242,7 +264,7 @@ testPaths() {
 		r = eval("count(/a/*)", json);
 		assert(r.getNumber() == 3);
 		r = eval("/a/*", json);
-		assert(r.getString() == "1truefoo");
+		assert(r.getStringValue() == "1truefoo");
 	}
 	{
 		// <a><b><b>1</b></b><b><b>2</b></b><b><c>3</c></b></a>
@@ -251,7 +273,7 @@ testPaths() {
 		XpathData r(eval("count(/a/*)", json));
 		assert(r.getNumber() == 3);
 		r = (eval("/a/*", json));
-		assert(r.getString() == "123");
+		assert(r.getStringValue() == "123");
 	}
 	// Descendant tests
 	{
@@ -336,7 +358,7 @@ testPaths() {
 		r = eval("count(//.)", json);
 		assert(r.getNumber() == 6);
 		r = eval("//a", json);
-		assert(r.getString() == "12312");
+		assert(r.getStringValue() == "12312");
 	}
 	{
 		// TODO replace above with following
@@ -594,6 +616,19 @@ testFilter() {
 		assert(r.getNumber() == 1);
 		r = eval("count(/a/b[not(. = 1)][not(. = 2)][not(. = 3)][not(. = 4)])", json);
 		assert(r.getNumber() == 0);
+		r = eval("/a/b[1]", json);
+		assert(r.getNumber() == 1);
+		r = eval("/a/b[2]", json);
+		assert(r.getNumber() == 2);
+		r = eval("/a/b[2 + 1]", json);
+		assert(r.getNumber() == 3);
+		r = eval("/a/b[1 + 3]", json);
+		assert(r.getNumber() == 4);
+		r = eval("count(/a/b[0])", json);
+		assert(r.getNumber() == 0);
+		r = eval("count(/a/b[5])", json);
+		assert(r.getNumber() == 0);
+
 	}
 	{
 		//<a><b><c><e>1</e></c></b><d><f><e>1</e></f></d></a>
@@ -609,14 +644,35 @@ testFilter() {
 }
 
 void
+testNodeSetFunctions() {
+	{
+		// <a>3</a>
+		const char* j = R"({"a":3})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/a[position()=1]", json));
+		assert(r.getStringValue() == "3");
+		r = eval("/a[position()=last()]", json);
+		assert(r.getStringValue() == "3");
+		r = eval("count(/a[position()=last()])", json);
+		assert(r.getNumber() == 1);
+		r = eval("local-name(/a[position()=last()])", json);
+		assert(r.getStringValue() == "a");
+		r = eval("count(/a[position()=0])", json);
+		assert(r.getNumber() == 0);
+		r = eval("count(/a[position()=2])", json);
+		assert(r.getNumber() == 0);
+	}
+}
+
+void
 testStringFunctions() {
-	// TODO only the first element in the node set should be added to the string
 	{
 		// <a>3</a>
 		const char* j = R"({"a":3})";
 		nlohmann::json json = nlohmann::json::parse(j);
 		XpathData r(eval("string(/)", json));
 		assert(r.getString() == "3");
+		assert(r.getStringValue() == "3");
 		r = eval("string(/a)", json);
 		assert(r.getString() == "3");
 	}
@@ -676,14 +732,27 @@ testStringFunctions() {
 		r = eval("string(/a)", json);
 		assert(r.getString() == "1234");
 		r = eval("string(/a/b)", json);
-		assert(r.getString() == "1234");
+		assert(r.getString() == "1");
 		r = eval("string(//b)", json);
-		assert(r.getString() == "1234");
+		assert(r.getString() == "1");
 	}
 }
 
 void
 testStringValue() {
+	{
+		// <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+		const char* j = R"({"a":{"b":[1,2,3,4]}})";
+		nlohmann::json json = nlohmann::json::parse(j);
+		XpathData r(eval("/", json));
+		assert(r.getStringValue() == "1234");
+		r = eval("/a", json);
+		assert(r.getString() == "1234");
+		r = eval("/a/b", json);
+		assert(r.getStringValue() == "1234");
+		r = eval("//b", json);
+		assert(r.getStringValue() == "1234");
+	}
 }
 
 int
@@ -694,6 +763,8 @@ main (int argc, char *argv[])
 	testPaths();
 	testRelations();
 	testFilter();
+	testNodeSetFunctions();
 	testStringFunctions();
+	testStringValue();
 	return 0;
 }

@@ -1,3 +1,25 @@
+// MIT license
+//
+// Copyright 2023 Per Nilsson
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the “Software”), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 #include <iostream>
 #include <sstream>
 #include "XpathExpr.hh"
@@ -168,8 +190,14 @@ Step::eval(const XpathData& d, size_t pos, bool firstStep) const {
 			std::vector<size_t> keepIndexes;
 			for (int i = 0; i < result.size(); i++) {
 				XpathData r = e->eval(result, i);
-				if (r.getBool()) {
-					keepIndexes.push_back(i);
+				if (r.getType() == XpathData::Number) {
+					if (i + 1 == r.getNumber()) {
+						keepIndexes.push_back(i);
+					}
+				} else {
+					if (r.getBool()) {
+						keepIndexes.push_back(i);
+					}
 				}
 			}
 			result = filter(result, keepIndexes);
@@ -246,7 +274,16 @@ Fun::~Fun() {
 
 XpathData
 Fun::eval(const XpathData& d, size_t pos, bool firstStep) const {
-	if (_name == "count") {
+	// TODO dont do string comparison
+	if (_name == "last") {
+		checkArgs(0);
+		double size = d.getNodeSet().size();
+		return XpathData(size);
+	} else if (_name == "position") {
+		checkArgs(0);
+		double position = pos + 1;
+		return XpathData(position);
+	}else if (_name == "count") {
 		checkArgs(1);
 		std::list<const XpathExpr*>::const_iterator i = _args->begin();
 		XpathData arg = (*i)->eval(d, pos);
@@ -275,6 +312,7 @@ Fun::eval(const XpathData& d, size_t pos, bool firstStep) const {
 	} else {
 		std::stringstream ss;
 		ss << "Fun::eval unkown function: " << _name;
+		throw std::runtime_error(ss.str());
 	}
 	return XpathData();
 }

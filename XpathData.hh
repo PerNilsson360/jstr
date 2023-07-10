@@ -1,3 +1,25 @@
+// MIT license
+//
+// Copyright 2023 Per Nilsson
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the “Software”), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 #ifndef _XPATH_DATA_HH_
 #define _XPATH_DATA_HH_
 
@@ -25,20 +47,27 @@ public:
 	~XpathData();
 	Type getType() const;
 	/**
-	 * @return true if this object represents a literal or a node with a value.
+	 * @return true if this object represents a literal or a single node with a value.
 	 */
 	bool isValue() const;
 	double getNumber() const;
 	bool getBool() const;
+	/**
+	 * Primitiv values are converted to strings. For node sets the "string value"
+	 * of the first node is returned. If the node set is empty the empty string is
+	 * returned.
+	 * @return a string representation of the value.
+	 */
+	std::string getString() const;
 	/**
 	 * Returns the XML "string value" of the data.
 	 * Primitive values are interpreted as XML text nodes.
 	 * Objects and arrays are mapped to elements.
 	 * "The string-value of an element node is the concatenation of the string-values of
 	 *  all text node descendants of the element node in document order."
-	 * @return the value as a string
-	 */ 
-	std::string getString() const;
+	 * @return a string representation of the value.
+	 */
+	std::string getStringValue() const;
 	const std::vector<Node>& getNodeSet() const;
 	XpathData getNodeSetSize() const;
 	XpathData getLocalName() const;
