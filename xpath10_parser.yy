@@ -1,7 +1,7 @@
 %skeleton "lalr1.cc" /* -*- C++ -*- */
 %require "3.0.4"
 %defines
-%define parser_class_name {xpath10_parser}
+%define api.parser.class {xpath10_parser}
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
