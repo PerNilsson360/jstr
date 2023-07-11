@@ -203,7 +203,9 @@ Step::create(const std::string& axisName,
         return new Descendant(new Path(step));
     } else if (axisName == "parent") {
         return new ParentStep(nodeTest, predicates);
-    } else {
+    } else if (axisName == "self") {
+        return new SelfStep(nodeTest, predicates);
+    }else {
         throw std::runtime_error("Step::create not a supported step");
     }
 }
@@ -240,6 +242,12 @@ ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* pr
     Step(s, preds) {
 }
 
+namespace {
+bool checkLocalName(const Node& n, const std::string& name) {
+    return name.empty() || name == "*" || n.getLocalName() == name;
+}
+}
+
 void
 ChildStep::evalStep(size_t pos,
                     bool firstStep,
@@ -256,7 +264,7 @@ ChildStep::evalStep(size_t pos,
 }
 
 ParentStep::ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
-    ChildStep(s, preds) {
+    Step(s, preds) {
 }
 
 void
@@ -264,25 +272,19 @@ ParentStep::evalStep(size_t pos,
                      bool firstStep,
                      const std::vector<Node>& nodeSet,
                      std::vector<Node>& result) const {
-    std::vector<Node> tmp;
     if (firstStep) {
         const Node& n = nodeSet[pos];
         const Node* parent = n.getParent();
-        if (parent != nullptr) {
-            addIfUnique(tmp, Node(*parent));
+        if (parent != nullptr && checkLocalName(*parent, _s)) {
+            addIfUnique(result, Node(*parent));
         }
     } else {
         for (const Node& n : nodeSet) {
             const Node* parent = n.getParent();
-            if (parent != nullptr) {
-                addIfUnique(tmp, Node(*parent));
+            if (parent != nullptr && checkLocalName(*parent, _s)) {
+                addIfUnique(result, Node(*parent));
             }
         }
-    }
-    if (_s.empty()) {
-        result = tmp;
-    } else {
-        ChildStep::evalStep(pos, firstStep, tmp, result);
     }
 }
 
@@ -296,9 +298,20 @@ SelfStep::evalStep(size_t pos,
                    const std::vector<Node>& nodeSet,
                    std::vector<Node>& result) const {
     if (firstStep) {
-        result = std::vector<Node>(1, nodeSet[pos]);
+        const Node& n = nodeSet[pos];
+        if (checkLocalName(n, _s)) {
+            result = std::vector<Node>(1, nodeSet[pos]);
+        }
     } else {
-        result = nodeSet;
+        if (_s.empty() || _s == "*") {
+            result = nodeSet;
+        } else {
+            for (const Node& n : nodeSet) {
+                if (n.getLocalName() == _s) {
+                    result.push_back(n);
+                }
+            }
+        }
     }
 }
 

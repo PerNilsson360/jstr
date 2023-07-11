@@ -242,6 +242,12 @@ testPaths() {
         assert(r.getString() == "a");
         r = eval("local-name(/a/.)", json);
         assert(r.getString() == "a");
+        r = eval("local-name(/a/self::*)", json);
+        assert(r.getString() == "a");
+        r = eval("local-name(/a/self::a)", json);
+        assert(r.getString() == "a");
+        r = eval("count(/a/self::b)", json);
+        assert(r.getNumber() == 0);
         r = eval("count(/a/child::*)", json);
         assert(r.getNumber() == 3);
     }
@@ -253,8 +259,12 @@ testPaths() {
         assert(r.getNumber() == 1);
         r = eval("count(/a/b)", json);
         assert(r.getNumber() == 1);
-        r = eval("count(/a/b/parent::d)", json);
+        r = eval("count(/a/b/parent::a)", json);
         assert(r.getNumber() == 1);
+        r = eval("count(/a/b/parent::*)", json);
+        assert(r.getNumber() == 1);
+        r = eval("count(/a/b/parent::c)", json);
+        assert(r.getNumber() == 0);
         r = eval("count(/a/b/c)", json);
         assert(r.getNumber() == 1);
         r = eval("count(/a/b/c/e)", json);

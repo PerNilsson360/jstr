@@ -124,7 +124,7 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
-class ParentStep : public ChildStep {
+class ParentStep : public Step {
 public:
     ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds);
 protected:
