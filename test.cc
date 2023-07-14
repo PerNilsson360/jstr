@@ -404,6 +404,10 @@ testPaths() {
         assert(r.getNumber() == 3);
          r = eval("count(/descendant::a)", json);
         assert(r.getNumber() == 3);
+        r = eval("count(/a/descendant-or-self::a)", json);
+        assert(r.getNumber() == 3);
+        r = eval("count(/a/descendant-or-self::*)", json);
+        assert(r.getNumber() == 3);
         r = eval("count(//a/a)", json);
         assert(r.getNumber() == 2);
         r = eval("count(/descendant::a/a)", json);
@@ -423,6 +427,8 @@ testPaths() {
         XpathData r(eval("count(//a)", json));
         assert(r.getNumber() == 5);
         r = eval("count(/descendant::a)", json);
+        assert(r.getNumber() == 5);
+        r = eval("count(/a/descendant-or-self::a)", json);
         assert(r.getNumber() == 5);
         r = eval("count(//*)", json);
         assert(r.getNumber() == 6);
