@@ -265,6 +265,12 @@ Step::create(const std::string& axisName,
         } else {
             return new DescendantSearch(nodeTest, predicates);
         }
+    } else if (axisName == "descendant-or-self") {
+        if (nodeTest == "*") {
+            return new DescendantOrSelfAll(predicates);
+        } else {
+            return new DescendantOrSelfSearch(nodeTest, predicates);
+        }
     } else if (axisName == "parent") {
         return new ParentStep(nodeTest, predicates);
     } else if (axisName == "self") {
@@ -452,6 +458,23 @@ DescendantAll::evalStep(size_t pos,
     }
 }
 
+DescendantOrSelfAll::DescendantOrSelfAll(const std::list<const XpathExpr*>* preds) :
+    DescendantAll(preds) {
+}
+
+void
+DescendantOrSelfAll::evalStep(size_t pos,
+                              bool firstStep,
+                              const std::vector<Node>& nodeSet,
+                              std::vector<Node>& result) const {
+    
+    for (const Node& n : nodeSet) {
+        result.emplace_back(n);
+    }
+    DescendantAll::evalStep(pos, firstStep, nodeSet, result);
+}
+
+
 DescendantSearch::DescendantSearch(const std::string& s,
                                    const std::list<const XpathExpr*>* preds) : Step(s, preds) {
 }
@@ -464,6 +487,22 @@ DescendantSearch::evalStep(size_t pos,
     for (const Node& n : nodeSet) {
         n.search(_s, result);
     }
+}
+
+DescendantOrSelfSearch::DescendantOrSelfSearch(const std::string& s,
+                                               const std::list<const XpathExpr*>* preds) :
+    DescendantSearch(s, preds) {
+}
+
+void
+DescendantOrSelfSearch::evalStep(size_t pos,
+                                 bool firstStep,
+                                 const std::vector<Node>& nodeSet,
+                                 std::vector<Node>& result) const {
+    for (const Node& n : nodeSet) {
+        result.emplace_back(n);
+    }
+    DescendantSearch::evalStep(pos, firstStep, nodeSet, result);
 }
 
 // Literal

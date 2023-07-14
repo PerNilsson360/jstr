@@ -184,6 +184,16 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
+class DescendantOrSelfAll : public DescendantAll {
+public:
+    DescendantOrSelfAll(const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
+
 class DescendantSearch : public Step {
 public:
     DescendantSearch(const std::string& s, const std::list<const XpathExpr*>* preds);
@@ -194,6 +204,15 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
+class DescendantOrSelfSearch : public DescendantSearch {
+public:
+    DescendantOrSelfSearch(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
 
 class ContextItem : public XpathExpr {
 public:
