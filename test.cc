@@ -414,6 +414,8 @@ testPaths() {
         assert(r.getNumber() == 3);
         r = eval("count(//.)", json);
         assert(r.getNumber() == 3);
+        r = eval("count(/a/a/a/ancestor-or-self::a)", json);
+        assert(r.getNumber() == 3);
     }
     {
         const char* j = R"({"a":[{"a":1},{"a":2},{"b":3}]})";
@@ -432,6 +434,8 @@ testPaths() {
         assert(r.getStringValue() == "12312");
         r = eval("/descendant::a", json);
         assert(r.getStringValue() == "12312");
+        r = eval("count(/a/a/ancestor-or-self::a)", json);
+        assert(r.getNumber() == 3);
     }
     {
         // TODO replace above with following
@@ -713,6 +717,15 @@ testFilter() {
         assert(r.getNumber() == 1);
         r = eval("count(/a/*[count(*[local-name(.) = 'c']) > 0])", json);
         assert(r.getNumber() == 1);
+    }
+    {
+        // <a><b><c><e>1</e></c></b><b><d><e>1</e></d></b></a>
+        const char* j = R"({"a":{"b":[{"c":{"e":1}},{"d":{"e":2}}]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        XpathData r(eval("count(/a/b[count(.//e) = 1])", json));
+        assert(r.getNumber() == 2);
+        r = eval("count(/a/b[count(//e) = 2])", json);
+        assert(r.getNumber() == 2);
     }
 }
 

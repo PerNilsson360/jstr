@@ -156,14 +156,20 @@ search(Node parent, const nlohmann::json& j, const std::string& name, std::vecto
                         result.emplace_back(Node(new Node(parent), name, value, i));
                     }
                     for (size_t i = 0, size = value.size(); i < size; i++) {
-                        ::search(Node(new Node(parent), name, value[i]), value[i], name, result);
+                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
                     }
                 } else {
                     result.emplace_back(Node(new Node(parent), name, value));
-                    ::search(Node(new Node(parent), name, value), value, name, result);
+                    ::search(Node(new Node(parent), key, value), value, name, result);
                 }
             } else {
-                ::search(Node(new Node(parent), key, value), value, name, result);
+                if (value.is_array()) {
+                    for (size_t i = 0, size = value.size(); i < size; i++) {
+                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
+                    }
+                } else {
+                    ::search(Node(new Node(parent), key, value), value, name, result);
+                }
             }
         }
     }
