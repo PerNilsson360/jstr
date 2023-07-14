@@ -99,7 +99,8 @@ std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>&
     return result;
 }
 
-void addIfUnique(std::vector<Node>& ns, Node&& node) {
+void
+addIfUnique(std::vector<Node>& ns, const Node& node) {
     bool found(false);
     for (const Node& n : ns) {
         if (n == node) {
@@ -108,6 +109,13 @@ void addIfUnique(std::vector<Node>& ns, Node&& node) {
     }
     if (!found) {
         ns.emplace_back(node);
+    }
+}
+
+void
+addIfUnique(std::vector<Node>& result, std::vector<Node>& ns) {
+    for (const Node& n : ns) {
+        addIfUnique(result, n);
     }
 }
     
@@ -169,11 +177,11 @@ Step::evalFilter(std::vector<Node>& result) const {
                 XpathData r = e->eval(result, i);
                 if (r.getType() == XpathData::Number) {
                     if (i + 1 == r.getNumber()) {
-                        keepIndexes.push_back(i);
+                        keepIndexes.emplace_back(i);
                     }
                 } else {
                     if (r.getBool()) {
-                        keepIndexes.push_back(i);
+                        keepIndexes.emplace_back(i);
                     }
                 }
             }
@@ -196,6 +204,8 @@ Step::create(const std::string& axisName,
         } else {
             return new ChildStep(nodeTest, predicates);
         }
+    } else if (axisName == "ancestor") {
+        return new AncestorStep(nodeTest, predicates);
     } else if (axisName == "child") {
         return createChildAllStep(nodeTest, predicates);
     } else if (axisName == "descendant") {
@@ -219,6 +229,38 @@ bool Step::isSelfOrParentStep(const XpathExpr* step) {
         dynamic_cast<const ParentStep*>(step) != nullptr;
 }
 
+AncestorStep::AncestorStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+    Step(s, preds) {
+}
+
+void
+AncestorStep::evalStep(size_t pos,
+                       bool firstStep,
+                       const std::vector<Node>& nodeSet,
+                       std::vector<Node>& result) const {
+    std::vector<Node> tmp1;
+    if (firstStep) {
+        const Node& n = nodeSet[pos];
+        n.getAncestors(tmp1);
+    } else {
+        for (const Node& n : nodeSet) {
+            std::vector<Node> tmp2;
+            n.getAncestors(tmp2);
+            addIfUnique(tmp1, tmp2);
+        }
+    }
+    // TODO Could be more efficient with search instead of filter
+    if (_s != "*") {
+        for (const Node& n : tmp1) {
+            if (n.getLocalName() == _s) {
+                result.push_back(n);
+            }
+        }
+    } else {
+        result = tmp1;
+    }
+}
+
 AllStep::AllStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
     Step(s, preds) {
 }
@@ -238,14 +280,14 @@ AllStep::evalStep(size_t pos,
     }
 }
 
-ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
-    Step(s, preds) {
-}
-
 namespace {
 bool checkLocalName(const Node& n, const std::string& name) {
     return name.empty() || name == "*" || n.getLocalName() == name;
 }
+}
+
+ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+    Step(s, preds) {
 }
 
 void

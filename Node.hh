@@ -42,7 +42,8 @@ public:
     std::string getString() const;
     const std::string& getLocalName() const;
     bool isArrayChild() const;
-    void getChild(const std::string& name , std::vector<Node>& result) const;
+    void getAncestors(std::vector<Node>& result) const;
+    void getChild(const std::string& name, std::vector<Node>& result) const;
     void getChildren(std::vector<Node>& result) const;
     void getSubTreeNodes(std::vector<Node>& result) const;
     void search(const std::string& name, std::vector<Node>& result) const;

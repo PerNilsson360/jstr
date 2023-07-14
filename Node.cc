@@ -135,13 +135,21 @@ Node::isArrayChild() const {
     return _i != -1;
 }
 
+void
+Node::getAncestors(std::vector<Node>& result) const {
+    for (const Node* parent = getParent(); parent != nullptr; parent = parent->getParent()) {
+        result.emplace_back(*parent);
+    }
+}
+
 namespace {
 void
 search(Node parent, const nlohmann::json& j, const std::string& name, std::vector<Node>& result) {
     if (j.is_object()) {
         for (const auto& item : j.items()) {
             const nlohmann::json& value = item.value();
-            if (item.key() == name) {
+            const std::string& key = item.key();
+            if (key == name) {
                 if (value.is_array()) {
                     // the stringValue becomes nicer if you first add array nodes then search
                     for (size_t i = 0, size = value.size(); i < size; i++) {
@@ -155,7 +163,7 @@ search(Node parent, const nlohmann::json& j, const std::string& name, std::vecto
                     ::search(Node(new Node(parent), name, value), value, name, result);
                 }
             } else {
-                ::search(Node(new Node(parent), name, value), value, name, result);
+                ::search(Node(new Node(parent), key, value), value, name, result);
             }
         }
     }

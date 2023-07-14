@@ -114,6 +114,16 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
+class AncestorStep : public Step {
+public:
+    AncestorStep(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
+
 class ChildStep : public Step {
 public:
     ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds);
