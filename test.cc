@@ -719,13 +719,15 @@ testFilter() {
         assert(r.getNumber() == 1);
     }
     {
-        // <a><b><c><e>1</e></c></b><b><d><e>1</e></d></b></a>
+        // <a><b><c><e>1</e></c></b><b><d><e>2</e></d></b></a>
         const char* j = R"({"a":{"b":[{"c":{"e":1}},{"d":{"e":2}}]}})";
         nlohmann::json json = nlohmann::json::parse(j);
         XpathData r(eval("count(/a/b[count(.//e) = 1])", json));
         assert(r.getNumber() == 2);
         r = eval("count(/a/b[count(//e) = 2])", json);
         assert(r.getNumber() == 2);
+        r = eval("count(//*[local-name(.) = 'd'])", json);
+        assert(r.getNumber() == 1);
     }
 }
 

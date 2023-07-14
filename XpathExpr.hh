@@ -54,13 +54,13 @@ protected:
 
 class MultiExpr {
 public:
-    MultiExpr(const XpathExpr* e);
+    MultiExpr(XpathExpr* e);
     virtual ~MultiExpr();
-    void addFront(const XpathExpr* e);
-    void addBack(const XpathExpr* e);
-    const std::list<const XpathExpr*>& getExprs() const;
+    void addFront(XpathExpr* e);
+    void addBack(XpathExpr* e);
+    std::list<XpathExpr*>& getExprs() ;
 protected:
-    std::list<const XpathExpr*> _exprs;
+    std::list<XpathExpr*> _exprs;
 };
 
 class StrExpr {
@@ -79,8 +79,10 @@ private:
 
 class Path : public XpathExpr, public MultiExpr {
 public:
-    Path(const XpathExpr* e);
+    Path(XpathExpr* e);
     XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
+    void addAbsoluteDescendant();
+    void addRelativeDescendant(XpathExpr* Step);
 private:
 };
 
@@ -92,6 +94,7 @@ public:
     static XpathExpr* create(const std::string& axisName,
                              const std::string& nodeTest,
                              std::list<const XpathExpr*>* predicates);
+    const std::list<const XpathExpr*>* takePredicates();
     // TODO make this better
     static bool isAllStep(const XpathExpr* step);
     static bool isSelfOrParentStep(const XpathExpr* step);
@@ -171,13 +174,26 @@ public:
 private:
 };
 
-class Descendant : public XpathExpr {
+class DescendantAll : public Step { // TODO not really a step
 public:
-    Descendant(const Path* path);
-    XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
-private:
-    std::unique_ptr<const Path> _path;
+    DescendantAll(const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
 };
+
+class DescendantSearch : public Step {
+public:
+    DescendantSearch(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
+
 
 class ContextItem : public XpathExpr {
 public:

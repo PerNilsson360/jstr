@@ -220,11 +220,11 @@ PredicateExpr:
 
 // AbbreviatedAbsoluteLocationPath	   ::=   	'//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
-"//" RelativeLocationPath	                     { $$ = new Path(new Root()); $$->addBack(new Descendant($2)); }
+  "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); }
 
 // AbbreviatedRelativeLocationPath	   ::=   	RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
-  RelativeLocationPath "//" Step	             { $1->addBack(new Descendant(new Path($3))); $$ = $1; }
+  RelativeLocationPath "//" Step	             { $$ = $1; $$->addRelativeDescendant($3); }
 
 AbbreviatedStep:
   "."                                            { $$ = $1; }

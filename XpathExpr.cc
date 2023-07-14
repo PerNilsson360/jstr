@@ -55,7 +55,7 @@ StrExpr::getString() const {
 }
 
 // MultiExpr
-MultiExpr::MultiExpr(const XpathExpr* e) {
+MultiExpr::MultiExpr(XpathExpr* e) {
     if (e != nullptr) {
         _exprs.push_back(e);
     }
@@ -69,17 +69,17 @@ MultiExpr::~MultiExpr() {
 }
 
 void
-MultiExpr::addFront(const XpathExpr* e) {
+MultiExpr::addFront(XpathExpr* e) {
   _exprs.push_front(e);
 }
 
 void
-MultiExpr::addBack(const XpathExpr* e) {
+MultiExpr::addBack(XpathExpr* e) {
   _exprs.push_back(e);
 }
 
-const std::list<const XpathExpr*>&
-MultiExpr::getExprs() const {
+std::list<XpathExpr*>&
+MultiExpr::getExprs() {
     return _exprs;
 }
 
@@ -127,7 +127,7 @@ checkLocalName(const Node& n, const std::string& name) {
 }
 
 // Path
-Path::Path(const XpathExpr* e) : MultiExpr(e) {}
+Path::Path(XpathExpr* e) : MultiExpr(e) {}
 
 XpathData
 Path::eval(const XpathData& d, size_t pos, bool firstStep) const {
@@ -141,19 +141,51 @@ Path::eval(const XpathData& d, size_t pos, bool firstStep) const {
     return XpathData(result);
 }
 
-// Step
 
-namespace {
-Step*
-createChildAllStep(const std::string& nodeTest, std::list<const XpathExpr*>* predicates) {
-    if (nodeTest == "*") {
-        return new AllStep(nodeTest, predicates);
+void
+Path::addAbsoluteDescendant() {
+    // The grammar ensures there is at least one step
+    XpathExpr* step = _exprs.front();
+    Step* descendant;
+    if (Step::isAllStep(step)) {
+        Step* s = static_cast<Step*>(step);
+        descendant = new DescendantAll(s->takePredicates());
+        _exprs.pop_front();
+       delete step;
+    } else if (Step::isSelfOrParentStep(step)) {
+        descendant = new DescendantAll(nullptr);
     } else {
-        return new ChildStep(nodeTest, predicates);
+        Step* s = static_cast<Step*>(step);
+        const std::string& stepName = s->getString();
+        descendant = new DescendantSearch(stepName, s->takePredicates());
+        _exprs.pop_front();
+       delete step;
     }
-}
+    _exprs.push_front(descendant);
+    _exprs.push_front(new Root);
 }
 
+void
+Path::addRelativeDescendant(XpathExpr* step) {
+    Step* descendant;
+    if (Step::isAllStep(step)) {
+        Step* s = static_cast<Step*>(step);
+        descendant = new DescendantAll(s->takePredicates());
+       delete step;
+    } else if (Step::isSelfOrParentStep(step)) {
+        descendant = new DescendantAll(nullptr);
+        _exprs.push_back(step);
+    } else {
+        Step* s = static_cast<Step*>(step);
+        const std::string& stepName = s->getString();
+        descendant = new DescendantSearch(stepName, s->takePredicates());
+       delete step;
+    }
+    _exprs.push_back(descendant);
+}
+
+
+// Step
 Step::Step(const std::string& s, const std::list<const XpathExpr*>* preds) :
     StrExpr(s), _preds(preds) {
 }
@@ -194,11 +226,18 @@ Step::evalFilter(std::vector<Node>& result) const {
         }
     }
 }
-    
+
+const std::list<const XpathExpr*>*
+Step::takePredicates() {
+    const std::list<const XpathExpr*>* result = _preds;
+    _preds = nullptr;
+    return result;
+}
+
 XpathExpr*
 Step::create(const std::string& axisName,
-                   const std::string& nodeTest,
-                   std::list<const XpathExpr*>* predicates) {
+             const std::string& nodeTest,
+             std::list<const XpathExpr*>* predicates) {
     if (axisName.empty()) {
         if (nodeTest == "..") {
             return new ParentStep("", predicates);
@@ -215,10 +254,17 @@ Step::create(const std::string& axisName,
     else if (axisName == "ancestor-or-self") {
         return new AncestorSelfStep(nodeTest, predicates);
     } else if (axisName == "child") {
-        return createChildAllStep(nodeTest, predicates);
+        if (nodeTest == "*") {
+            return new AllStep(nodeTest, predicates);
+        } else {
+            return new ChildStep(nodeTest, predicates);
+        }
     } else if (axisName == "descendant") {
-        Step* step = createChildAllStep(nodeTest, predicates);
-        return new Descendant(new Path(step));
+        if (nodeTest == "*") {
+            return new DescendantAll(predicates);
+        } else {
+            return new DescendantSearch(nodeTest, predicates);
+        }
     } else if (axisName == "parent") {
         return new ParentStep(nodeTest, predicates);
     } else if (axisName == "self") {
@@ -393,38 +439,31 @@ Predicate::eval(const XpathData& d, size_t pos, bool firstStep) const {
 }
 
 // Descendant
-Descendant::Descendant(const Path* path) : _path(path) {
+DescendantAll::DescendantAll(const std::list<const XpathExpr*>* preds) : Step("", preds) {
 }
 
-XpathData
-Descendant::eval(const XpathData& d, size_t pos, bool firstStep) const {
-    const std::list<const XpathExpr*>& es = _path->getExprs();
-    std::list<const XpathExpr*>::const_iterator i = es.begin();
-    std::vector<Node> searchResult;
-    const std::vector<Node>& nodeSet = d.getNodeSet();
-    // Dont need to consider first step since // means root if not step infront
-    if (Step::isAllStep(*i)) {
-        for (const Node& n : nodeSet) {
-            n.getSubTreeNodes(searchResult);
-        }
-        i++;
-    } else if (Step::isSelfOrParentStep(*i)) {
-        for (const Node& n : nodeSet) {
-            n.getSubTreeNodes(searchResult);
-        }
-    } else {
-        const Step* s = static_cast<const Step*>(*i);
-        const std::string& stepName = s->getString();
-        for (const Node& n : nodeSet) {
-            n.search(stepName, searchResult);
-        }
-        i++;
+void
+DescendantAll::evalStep(size_t pos,
+                        bool firstStep,
+                        const std::vector<Node>& nodeSet,
+                        std::vector<Node>& result) const {
+    for (const Node& n : nodeSet) {
+        n.getSubTreeNodes(result);
     }
-    XpathData result(searchResult);
-    for (;i != es.end(); ++i) {
-        result = (*i)->eval(result, pos);
+}
+
+DescendantSearch::DescendantSearch(const std::string& s,
+                                   const std::list<const XpathExpr*>* preds) : Step(s, preds) {
+}
+
+void
+DescendantSearch::evalStep(size_t pos,
+                           bool firstStep,
+                           const std::vector<Node>& nodeSet,
+                           std::vector<Node>& result) const {
+    for (const Node& n : nodeSet) {
+        n.search(_s, result);
     }
-    return result;
 }
 
 // Literal
