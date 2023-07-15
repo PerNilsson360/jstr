@@ -31,128 +31,128 @@ testNumbers() {
     // NaN
     {
         nlohmann::json json;
-        XpathData r(eval("'NO'", json));
+        Value r(eval("'NO'", json));
         assert(std::isnan(r.getNumber()));
     }
     // +
     {
         nlohmann::json json;
-        XpathData r(eval("1 + 2", json));
+        Value r(eval("1 + 2", json));
         assert(r.getNumber() == 3);
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("1 + /a", json));
+        Value r(eval("1 + /a", json));
         assert(r.getNumber() == 4);
     }
     {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b + /a/c", json));
+        Value r(eval("/a/b + /a/c", json));
         assert(r.getNumber() == 4);
     }
     // -
     {
         nlohmann::json json;
-        XpathData r(eval("1 - 2", json));
+        Value r(eval("1 - 2", json));
         assert(r.getNumber() == -1);
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("1 - /a", json));
+        Value r(eval("1 - /a", json));
         assert(r.getNumber() == -2);
     }
     {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b - /a/c", json));
+        Value r(eval("/a/b - /a/c", json));
         assert(r.getNumber() == 2);
     }
     // *
     {
         nlohmann::json json;
-        XpathData r(eval("3 * 2", json));
+        Value r(eval("3 * 2", json));
         assert(r.getNumber() == 6);
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("1 * /a", json));
+        Value r(eval("1 * /a", json));
         assert(r.getNumber() == 3);
     }
     {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b * /a/c", json));
+        Value r(eval("/a/b * /a/c", json));
         assert(r.getNumber() == 3);
     }
     // div
     {
         nlohmann::json json;
-        XpathData r(eval("4 div 2", json));
+        Value r(eval("4 div 2", json));
         assert(r.getNumber() == 2);
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("6 div /a", json));
+        Value r(eval("6 div /a", json));
         assert(r.getNumber() == 2);
     }
     {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b div /a/c", json));
+        Value r(eval("/a/b div /a/c", json));
         assert(r.getNumber() == 3);
     }
     // mod
     {
         nlohmann::json json;
-        XpathData r(eval("5 mod 2", json));
+        Value r(eval("5 mod 2", json));
         assert(r.getNumber() == 1);
     }
     {
         nlohmann::json json;
-        XpathData r(eval("5 mod -2", json));
+        Value r(eval("5 mod -2", json));
         assert(r.getNumber() == 1);
     }
     // {
     //  nlohmann::json json;
-    //  XpathData r(eval("5 mod -2", json));
+    //  Value r(eval("5 mod -2", json));
     //  assert(r.getNumber() == -1); // TODO value is 1 should be -1 according to spec
     // }
     {
         nlohmann::json json;
-        XpathData r(eval("-5 mod -2", json));
+        Value r(eval("-5 mod -2", json));
         assert(r.getNumber() == -1);
     }
     // unary -
     {
         nlohmann::json json;
-        XpathData r(eval("4 div (- 2)", json));
+        Value r(eval("4 div (- 2)", json));
         assert(r.getNumber() == -2);
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("-6 div /a", json));
+        Value r(eval("-6 div /a", json));
         assert(r.getNumber() == -2);
     }
     {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("-/a/b div /a/c", json));
+        Value r(eval("-/a/b div /a/c", json));
         assert(r.getNumber() == -3);
     }
 }
@@ -161,63 +161,63 @@ void
 testLogic() {
     {
         nlohmann::json json;
-        XpathData r(eval("true() and true()", json));
+        Value r(eval("true() and true()", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("true() and false()", json));
+        Value r(eval("true() and false()", json));
         assert(!r.getBool());
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a and 1", json));
+        Value r(eval("/a and 1", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("true() or true()", json));
+        Value r(eval("true() or true()", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("false() or false()", json));
+        Value r(eval("false() or false()", json));
         assert(!r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("1 or false()", json));
+        Value r(eval("1 or false()", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("'foo' or false()", json));
+        Value r(eval("'foo' or false()", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("not(false())", json));
+        Value r(eval("not(false())", json));
         assert(r.getBool());
     }
     {
         nlohmann::json json;
-        XpathData r(eval("not(true())", json));
+        Value r(eval("not(true())", json));
         assert(!r.getBool());
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("not(/a and 1)", json));
+        Value r(eval("not(/a and 1)", json));
         assert(!r.getBool());
     }
     {
         // <a><b>1</b><c>true</c><d>foo</d></a>
         const char* j = R"({"a":{"b":1,"c":true,"d":"foo"}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a and /a/b and /a/c and /a/d", json));
+        Value r(eval("/a and /a/b and /a/c and /a/d", json));
         assert(r.getBool());
     }
 }
@@ -228,7 +228,7 @@ testPaths() {
         // <a><b>1</b><b>2</b><b>3</b></a>
         const char* j = R"({"a":{"b":[1, 2, 3]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a/b)", json));
+        Value r(eval("count(/a/b)", json));
         assert(r.getNumber() == 3);
         r = eval("count(/a/b/ancestor::a)", json);
         assert(r.getNumber() == 1);
@@ -259,7 +259,7 @@ testPaths() {
         // <a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a)", json));
+        Value r(eval("count(/a)", json));
         assert(r.getNumber() == 1);
         r = eval("count(/a/b)", json);
         assert(r.getNumber() == 1);
@@ -291,7 +291,7 @@ testPaths() {
         // <a><b>1</b><c>true</c><d>foo</d></a>
         const char* j = R"({"a":{"b":1,"c":true,"d":"foo"}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/*)", json));
+        Value r(eval("count(/*)", json));
         assert(r.getNumber() == 1);
         r = eval("/*", json);
         assert(r.getString() == "1truefoo");
@@ -304,7 +304,7 @@ testPaths() {
         // <a><b><b>1</b></b><b><b>2</b></b><b><c>3</c></b></a>
         const char* j = R"({"a":{"b": [{"b": 1},{"b": 2},{"c":3}]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a/*)", json));
+        Value r(eval("count(/a/*)", json));
         assert(r.getNumber() == 3);
         r = (eval("/a/*", json));
         assert(r.getStringValue() == "123");
@@ -336,7 +336,7 @@ testPaths() {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//a)", json));
+        Value r(eval("count(//a)", json));
         assert(r.getNumber() == 1);
         r = eval("count(//*)", json);
         assert(r.getNumber() == 1);
@@ -349,7 +349,7 @@ testPaths() {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//a)", json));
+        Value r(eval("count(//a)", json));
         assert(r.getNumber() == 1);
         r = eval("count(/descendant::a)", json);
         assert(r.getNumber() == 1);
@@ -368,7 +368,7 @@ testPaths() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//a)", json));
+        Value r(eval("count(//a)", json));
         assert(r.getNumber() == 1);
         r = eval("count(//b)", json);
         assert(r.getNumber() == 1);
@@ -407,7 +407,7 @@ testPaths() {
         // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
         const char* j = R"({"a":{"b":[1,2,3,4]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//b)", json));
+        Value r(eval("count(//b)", json));
         assert(r.getNumber() == 4);
         r = eval("count(/descendant::b)", json);
         assert(r.getNumber() == 4);
@@ -422,7 +422,7 @@ testPaths() {
         // <a><a><a></a>1</a></a>
         const char* j = R"({"a":{"a":{"a":1}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//a)", json));
+        Value r(eval("count(//a)", json));
         assert(r.getNumber() == 3);
          r = eval("count(/descendant::a)", json);
         assert(r.getNumber() == 3);
@@ -446,7 +446,7 @@ testPaths() {
     {
         const char* j = R"({"a":[{"a":1},{"a":2},{"b":3}]})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(//a)", json));
+        Value r(eval("count(//a)", json));
         assert(r.getNumber() == 5);
         r = eval("count(/descendant::a)", json);
         assert(r.getNumber() == 5);
@@ -476,7 +476,7 @@ testRelations() {
     // =
     {
         nlohmann::json json;
-        XpathData r(eval("1 = 1", json));
+        Value r(eval("1 = 1", json));
         assert(r.getBool());
         r = (eval("1 = 2", json));
         assert(!r.getBool());
@@ -497,7 +497,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e = 1", json));
+        Value r(eval("/a/b/c/e = 1", json));
         assert(r.getBool());
         r = eval("/a/b/c/e = '1'", json);
         assert(r.getBool());
@@ -515,7 +515,7 @@ testRelations() {
     // !=
     {
         nlohmann::json json;
-        XpathData r(eval("1 != 1", json));
+        Value r(eval("1 != 1", json));
         assert(!r.getBool());
         r = (eval("1 != 2", json));
         assert(r.getBool());
@@ -536,7 +536,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e != 1", json));
+        Value r(eval("/a/b/c/e != 1", json));
         assert(!r.getBool());
         r = eval("/a/b/c/e != '1'", json);
         assert(!r.getBool());
@@ -554,7 +554,7 @@ testRelations() {
     // <
     {
         nlohmann::json json;
-        XpathData r(eval("1 < 1", json));
+        Value r(eval("1 < 1", json));
         assert(!r.getBool());
         r = (eval("1 < 2", json));
         assert(r.getBool());
@@ -571,7 +571,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e < 2", json));
+        Value r(eval("/a/b/c/e < 2", json));
         assert(r.getBool());
         r = eval("/a/b/c/e < '1'", json);
         assert(!r.getBool());
@@ -592,7 +592,7 @@ testRelations() {
     // <=
     {
         nlohmann::json json;
-        XpathData r(eval("1 <= 1", json));
+        Value r(eval("1 <= 1", json));
         assert(r.getBool());
         r = (eval("1 <= 2", json));
         assert(r.getBool());
@@ -609,7 +609,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e <= 2", json));
+        Value r(eval("/a/b/c/e <= 2", json));
         assert(r.getBool());
         r = eval("/a/b/c/e <= '0.5'", json);
         assert(!r.getBool());
@@ -630,7 +630,7 @@ testRelations() {
     // >
         {
         nlohmann::json json;
-        XpathData r(eval("1 > 1", json));
+        Value r(eval("1 > 1", json));
         assert(!r.getBool());
         r = (eval("2 > 1", json));
         assert(r.getBool());
@@ -647,7 +647,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e > 2", json));
+        Value r(eval("/a/b/c/e > 2", json));
         assert(!r.getBool());
         r = eval("/a/b/c/e > '0.5'", json);
         assert(r.getBool());
@@ -668,7 +668,7 @@ testRelations() {
     // >=
         {
         nlohmann::json json;
-        XpathData r(eval("1 >= 1", json));
+        Value r(eval("1 >= 1", json));
         assert(r.getBool());
         r = (eval("2 >= 1", json));
         assert(r.getBool());
@@ -685,7 +685,7 @@ testRelations() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a/b/c/e >= 0.5", json));
+        Value r(eval("/a/b/c/e >= 0.5", json));
         assert(r.getBool());
         r = eval("/a/b/c/e >= '2'", json);
         assert(!r.getBool());
@@ -711,7 +711,7 @@ testFilter() {
         // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
         const char* j = R"({"a":{"b":[1,2,3,4]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a/b[. = 1])", json));
+        Value r(eval("count(/a/b[. = 1])", json));
         assert(r.getNumber() == 1);
         r = eval("count(/a/b[not(. = 1)])", json);
         assert(r.getNumber() == 3);
@@ -739,7 +739,7 @@ testFilter() {
         //<a><b><c><e>1</e></c></b><d><f><e>1</e></f></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"f":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a/*[count(c) > 0])", json));
+        Value r(eval("count(/a/*[count(c) > 0])", json));
         assert(r.getNumber() == 1);
         r  = eval("count(/a/*/*[local-name(..) = 'b'])", json);
         assert(r.getNumber() == 1);
@@ -750,7 +750,7 @@ testFilter() {
         // <a><b><c><e>1</e></c></b><b><d><e>2</e></d></b></a>
         const char* j = R"({"a":{"b":[{"c":{"e":1}},{"d":{"e":2}}]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("count(/a/b[count(.//e) = 1])", json));
+        Value r(eval("count(/a/b[count(.//e) = 1])", json));
         assert(r.getNumber() == 2);
         r = eval("count(/a/b[count(//e) = 2])", json);
         assert(r.getNumber() == 2);
@@ -769,7 +769,7 @@ testNodeSetFunctions() {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/a[position()=1]", json));
+        Value r(eval("/a[position()=1]", json));
         assert(r.getStringValue() == "3");
         r = eval("/a[position()=last()]", json);
         assert(r.getStringValue() == "3");
@@ -790,7 +790,7 @@ testStringFunctions() {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("string(/)", json));
+        Value r(eval("string(/)", json));
         assert(r.getString() == "3");
         assert(r.getStringValue() == "3");
         r = eval("string(/a)", json);
@@ -800,7 +800,7 @@ testStringFunctions() {
         // <a><b>1</b><c>2</c></a>
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("string(/)", json));
+        Value r(eval("string(/)", json));
         assert(r.getString() == "31");
         r = eval("string(/a)", json);
         assert(r.getString() == "31");
@@ -813,7 +813,7 @@ testStringFunctions() {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("string(/)", json));
+        Value r(eval("string(/)", json));
         assert(r.getString() == "11");
         r = (eval("string(/a)", json));
         assert(r.getString() == "11");
@@ -832,7 +832,7 @@ testStringFunctions() {
         // <a><b>1</b><c>true</c><d>foo</d></a>
         const char* j = R"({"a":{"b":1,"c":true,"d":"foo"}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("string(/)", json));
+        Value r(eval("string(/)", json));
         assert(r.getString() == "1truefoo");
         r = eval("string(/a)", json);
         assert(r.getString() == "1truefoo");
@@ -847,7 +847,7 @@ testStringFunctions() {
         // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
         const char* j = R"({"a":{"b":[1,2,3,4]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("string(/)", json));
+        Value r(eval("string(/)", json));
         assert(r.getString() == "1234");
         r = eval("string(/a)", json);
         assert(r.getString() == "1234");
@@ -864,7 +864,7 @@ testStringValue() {
         // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
         const char* j = R"({"a":{"b":[1,2,3,4]}})";
         nlohmann::json json = nlohmann::json::parse(j);
-        XpathData r(eval("/", json));
+        Value r(eval("/", json));
         assert(r.getStringValue() == "1234");
         r = eval("/a", json);
         assert(r.getString() == "1234");

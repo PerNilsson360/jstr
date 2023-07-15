@@ -24,9 +24,9 @@
 #define _NLJP_HH_
 
 #include <nlohmann/json.hpp>
-#include "XpathData.hh"
+#include "Value.hh"
 
-XpathData
+Value
 eval(const std::string& xpath, const nlohmann::json& json);
 
 #endif

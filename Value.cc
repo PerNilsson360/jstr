@@ -23,33 +23,33 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
-#include "XpathData.hh"
+#include "Value.hh"
 
-XpathData::XpathData() : _type(NodeSet) {
+Value::Value() : _type(NodeSet) {
     _d.ns = new std::vector<Node>();
 }
 
-XpathData::XpathData(const XpathData& xd) {
+Value::Value(const Value& xd) {
     assign(xd);
 }
 
-XpathData::XpathData(XpathData&& xd) {
+Value::Value(Value&& xd) {
     exchange(std::move(xd));
 }
 
-XpathData::XpathData(double n) : _type(Number){
+Value::Value(double n) : _type(Number){
     _d.n = n;
 }
 
-XpathData::XpathData(bool b) : _type(Bool) {
+Value::Value(bool b) : _type(Bool) {
     _d.b = b;
 }
 
-XpathData::XpathData(const std::string& s) : _type(String) {
+Value::Value(const std::string& s) : _type(String) {
     _d.s = new std::string(s);
 }
 
-XpathData::XpathData(const std::string& name, const nlohmann::json& json) :
+Value::Value(const std::string& name, const nlohmann::json& json) :
     _type(NodeSet) {
     _d.ns = new std::vector<Node>();
     if (json.is_array()) {
@@ -61,42 +61,42 @@ XpathData::XpathData(const std::string& name, const nlohmann::json& json) :
     }
 }
 
-XpathData::XpathData(const Node& node) : _type(NodeSet) {
+Value::Value(const Node& node) : _type(NodeSet) {
     _d.ns = new std::vector<Node>();
     _d.ns->emplace_back(Node(node));
 }
 
-XpathData::XpathData(const std::vector<Node>& ns) : _type(NodeSet) {
+Value::Value(const std::vector<Node>& ns) : _type(NodeSet) {
     _d.ns = new std::vector<Node>(ns);
 }
 
-XpathData&
-XpathData::operator=(const XpathData& xd) {
+Value&
+Value::operator=(const Value& xd) {
     assign(xd);
     return *this;
 }
 
-XpathData&
-XpathData::operator=(XpathData&& xd) {
+Value&
+Value::operator=(Value&& xd) {
     exchange(std::move(xd));
     return *this;
 }
 
-XpathData::~XpathData() {
+Value::~Value() {
     clear();
 }
 
-XpathData::Type
-XpathData::getType() const {
+Value::Type
+Value::getType() const {
     return _type;
 }
 
-bool XpathData::isValue() const {
+bool Value::isValue() const {
     return _type != NodeSet || (_d.ns->size() == 1 && (*_d.ns)[0].isValue());
 }
 
 double
-XpathData::getNumber() const {
+Value::getNumber() const {
     switch (_type) {
     case Number: return _d.n;
     case Bool: return _d.b;
@@ -116,24 +116,24 @@ XpathData::getNumber() const {
         return s.empty() ? NAN : std::stod(s);
     }
     default:
-        throw std::runtime_error("XpathData::getNumber(): unkown type");
+        throw std::runtime_error("Value::getNumber(): unkown type");
     }
 }
 
 bool
-XpathData::getBool() const {
+Value::getBool() const {
     switch(_type) {
     case Number: return _d.n;
     case Bool: return _d.b;
     case String: return !_d.s->empty();
     case NodeSet: return !_d.ns->empty();
     default:
-        throw std::runtime_error("XpathData::getBool(): unkown type");
+        throw std::runtime_error("Value::getBool(): unkown type");
     }
 }
 
 std::string
-XpathData::getStringValue() const {
+Value::getStringValue() const {
     switch (_type) {
     case Number:
     case Bool:
@@ -146,12 +146,12 @@ XpathData::getStringValue() const {
         return r;
     }
     default:
-        throw std::runtime_error("XpathData::getString(): unkown type");
+        throw std::runtime_error("Value::getString(): unkown type");
     }
 }
 
 std::string
-XpathData::getString() const {
+Value::getString() const {
     switch (_type) {
     case Number: {
         if (std::isnan(_d.n)) {
@@ -164,51 +164,51 @@ XpathData::getString() const {
     case String: return *(_d.s);
     case NodeSet:  return _d.ns->empty() ? "" : _d.ns->begin()->getString();
     default:
-        throw std::runtime_error("XpathData::getString(): unkown type");
+        throw std::runtime_error("Value::getString(): unkown type");
     }
 }
 
 const std::vector<Node>&
-XpathData::getNodeSet() const {
+Value::getNodeSet() const {
     return *_d.ns;
 }
 
-XpathData
-XpathData::getNodeSetSize() const {
+Value
+Value::getNodeSetSize() const {
     switch(_type) {
     case Number:
     case Bool:
-    case String: return XpathData(static_cast<double>(1));
-    case NodeSet: return XpathData(static_cast<double>(_d.ns->size()));
+    case String: return Value(static_cast<double>(1));
+    case NodeSet: return Value(static_cast<double>(_d.ns->size()));
     default:
-        throw std::runtime_error("XpathData::getNodeSetSize(): unkown type");
+        throw std::runtime_error("Value::getNodeSetSize(): unkown type");
     }
 }
 
-XpathData
-XpathData::getLocalName() const {
+Value
+Value::getLocalName() const {
     if (_type == NodeSet && !_d.ns->empty()) {
-        return XpathData(_d.ns->begin()->getLocalName());
+        return Value(_d.ns->begin()->getLocalName());
     } else {
-        return XpathData("");
+        return Value("");
     }
 }
 
-XpathData
-XpathData::getRoot() const {
+Value
+Value::getRoot() const {
     if (_type != NodeSet) {
         std::stringstream ss;
-        ss << "XpathData::getRoot() node set is not NodeSet: " << _type << std::endl;
+        ss << "Value::getRoot() node set is not NodeSet: " << _type << std::endl;
         throw std::runtime_error(ss.str());
     }
     if (_d.ns->empty()) {
-        throw std::runtime_error("XpathData::getRoot() node set is empty");
+        throw std::runtime_error("Value::getRoot() node set is empty");
     }
-    return XpathData(_d.ns->begin()->getRoot());
+    return Value(_d.ns->begin()->getRoot());
 }
 
 bool
-XpathData::operator==(const XpathData& xd) const {
+Value::operator==(const Value& xd) const {
     if (_type == NodeSet && xd._type == NodeSet) {
         for (const Node& l : getNodeSet()) {
             if (xd == l.getString()) {
@@ -221,14 +221,14 @@ XpathData::operator==(const XpathData& xd) const {
         case Number: return *this == xd.getNumber();
         case Bool: return *this == xd.getBool();
         case String: return *this == xd.getString();
-        default: throw std::runtime_error("XpathData::operator==, unkown type _type==NodeSet");
+        default: throw std::runtime_error("Value::operator==, unkown type _type==NodeSet");
         }
     } else if (xd._type == NodeSet){
         switch (_type) {
         case Number: return xd == getNumber();
         case Bool: return xd == getBool();
         case String: return xd == getString();
-        default: throw std::runtime_error("XpathData::operator==, unkown type xd._type==NodeSet");
+        default: throw std::runtime_error("Value::operator==, unkown type xd._type==NodeSet");
         }
     } else if (_type == Bool || xd._type == Bool) {
         return getBool() == xd.getBool();
@@ -240,7 +240,7 @@ XpathData::operator==(const XpathData& xd) const {
 }
 
 bool
-XpathData::operator!=(const XpathData& xd) const {
+Value::operator!=(const Value& xd) const {
     if (_type == NodeSet && xd._type == NodeSet) {
         for (const Node& l : getNodeSet()) {
             if (xd != l.getString()) {
@@ -253,14 +253,14 @@ XpathData::operator!=(const XpathData& xd) const {
         case Number: return *this != xd.getNumber();
         case Bool: return *this != xd.getBool();
         case String: return *this != xd.getString();
-        default: throw std::runtime_error("XpathData::operator!=, unkown type _type==NodeSet");
+        default: throw std::runtime_error("Value::operator!=, unkown type _type==NodeSet");
         }
     } else if (xd._type == NodeSet){
         switch (_type) {
         case Number: return xd != getNumber();
         case Bool: return xd != getBool();
         case String: return xd != getString();
-        default: throw std::runtime_error("XpathData::operator!=, unkown type xd._type==NodeSet");
+        default: throw std::runtime_error("Value::operator!=, unkown type xd._type==NodeSet");
         }
     } else if (_type == Bool || xd._type == Bool) {
         return getBool() != xd.getBool();
@@ -271,36 +271,36 @@ XpathData::operator!=(const XpathData& xd) const {
     }
 }
 
-bool XpathData::operator<(const XpathData& xd) const {
+bool Value::operator<(const Value& xd) const {
     checkOrderingRelationArgs(xd);
     return getNumber() < xd.getNumber();
 }
 
-bool XpathData::operator<=(const XpathData& xd) const {
+bool Value::operator<=(const Value& xd) const {
     checkOrderingRelationArgs(xd);
     return getNumber() <= xd.getNumber();
 }
 
-bool XpathData::operator>(const XpathData& xd) const {
+bool Value::operator>(const Value& xd) const {
     checkOrderingRelationArgs(xd);
     return getNumber() > xd.getNumber();
 }
 
-bool XpathData::operator>=(const XpathData& xd) const {
+bool Value::operator>=(const Value& xd) const {
     checkOrderingRelationArgs(xd);
     return getNumber() >= xd.getNumber();
 }
 
 void
-XpathData::checkOrderingRelationArgs(const XpathData& xd) const {
+Value::checkOrderingRelationArgs(const Value& xd) const {
     if (!isValue() || !xd.isValue()) {
-        std::string m("XpathData::checkOrderingRelationArgs, can not compare node sets");
+        std::string m("Value::checkOrderingRelationArgs, can not compare node sets");
         throw std::runtime_error(m);
     }
 }
 
 void
-XpathData::assign(const XpathData& xd) {
+Value::assign(const Value& xd) {
     clear();
     _type = xd._type;
     switch(_type) {
@@ -317,12 +317,12 @@ XpathData::assign(const XpathData& xd) {
         _d.ns = new std::vector<Node>(*xd._d.ns);
         break;
     default:
-        throw std::runtime_error("XpathData::assign: unkown type");
+        throw std::runtime_error("Value::assign: unkown type");
     }
 }
 
 void
-XpathData::exchange(XpathData&& xd) {
+Value::exchange(Value&& xd) {
     _type = xd._type;
     switch(_type) {
     case Number:
@@ -338,12 +338,12 @@ XpathData::exchange(XpathData&& xd) {
         _d.ns = std::exchange(xd._d.ns, nullptr);
         break;
     default:
-        throw std::runtime_error("XpathData::exchange: unkown type");
+        throw std::runtime_error("Value::exchange: unkown type");
     }
 }
 
 void
-XpathData::clear() {
+Value::clear() {
     switch (_type) {
     case String:
         delete _d.s;

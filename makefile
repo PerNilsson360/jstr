@@ -37,15 +37,15 @@ nljp.o: nljp.hh nljp.cc
 Node.o: Node.hh Node.cc
 	g++ -g -c Node.cc
 
-XpathData.o: XpathData.hh XpathData.cc
-	g++ -g -c XpathData.cc
+Value.o: Value.hh Value.cc
+	g++ -g -c Value.cc
 
 XpathExpr.o: XpathExpr.hh XpathExpr.cc
 	g++ -g -c XpathExpr.cc
 
-test: lex.yy.c xpath10_parser.tab.cpp xpath10_parser.tab.h xpath10_driver.cc test.cc XpathData.o XpathExpr.o Node.o nljp.o
-	g++ -g -o test test.cc xpath10_parser.tab.cpp lex.yy.c xpath10_driver.cc XpathData.o XpathExpr.o Node.o nljp.o
+test: lex.yy.c xpath10_parser.tab.cpp xpath10_parser.tab.h xpath10_driver.cc test.cc Value.o XpathExpr.o Node.o nljp.o
+	g++ -g -o test test.cc xpath10_parser.tab.cpp lex.yy.c xpath10_driver.cc Value.o XpathExpr.o Node.o nljp.o
 
 clean:
-	rm test xpath10_parser.tab.cpp lex.yy.c xpath10_parser.tab.h xpath10_parser.output location.hh position.hh stack.hh XpathData.o XpathExpr.o Node.o nljp.o *~
+	rm test xpath10_parser.tab.cpp lex.yy.c xpath10_parser.tab.h xpath10_parser.output location.hh position.hh stack.hh Value.o XpathExpr.o Node.o nljp.o *~
 

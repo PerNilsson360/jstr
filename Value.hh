@@ -20,14 +20,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef _XPATH_DATA_HH_
-#define _XPATH_DATA_HH_
+#ifndef _VALUE_HH_
+#define _VALUE_HH_
 
 #include <vector>
 #include <string>
 #include "Node.hh"
 
-class XpathData {
+class Value {
 public:
     enum Type {
         Number,
@@ -35,18 +35,18 @@ public:
         String,
         NodeSet
     };
-    XpathData();
-    XpathData(const XpathData& xd);
-    XpathData(XpathData&& xd);
-    XpathData(double d);
-    XpathData(bool b);
-    XpathData(const std::string& s);
-    XpathData(const std::string& name, const nlohmann::json& json);
-    XpathData(const Node& node);
-    XpathData(const std::vector<Node>& ns);
-    XpathData& operator=(const XpathData& xd);
-    XpathData& operator=(XpathData&& xd);
-    ~XpathData();
+    Value();
+    Value(const Value& xd);
+    Value(Value&& xd);
+    Value(double d);
+    Value(bool b);
+    Value(const std::string& s);
+    Value(const std::string& name, const nlohmann::json& json);
+    Value(const Node& node);
+    Value(const std::vector<Node>& ns);
+    Value& operator=(const Value& xd);
+    Value& operator=(Value&& xd);
+    ~Value();
     Type getType() const;
     /**
      * @return true if this object represents a literal or a single node with a value.
@@ -71,19 +71,19 @@ public:
      */
     std::string getStringValue() const;
     const std::vector<Node>& getNodeSet() const;
-    XpathData getNodeSetSize() const;
-    XpathData getLocalName() const;
-    XpathData getRoot() const;
-    bool operator==(const XpathData& xd) const;
-    bool operator!=(const XpathData& xd) const;
-    bool operator<(const XpathData& xd) const;
-    bool operator<=(const XpathData& xd) const;
-    bool operator>(const XpathData& xd) const;
-    bool operator>=(const XpathData& xd) const;
+    Value getNodeSetSize() const;
+    Value getLocalName() const;
+    Value getRoot() const;
+    bool operator==(const Value& xd) const;
+    bool operator!=(const Value& xd) const;
+    bool operator<(const Value& xd) const;
+    bool operator<=(const Value& xd) const;
+    bool operator>(const Value& xd) const;
+    bool operator>=(const Value& xd) const;
 private:
-    void checkOrderingRelationArgs(const XpathData& xd) const;
-    void assign(const XpathData& xd);
-    void exchange(XpathData&& xd);
+    void checkOrderingRelationArgs(const Value& xd) const;
+    void assign(const Value& xd);
+    void exchange(Value&& xd);
     void clear();
     Type _type;
     union Data {
@@ -96,7 +96,7 @@ private:
 
 inline
 bool
-operator==(const XpathData& xd, double d) {
+operator==(const Value& xd, double d) {
     const std::vector<Node>& ns = xd.getNodeSet();
     for (const Node& l : xd.getNodeSet()) {
         if (l.getNumber() == d) {
@@ -108,7 +108,7 @@ operator==(const XpathData& xd, double d) {
 
 inline
 bool
-operator==(const XpathData& xd, const std::string& s) {
+operator==(const Value& xd, const std::string& s) {
     const std::vector<Node>& ns = xd.getNodeSet();
     for (const Node& l : xd.getNodeSet()) {
         const std::string& ls = l.getString();
@@ -121,7 +121,7 @@ operator==(const XpathData& xd, const std::string& s) {
 
 inline
 bool
-operator==(const XpathData& xd, bool b) {
+operator==(const Value& xd, bool b) {
     for (const Node& l : xd.getNodeSet()) {
         if (l.getBool() == b) {
             return true;
@@ -132,7 +132,7 @@ operator==(const XpathData& xd, bool b) {
 
 inline
 bool
-operator!=(const XpathData& xd, double d) {
+operator!=(const Value& xd, double d) {
     const std::vector<Node>& ns = xd.getNodeSet();
     for (const Node& l : xd.getNodeSet()) {
         if (l.getNumber() != d) {
@@ -144,7 +144,7 @@ operator!=(const XpathData& xd, double d) {
 
 inline
 bool
-operator!=(const XpathData& xd, const std::string& s) {
+operator!=(const Value& xd, const std::string& s) {
     const std::vector<Node>& ns = xd.getNodeSet();
     for (const Node& l : xd.getNodeSet()) {
         const std::string& ls = l.getString();
@@ -157,7 +157,7 @@ operator!=(const XpathData& xd, const std::string& s) {
 
 inline
 bool
-operator!=(const XpathData& xd, bool b) {
+operator!=(const Value& xd, bool b) {
     for (const Node& l : xd.getNodeSet()) {
         if (l.getBool() != b) {
             return true;
@@ -168,19 +168,19 @@ operator!=(const XpathData& xd, bool b) {
 
 inline
 std::ostream&
-operator<<(std::ostream& os, const XpathData& xd) {
-    XpathData::Type type = xd.getType();
+operator<<(std::ostream& os, const Value& xd) {
+    Value::Type type = xd.getType();
     switch(type) {
-    case XpathData::Number:
+    case Value::Number:
         os << "Number: " << xd.getNumber();
         break;
-    case XpathData::Bool:
+    case Value::Bool:
         os << "Bool: " << xd.getBool();
         break;
-    case XpathData::String:
+    case Value::String:
         os << "String: " << xd.getString();
         break;
-    case XpathData::NodeSet: {
+    case Value::NodeSet: {
         os << xd.getNodeSet();
     }
         break;
