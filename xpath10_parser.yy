@@ -31,7 +31,7 @@
 
 #include <iostream>
 #include <string>
-#include "XpathExpr.hh"  
+#include "Expr.hh"  
 class xpath10_driver;
 inline std::string stripLiteral(const std::string& s) {
 	size_t len = s.size();
@@ -112,30 +112,30 @@ inline std::string stripLiteral(const std::string& s) {
 %type  <Path*> LocationPath
 %type  <Path*> AbsoluteLocationPath
 %type  <Path*> RelativeLocationPath
-%type  <XpathExpr*> Step
+%type  <Expr*> Step
 %type  <std::string> NodeTest
-%type  <std::list<const XpathExpr*>*> Predicates
-%type  <const XpathExpr*> Predicate
-%type  <XpathExpr*> PredicateExpr
+%type  <std::list<const Expr*>*> Predicates
+%type  <const Expr*> Predicate
+%type  <Expr*> PredicateExpr
 %type  <Path*> AbbreviatedAbsoluteLocationPath
 %type  <Path*> AbbreviatedRelativeLocationPath
 %type  <std::string> AbbreviatedStep
 %type  <std::string> AxisSpecifier
 %type  <std::string> AxisName
-%type  <XpathExpr*> Expr
-%type  <XpathExpr*> PrimaryExpr
+%type  <Expr*> Expr
+%type  <Expr*> PrimaryExpr
 %type  <Fun*> FunctionCall
-%type  <std::list<const XpathExpr*>*> Arguments
-%type  <XpathExpr*> UnionExpr
-%type  <XpathExpr*> PathExpr
-%type  <XpathExpr*> FilterExpr
-%type  <XpathExpr*> OrExpr
-%type  <XpathExpr*> AndExpr
-%type  <XpathExpr*> EqualityExpr
-%type  <XpathExpr*> RelationalExpr
-%type  <XpathExpr*> AdditiveExpr
-%type  <XpathExpr*> MultiplicativeExpr
-%type  <XpathExpr*> UnaryExpr
+%type  <std::list<const Expr*>*> Arguments
+%type  <Expr*> UnionExpr
+%type  <Expr*> PathExpr
+%type  <Expr*> FilterExpr
+%type  <Expr*> OrExpr
+%type  <Expr*> AndExpr
+%type  <Expr*> EqualityExpr
+%type  <Expr*> RelationalExpr
+%type  <Expr*> AdditiveExpr
+%type  <Expr*> MultiplicativeExpr
+%type  <Expr*> UnaryExpr
 %type  <std::string> NameTest
 %type  <std::string> FunctionName
 
@@ -207,7 +207,7 @@ NodeTest :
 //| "processing-instruction" "(" Literal ")"     {}
 
 Predicates:
-  Predicate                                      { $$ = new std::list<const XpathExpr*>(1, $1); }
+  Predicate                                      { $$ = new std::list<const Expr*>(1, $1); }
 | Predicate Predicates                           { $2->push_front($1); $$ = $2; }
 
 Predicate:
@@ -248,7 +248,7 @@ FunctionCall :
 
 //[17]   	Argument	   ::=   	Expr
 Arguments :
-  Expr                                           { $$ = new std::list<const XpathExpr*>(1, $1); }
+  Expr                                           { $$ = new std::list<const Expr*>(1, $1); }
 | Expr "," Arguments                             { $3->push_front($1); $$ = $3; }
 
 UnionExpr :

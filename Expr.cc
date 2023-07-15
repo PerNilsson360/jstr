@@ -22,15 +22,15 @@
 
 #include <iostream>
 #include <sstream>
-#include "XpathExpr.hh"
+#include "Expr.hh"
 #include "Value.hh"
 
 namespace {
     
 void
-deleteExprs(const std::list<const XpathExpr*>* l) {
+deleteExprs(const std::list<const Expr*>* l) {
     if (l != nullptr) {
-        for (const XpathExpr* e : *l) {
+        for (const Expr* e : *l) {
             delete e;
         }
         delete l;
@@ -40,10 +40,10 @@ deleteExprs(const std::list<const XpathExpr*>* l) {
 }
 
 // UnaryExpr
-UnaryExpr::UnaryExpr(const XpathExpr* e) : _e(e) {}
+UnaryExpr::UnaryExpr(const Expr* e) : _e(e) {}
 
 // BinaryExpr
-BinaryExpr::BinaryExpr(const XpathExpr* l, const XpathExpr* r) : _l(l), _r(r) {}
+BinaryExpr::BinaryExpr(const Expr* l, const Expr* r) : _l(l), _r(r) {}
 
 // StrExpr
 StrExpr::StrExpr(const std::string& s) : _s(s) {
@@ -55,30 +55,30 @@ StrExpr::getString() const {
 }
 
 // MultiExpr
-MultiExpr::MultiExpr(XpathExpr* e) {
+MultiExpr::MultiExpr(Expr* e) {
     if (e != nullptr) {
         _exprs.push_back(e);
     }
 }
 
 MultiExpr::~MultiExpr() {
-    for (const XpathExpr* e : _exprs) {
+    for (const Expr* e : _exprs) {
         delete e;
     }
     _exprs.clear();
 }
 
 void
-MultiExpr::addFront(XpathExpr* e) {
+MultiExpr::addFront(Expr* e) {
   _exprs.push_front(e);
 }
 
 void
-MultiExpr::addBack(XpathExpr* e) {
+MultiExpr::addBack(Expr* e) {
   _exprs.push_back(e);
 }
 
-std::list<XpathExpr*>&
+std::list<Expr*>&
 MultiExpr::getExprs() {
     return _exprs;
 }
@@ -127,13 +127,13 @@ checkLocalName(const Node& n, const std::string& name) {
 }
 
 // Path
-Path::Path(XpathExpr* e) : MultiExpr(e) {}
+Path::Path(Expr* e) : MultiExpr(e) {}
 
 Value
 Path::eval(const Value& d, size_t pos, bool firstStep) const {
     std::vector<Node> result = d.getNodeSet();
     bool first(true);
-    for (const XpathExpr* e : _exprs) {
+    for (const Expr* e : _exprs) {
         const Value& tmp = e->eval(result, pos, first);
         result = tmp.getNodeSet();
         first = false;
@@ -145,7 +145,7 @@ Path::eval(const Value& d, size_t pos, bool firstStep) const {
 void
 Path::addAbsoluteDescendant() {
     // The grammar ensures there is at least one step
-    XpathExpr* step = _exprs.front();
+    Expr* step = _exprs.front();
     Step* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
@@ -166,7 +166,7 @@ Path::addAbsoluteDescendant() {
 }
 
 void
-Path::addRelativeDescendant(XpathExpr* step) {
+Path::addRelativeDescendant(Expr* step) {
     Step* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
@@ -186,7 +186,7 @@ Path::addRelativeDescendant(XpathExpr* step) {
 
 
 // Step
-Step::Step(const std::string& s, const std::list<const XpathExpr*>* preds) :
+Step::Step(const std::string& s, const std::list<const Expr*>* preds) :
     StrExpr(s), _preds(preds) {
 }
 
@@ -208,7 +208,7 @@ Step::eval(const Value& d, size_t pos, bool firstStep) const {
 void
 Step::evalFilter(std::vector<Node>& result) const {
     if (_preds != nullptr) {
-        for (const XpathExpr* e : *_preds) {
+        for (const Expr* e : *_preds) {
             std::vector<size_t> keepIndexes;
             for (int i = 0; i < result.size(); i++) {
                 Value r = e->eval(result, i);
@@ -227,17 +227,17 @@ Step::evalFilter(std::vector<Node>& result) const {
     }
 }
 
-const std::list<const XpathExpr*>*
+const std::list<const Expr*>*
 Step::takePredicates() {
-    const std::list<const XpathExpr*>* result = _preds;
+    const std::list<const Expr*>* result = _preds;
     _preds = nullptr;
     return result;
 }
 
-XpathExpr*
+Expr*
 Step::create(const std::string& axisName,
              const std::string& nodeTest,
-             std::list<const XpathExpr*>* predicates) {
+             std::list<const Expr*>* predicates) {
     if (axisName.empty()) {
         if (nodeTest == "..") {
             return new ParentStep("", predicates);
@@ -286,16 +286,16 @@ Step::create(const std::string& axisName,
     }
 }
 
-bool Step::isAllStep(const XpathExpr* step) {
+bool Step::isAllStep(const Expr* step) {
     return dynamic_cast<const AllStep*>(step) != nullptr;
 }
-bool Step::isSelfOrParentStep(const XpathExpr* step) {
+bool Step::isSelfOrParentStep(const Expr* step) {
     return
         dynamic_cast<const SelfStep*>(step) != nullptr ||
         dynamic_cast<const ParentStep*>(step) != nullptr;
 }
 
-AncestorStep::AncestorStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+AncestorStep::AncestorStep(const std::string& s, const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -328,7 +328,7 @@ AncestorStep::evalStep(size_t pos,
 }
 
 AncestorSelfStep::AncestorSelfStep(const std::string& s,
-                                   const std::list<const XpathExpr*>* preds) :
+                                   const std::list<const Expr*>* preds) :
     AncestorStep(s, preds) {
 }
 
@@ -352,7 +352,7 @@ AncestorSelfStep::evalStep(size_t pos,
     }
 }
 
-AllStep::AllStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+AllStep::AllStep(const std::string& s, const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -371,7 +371,7 @@ AllStep::evalStep(size_t pos,
     }
 }
 
-ChildStep::ChildStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+ChildStep::ChildStep(const std::string& s, const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -390,7 +390,7 @@ ChildStep::evalStep(size_t pos,
     }
 }
 
-ParentStep::ParentStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+ParentStep::ParentStep(const std::string& s, const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -415,7 +415,7 @@ ParentStep::evalStep(size_t pos,
     }
 }
 
-SelfStep::SelfStep(const std::string& s, const std::list<const XpathExpr*>* preds) :
+SelfStep::SelfStep(const std::string& s, const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -443,7 +443,7 @@ SelfStep::evalStep(size_t pos,
 }
 
 // Predicate
-Predicate::Predicate(const XpathExpr* e) : UnaryExpr(e) {}
+Predicate::Predicate(const Expr* e) : UnaryExpr(e) {}
 
 Value
 Predicate::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -451,7 +451,7 @@ Predicate::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Descendant
-DescendantAll::DescendantAll(const std::list<const XpathExpr*>* preds) : Step("", preds) {
+DescendantAll::DescendantAll(const std::list<const Expr*>* preds) : Step("", preds) {
 }
 
 void
@@ -464,7 +464,7 @@ DescendantAll::evalStep(size_t pos,
     }
 }
 
-DescendantOrSelfAll::DescendantOrSelfAll(const std::list<const XpathExpr*>* preds) :
+DescendantOrSelfAll::DescendantOrSelfAll(const std::list<const Expr*>* preds) :
     DescendantAll(preds) {
 }
 
@@ -482,7 +482,7 @@ DescendantOrSelfAll::evalStep(size_t pos,
 
 
 DescendantSearch::DescendantSearch(const std::string& s,
-                                   const std::list<const XpathExpr*>* preds) : Step(s, preds) {
+                                   const std::list<const Expr*>* preds) : Step(s, preds) {
 }
 
 void
@@ -496,7 +496,7 @@ DescendantSearch::evalStep(size_t pos,
 }
 
 DescendantOrSelfSearch::DescendantOrSelfSearch(const std::string& s,
-                                               const std::list<const XpathExpr*>* preds) :
+                                               const std::list<const Expr*>* preds) :
     DescendantSearch(s, preds) {
 }
 
@@ -529,7 +529,7 @@ findPosition(const Node& node, std::vector<Node>& children) {
 }
 }
 
-FollowingSiblingAll::FollowingSiblingAll(const std::list<const XpathExpr*>* preds) :
+FollowingSiblingAll::FollowingSiblingAll(const std::list<const Expr*>* preds) :
     Step("", preds) {
 }
 
@@ -556,7 +556,7 @@ FollowingSiblingAll::evalStep(size_t pos,
 }
 
 FollowingSiblingSearch::FollowingSiblingSearch(const std::string& s,
-                                               const std::list<const XpathExpr*>* preds) :
+                                               const std::list<const Expr*>* preds) :
     Step(s, preds) {
 }
 
@@ -602,7 +602,7 @@ Number::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Fun
-Fun::Fun(const std::string& name, const std::list<const XpathExpr*>* args) :
+Fun::Fun(const std::string& name, const std::list<const Expr*>* args) :
     _name(name), _args(args) {
 }
 
@@ -623,22 +623,22 @@ Fun::eval(const Value& d, size_t pos, bool firstStep) const {
         return Value(position);
     }else if (_name == "count") {
         checkArgs(1);
-        std::list<const XpathExpr*>::const_iterator i = _args->begin();
+        std::list<const Expr*>::const_iterator i = _args->begin();
         Value arg = (*i)->eval(d, pos);
         return arg.getNodeSetSize();
     } else if (_name == "local-name") {
         checkArgs(1);
-        std::list<const XpathExpr*>::const_iterator i = _args->begin();
+        std::list<const Expr*>::const_iterator i = _args->begin();
         Value arg = (*i)->eval(d, pos);
         return arg.getLocalName();
     } else if (_name == "string") {
         checkArgs(1);           // TODO support 0 args
-        std::list<const XpathExpr*>::const_iterator i = _args->begin();
+        std::list<const Expr*>::const_iterator i = _args->begin();
         Value arg = (*i)->eval(d, pos);
         return Value(arg.getString());
     } else if (_name == "not") {
         checkArgs(1);
-        std::list<const XpathExpr*>::const_iterator i = _args->begin();
+        std::list<const Expr*>::const_iterator i = _args->begin();
         Value arg = (*i)->eval(d, pos);
         return Value(!arg.getBool());
     } else if (_name == "true") {
@@ -667,7 +667,7 @@ Fun::checkArgs(size_t expectedSize) const {
 }
 
 // Union
-Union::Union(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Union::Union(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Union::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -675,7 +675,7 @@ Union::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Or
-Or::Or(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Or::Or(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Or::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -685,7 +685,7 @@ Or::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // And
-And::And(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+And::And(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 And::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -695,7 +695,7 @@ And::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Eq
-Eq::Eq(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Eq::Eq(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Eq::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -706,7 +706,7 @@ Eq::eval(const Value& d, size_t pos, bool firstStep) const {
 
 
 // Ne
-Ne::Ne(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Ne::Ne(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Ne::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -716,7 +716,7 @@ Ne::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Lt
-Lt::Lt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Lt::Lt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Lt::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -726,7 +726,7 @@ Lt::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Gt
-Gt::Gt(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Gt::Gt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Gt::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -736,7 +736,7 @@ Gt::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Le
-Le::Le(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Le::Le(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Le::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -746,7 +746,7 @@ Le::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Ge
-Ge::Ge(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Ge::Ge(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Ge::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -757,7 +757,7 @@ Ge::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Plus
-Plus::Plus(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Plus::Plus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Plus::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -767,7 +767,7 @@ Plus::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Minus
-Minus::Minus(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Minus::Minus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Minus::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -780,7 +780,7 @@ Minus::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Mul
-Mul::Mul(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Mul::Mul(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Mul::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -790,7 +790,7 @@ Mul::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Div
-Div::Div(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Div::Div(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Div::eval(const Value& d, size_t pos, bool firstStep) const {
@@ -800,7 +800,7 @@ Div::eval(const Value& d, size_t pos, bool firstStep) const {
 }
 
 // Mod
-Mod::Mod(const XpathExpr* l, const XpathExpr* r) : BinaryExpr(l, r) {}
+Mod::Mod(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Mod::eval(const Value& d, size_t pos, bool firstStep) const {

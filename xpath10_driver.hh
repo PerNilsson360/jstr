@@ -45,7 +45,7 @@ public:
     // Return 0 on success.
     int parse(const std::string& xpath);
     // Used later to pass the file name to the location tracker.
-    std::unique_ptr<const XpathExpr> result;
+    std::unique_ptr<const Expr> result;
     std::string xpath;
     // Whether parser traces should be generated.
     bool trace_parsing;
