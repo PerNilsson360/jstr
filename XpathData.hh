@@ -37,6 +37,7 @@ public:
     };
     XpathData();
     XpathData(const XpathData& xd);
+    XpathData(XpathData&& xd);
     XpathData(double d);
     XpathData(bool b);
     XpathData(const std::string& s);
@@ -44,6 +45,7 @@ public:
     XpathData(const Node& node);
     XpathData(const std::vector<Node>& ns);
     XpathData& operator=(const XpathData& xd);
+    XpathData& operator=(XpathData&& xd);
     ~XpathData();
     Type getType() const;
     /**
@@ -81,6 +83,7 @@ public:
 private:
     void checkOrderingRelationArgs(const XpathData& xd) const;
     void assign(const XpathData& xd);
+    void exchange(XpathData&& xd);
     void clear();
     Type _type;
     union Data {

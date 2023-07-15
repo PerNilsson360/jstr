@@ -33,6 +33,10 @@ XpathData::XpathData(const XpathData& xd) {
     assign(xd);
 }
 
+XpathData::XpathData(XpathData&& xd) {
+    exchange(std::move(xd));
+}
+
 XpathData::XpathData(double n) : _type(Number){
     _d.n = n;
 }
@@ -69,6 +73,12 @@ XpathData::XpathData(const std::vector<Node>& ns) : _type(NodeSet) {
 XpathData&
 XpathData::operator=(const XpathData& xd) {
     assign(xd);
+    return *this;
+}
+
+XpathData&
+XpathData::operator=(XpathData&& xd) {
+    exchange(std::move(xd));
     return *this;
 }
 
@@ -308,6 +318,27 @@ XpathData::assign(const XpathData& xd) {
         break;
     default:
         throw std::runtime_error("XpathData::assign: unkown type");
+    }
+}
+
+void
+XpathData::exchange(XpathData&& xd) {
+    _type = xd._type;
+    switch(_type) {
+    case Number:
+        _d.n = xd._d.n;
+        break;
+    case Bool:
+        _d.b = xd._d.b;
+        break;
+    case String:
+        _d.s = std::exchange(xd._d.s, nullptr);
+        break;
+    case NodeSet:
+        _d.ns = std::exchange(xd._d.ns, nullptr);
+        break;
+    default:
+        throw std::runtime_error("XpathData::exchange: unkown type");
     }
 }
 
