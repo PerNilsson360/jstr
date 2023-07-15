@@ -242,7 +242,7 @@ Node::search(const std::string& name, std::vector<Node>& result) const {
 
 bool
 Node::operator==(const Node& r) const {
-    return _json == r._json;
+    return _json == r._json && _i == r._i;
 }
 
 void

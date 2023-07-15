@@ -271,6 +271,12 @@ Step::create(const std::string& axisName,
         } else {
             return new DescendantOrSelfSearch(nodeTest, predicates);
         }
+    } else if (axisName == "following-sibling") {
+        if (nodeTest == "*") {
+            return new FollowingSiblingAll(predicates);
+        } else {
+            return new FollowingSiblingSearch(nodeTest, predicates);
+        }
     } else if (axisName == "parent") {
         return new ParentStep(nodeTest, predicates);
     } else if (axisName == "self") {
@@ -503,6 +509,80 @@ DescendantOrSelfSearch::evalStep(size_t pos,
         result.emplace_back(n);
     }
     DescendantSearch::evalStep(pos, firstStep, nodeSet, result);
+}
+
+// FollowingSibling
+namespace {
+size_t
+findPosition(const Node& node, std::vector<Node>& children) {
+    size_t i = 0;
+    size_t size = children.size();
+    for (; i < size; i++) {
+        if (node == children[i]) {
+            break;
+        }
+    }
+    if (i > size) {
+        throw std::runtime_error("findPosition: could not find child in node set.");
+    }
+    return i;
+}
+}
+
+FollowingSiblingAll::FollowingSiblingAll(const std::list<const XpathExpr*>* preds) :
+    Step("", preds) {
+}
+
+void
+FollowingSiblingAll::evalStep(size_t pos,
+                               bool firstStep,
+                               const std::vector<Node>& nodeSet,
+                               std::vector<Node>& result) const {
+    if (!firstStep) {
+        // All nodes in this node set must have same parent right!
+        pos = 0;
+    }
+    const Node& node = nodeSet[pos];
+    const Node* parent = node.getParent();
+    if (parent == nullptr) {
+        return;
+    }
+    std::vector<Node> children;
+    parent->getChildren(children);
+    size_t position = findPosition(node, children) + 1; // skip the current node
+    for (size_t i = position, size = children.size(); i < size; i++) {
+        result.emplace_back(children[i]);
+    }
+}
+
+FollowingSiblingSearch::FollowingSiblingSearch(const std::string& s,
+                                               const std::list<const XpathExpr*>* preds) :
+    Step(s, preds) {
+}
+
+void
+FollowingSiblingSearch::evalStep(size_t pos,
+                                 bool firstStep,
+                                 const std::vector<Node>& nodeSet,
+                                 std::vector<Node>& result) const {
+    if (!firstStep) {
+        // All nodes in this node set must have same parent right!
+        pos = 0;
+    }
+    const Node& node = nodeSet[pos];
+    const Node* parent = node.getParent();
+    if (parent == nullptr) {
+        return;
+    }
+    std::vector<Node> children;
+    parent->getChildren(children);
+    size_t position = findPosition(node, children) + 1; // skip first node
+    for (size_t i = position, size = children.size(); i < size; i++) {
+        const Node& child = children[i];
+        if (child.getLocalName() == _s) {
+            result.emplace_back(child);
+        }
+    }
 }
 
 // Literal

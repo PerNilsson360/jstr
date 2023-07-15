@@ -308,6 +308,28 @@ testPaths() {
         assert(r.getNumber() == 3);
         r = (eval("/a/*", json));
         assert(r.getStringValue() == "123");
+        r = (eval("count(/a/b/*)", json));
+        assert(r.getNumber() == 3);
+        r = (eval("count(/a/b/following-sibling::*)", json));
+        assert(r.getNumber() == 2);
+        r = eval("/a/b/following-sibling::*", json);
+        assert(r.getStringValue() == "23");
+        r = eval("/a/b/following-sibling::*[2]", json);
+        assert(r.getStringValue() == "3");
+        r = eval("count(/a/b[b = 2]/following-sibling::*)", json);
+        assert(r.getNumber() == 1);
+        r = eval("/a/b[b = 2]/following-sibling::*", json);
+        assert(r.getStringValue() == "3");
+        r = (eval("count(/a/b/following-sibling::b)", json));
+        assert(r.getNumber() == 2);
+        r = (eval("/a/b/following-sibling::b", json));
+        assert(r.getStringValue() == "23");
+        r = eval("/a/b/following-sibling::b[1]", json);
+        assert(r.getStringValue() == "2");
+        r = eval("count(/a/b[b = 2]/following-sibling::b)", json);
+        assert(r.getNumber() == 1);
+        r = eval("/a/b[b = 2]/following-sibling::b", json);
+        assert(r.getStringValue() == "3");
     }
     // Descendant tests
     {
@@ -441,7 +463,7 @@ testPaths() {
         r = eval("/descendant::a", json);
         assert(r.getStringValue() == "12312");
         r = eval("count(/a/a/ancestor-or-self::a)", json);
-        assert(r.getNumber() == 3);
+        assert(r.getNumber() == 4);
     }
     {
         // TODO replace above with following
@@ -734,6 +756,10 @@ testFilter() {
         assert(r.getNumber() == 2);
         r = eval("count(//*[local-name(.) = 'd'])", json);
         assert(r.getNumber() == 1);
+        r = eval("count(/a/*[count(following-sibling::*) = 1])", json);
+        assert(r.getNumber() == 1);
+        r = eval("/a/*[count(following-sibling::*) = 1]", json);
+        assert(r.getStringValue() == "1");
     }
 }
 

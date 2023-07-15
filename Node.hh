@@ -59,8 +59,25 @@ private:
 inline
 std::ostream&
 operator<<(std::ostream& os, const Node& n) {
-    os << "Node : " << n.getJson().dump();
+    os << n.getJson().dump();
     return os;
 }
+
+inline
+std::ostream&
+operator<<(std::ostream& os, const std::vector<Node>& ns) {
+    os << "[";
+    bool first(true);
+    std::string separator;
+    for (const Node& n : ns) {
+        os << separator << n;
+        if (first) {
+            separator = ", ";
+        }
+    }
+    os << "]";
+    return os;
+}
+
 
 #endif

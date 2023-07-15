@@ -188,19 +188,17 @@ AxisSpecifier :
 //                        | 'preceding'	
 //                        | 'preceding-sibling'	
 //                        | 'self'
-
-
 AxisName :
   "ancestor"	                                 { $$ = $1; }
 | "ancestor-or-self"	                         { $$ = $1; }
 | "child"	                                     { $$ = $1; }
 | "descendant"	                                 { $$ = $1; }
 | "descendant-or-self"	                         { $$ = $1; }
-| "following"	                                 { $$ = $1; }
+//| "following"	                                 { $$ = $1; }
 | "following-sibling"	                         { $$ = $1; }
 | "parent"	                                     { $$ = $1; }
-| "preceding"	                                 { $$ = $1; }
-| "preceding-sibling"	                         { $$ = $1; }
+//| "preceding"	                                 { $$ = $1; }
+//| "preceding-sibling"	                         { $$ = $1; }
 | "self"                                         { $$ = $1; }
 
 NodeTest :

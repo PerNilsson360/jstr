@@ -178,17 +178,7 @@ operator<<(std::ostream& os, const XpathData& xd) {
         os << "String: " << xd.getString();
         break;
     case XpathData::NodeSet: {
-        const std::vector<Node>& ns = xd.getNodeSet();
-        os << "[";
-        bool first(true);
-        std::string separator;
-        for (const Node& n : ns) {
-            os << separator << n;
-            if (first) {
-                separator = " ,";
-            }
-        }
-        os << "]";
+        os << xd.getNodeSet();
     }
         break;
     default:

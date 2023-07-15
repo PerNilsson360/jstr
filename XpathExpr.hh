@@ -214,6 +214,27 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
+class FollowingSiblingAll : public Step {
+public:
+
+    FollowingSiblingAll(const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
+
+class FollowingSiblingSearch : public Step {
+public:
+    FollowingSiblingSearch(const std::string& s, const std::list<const XpathExpr*>* preds);
+protected:
+    void evalStep(size_t pos,
+                  bool firstStep,
+                  const std::vector<Node>& nodeSet,
+                  std::vector<Node>& result) const override;
+};
+
 class ContextItem : public XpathExpr {
 public:
     XpathData eval(const XpathData& d, size_t pos, bool firstStep = false) const override;
