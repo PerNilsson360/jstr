@@ -4,9 +4,12 @@ AC_PROG_CXX
 AC_PROG_YACC
 AC_PROG_LEX
 AC_CONFIG_HEADERS([config.h])
+AM_PROG_AR
+AC_PROG_RANLIB
 AC_CONFIG_FILES([
  Makefile
  src/Makefile
+ test/Makefile
 ])
 AC_OUTPUT
     
