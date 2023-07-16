@@ -20,32 +20,38 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#include "xpath10_driver.hh"
-#include "xpath10_parser.tab.h"
 
-xpath10_driver::xpath10_driver() :
-    trace_scanning(false), trace_parsing(false) {
-}
+#ifndef _XPATH10_DRIVER_HH_
+#define _XPATH10_DRIVER_HH_
+#include <string>
+#include <memory>
+#include "xpath10_parser.hh"
+// Tell Flex the lexer's prototype ...
+# define YY_DECL                                                    \
+    yy::xpath10_parser::symbol_type yylex (xpath10_driver& driver)
+// ... and declare it for the parser's sake.
+YY_DECL;
+// Conducting the whole scanning and parsing of Calc++.
+class xpath10_driver
+{
+public:
+    xpath10_driver ();
+    virtual ~xpath10_driver ();
 
-xpath10_driver::~xpath10_driver() {}
-
-int
-xpath10_driver::parse (const std::string& s) {
-    xpath = s;
-    scan_begin ();
-    yy::xpath10_parser parser (*this);
-    parser.set_debug_level (trace_parsing);
-    int res = parser.parse ();
-    scan_end ();
-    return res;
-}
-
-void
-xpath10_driver::error (const yy::location& l, const std::string& m) {
-    std::cerr << l << ": " << m << std::endl;
-}
-
-void
-xpath10_driver::error (const std::string& m) {
-    std::cerr << m << std::endl;
-}
+    // Handling the scanner.
+    void scan_begin ();
+    void scan_end ();
+    // Run the parser on file F.
+    // Return 0 on success.
+    int parse(const std::string& xpath);
+    // Used later to pass the file name to the location tracker.
+    std::unique_ptr<const Expr> result;
+    std::string xpath;
+    // Whether parser traces should be generated.
+    bool trace_parsing;
+    bool trace_scanning;
+    // Error handling.
+    void error (const yy::location& l, const std::string& m);
+    void error (const std::string& m);
+};
+#endif // ! XPATH10_DRIVER_HH
