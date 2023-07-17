@@ -262,17 +262,6 @@ private:
     double _d;
 };
 
-class Fun : public Expr {  // TODO StrExp
-public:
-    Fun(const std::string& name, const std::list<const Expr*>* args);
-    ~Fun();
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
-    void checkArgs(size_t expectedSize) const;
-    std::string _name;
-    const std::list<const Expr*>* _args;
-};
-
 class Args : public Expr, public MultiExpr {
 public:
     Args(const Expr* e);

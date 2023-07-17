@@ -31,7 +31,8 @@
 
 #include <iostream>
 #include <string>
-#include "Expr.hh"  
+#include "Expr.hh"
+#include "Functions.hh"
 class xpath10_driver;
 inline std::string stripLiteral(const std::string& s) {
 	size_t len = s.size();
@@ -243,8 +244,8 @@ PrimaryExpr :
 
 //[16]   	FunctionCall	   ::=   	FunctionName "(" ( Argument ( "," Argument )* )? ")"
 FunctionCall :
-  FunctionName "(" ")"                           { $$ = new Fun($1, nullptr);}
-| FunctionName "(" Arguments ")"                 { $$ = new Fun($1, $3);}
+  FunctionName "(" ")"                           { $$ = Fun::create($1, nullptr); }
+| FunctionName "(" Arguments ")"                 { $$ = Fun::create($1, $3); }
 
 //[17]   	Argument	   ::=   	Expr
 Arguments :

@@ -22,22 +22,10 @@
 
 #include <iostream>
 #include <sstream>
+#include "Utils.hh"
 #include "Expr.hh"
 #include "Value.hh"
 
-namespace {
-    
-void
-deleteExprs(const std::list<const Expr*>* l) {
-    if (l != nullptr) {
-        for (const Expr* e : *l) {
-            delete e;
-        }
-        delete l;
-    }
-}
-    
-}
 
 // UnaryExpr
 UnaryExpr::UnaryExpr(const Expr* e) : _e(e) {}
@@ -599,71 +587,6 @@ Number::Number(double d) : _d(d) {}
 Value
 Number::eval(const Value& d, size_t pos, bool firstStep) const {
     return Value(_d);
-}
-
-// Fun
-Fun::Fun(const std::string& name, const std::list<const Expr*>* args) :
-    _name(name), _args(args) {
-}
-
-Fun::~Fun() {
-    deleteExprs(_args);
-}
-
-Value
-Fun::eval(const Value& d, size_t pos, bool firstStep) const {
-    // TODO dont do string comparison
-    if (_name == "last") {
-        checkArgs(0);
-        double size = d.getNodeSet().size();
-        return Value(size);
-    } else if (_name == "position") {
-        checkArgs(0);
-        double position = pos + 1;
-        return Value(position);
-    }else if (_name == "count") {
-        checkArgs(1);
-        std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(d, pos);
-        return arg.getNodeSetSize();
-    } else if (_name == "local-name") {
-        checkArgs(1);
-        std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(d, pos);
-        return arg.getLocalName();
-    } else if (_name == "string") {
-        checkArgs(1);           // TODO support 0 args
-        std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(d, pos);
-        return Value(arg.getString());
-    } else if (_name == "not") {
-        checkArgs(1);
-        std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(d, pos);
-        return Value(!arg.getBool());
-    } else if (_name == "true") {
-        checkArgs(0);
-        return Value(true);
-    } else if (_name == "false") {
-        checkArgs(0);
-        return Value(false);
-    } else {
-        std::stringstream ss;
-        ss << "Fun::eval unkown function: " << _name;
-        throw std::runtime_error(ss.str());
-    }
-    return Value();
-}
-
-void
-Fun::checkArgs(size_t expectedSize) const {
-    size_t nArgs = _args == nullptr ? 0 : _args->size();
-    if (nArgs != expectedSize) {
-        std::stringstream ss;
-        ss << "Fun::eval wrong number arguments to function, " << _name
-           << " expected: "<< expectedSize << " actual: " << nArgs;
-        throw std::runtime_error(ss.str());
-    }
 }
 
 // Union
