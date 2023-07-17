@@ -1,3 +1,4 @@
+#include <cmath>
 #include <sstream>
 
 #include "Utils.hh"
@@ -50,6 +51,7 @@ struct LocalNameFun : Fun {
     }
 };
 
+// String functions
 struct StringFun : Fun {
     StringFun(const std::string& name, const std::list<const Expr*>* args) :
         Fun(args) {
@@ -62,6 +64,220 @@ struct StringFun : Fun {
         return Value(arg.getString());
     }
 };
+
+struct ConcatFun : Fun {
+    ConcatFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgsGe(name, 2);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::string s;
+        for (const Expr* e : *_args) {
+            Value arg = e->eval(d, pos);
+            s += arg.getString();
+        }
+        return Value(s);
+    }
+};
+
+struct StartsWithFun : Fun {
+    StartsWithFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 2);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value right = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        std::string r = right.getString();
+        return Value(l.rfind(r, 0) == 0);
+    }
+};
+
+struct ContainsFun : Fun {
+    ContainsFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 2);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value right = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        std::string r = right.getString();
+        return Value(l.find(r, 0) != std::string::npos);
+    }
+};
+
+struct SubstringBeforeFun : Fun {
+    SubstringBeforeFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 2);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value right = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        std::string r = right.getString();
+        size_t p = l.find(r, 0);
+        return p == std::string::npos ? Value() : Value(l.substr(0, p));
+    }
+};
+
+struct SubstringAfterFun : Fun {
+    SubstringAfterFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 2);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value right = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        std::string r = right.getString();
+        size_t p = l.find(r, 0);
+        return p == std::string::npos ? Value() : Value(l.substr(p + r.size()));
+    }
+};
+
+struct SubstringFun : Fun {
+    SubstringFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 3);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value right = (*i)->eval(d, pos);
+        ++i;
+        Value length = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        std::string r = right.getString();
+        size_t p = l.find(r, 0);
+        if (p == std::string::npos) {
+            return Value();
+        }
+        double len = length.getNumber();
+        if (std::isnan(len) || std::isinf(len)) {
+            throw std::runtime_error("SubstringFun::eval, length is infinity or Nan.");
+        }
+        return Value(l.substr(pos + len));
+    }
+};
+
+struct StringLengthFun : Fun {
+    StringLengthFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        const std::string& s = v.getString();
+        double l = s.size();
+        return Value(l);
+    }
+};
+
+struct TranslateFun : Fun {
+    TranslateFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 3);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value left = (*i)->eval(d, pos);
+        ++i;
+        Value source = (*i)->eval(d, pos);
+        ++i;
+        Value target = (*i)->eval(d, pos);
+        std::string l = left.getString();
+        const std::string& s = source.getString();
+        const std::string& t = target.getString();
+        size_t translateSize = std::min(s.size(), t.size());
+        for (size_t i = 0, size = l.size() ; i < size; i++) {
+            size_t p = s.find(l[i]);
+            if (p != std::string::npos && p < translateSize) {
+                l[i] = t[p];
+            }
+        }
+        return Value(l);
+    }
+};
+
+// NUmber functions
+struct NumberFun : Fun {
+    NumberFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        return Value(v.getNumber());
+    }
+};
+
+struct SumFun : Fun {
+    SumFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        double r(0);
+        for (const Node& n : v.getNodeSet()) {
+            r += n.getNumber();
+        }
+        return Value(r);
+    }
+};
+
+struct FloorFun : Fun {
+    FloorFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        return Value(floor(v.getNumber()));
+    }
+};
+
+struct CeilingFun : Fun {
+    CeilingFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        return Value(ceil(v.getNumber()));
+    }
+};
+
+struct RoundFun : Fun {
+    RoundFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 1);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        std::list<const Expr*>::const_iterator i = _args->begin();
+        Value v = (*i)->eval(d, pos);
+        return Value(round(v.getNumber()));
+    }
+};
+
+// Booelan Functions
 
 // No fun, my babe No fun. No fun to hang around feelin' that same old way.
 // No fun to hang around freaked out for another day.
@@ -118,6 +334,34 @@ Fun::create(const std::string& name, const std::list<const Expr*>* args) {
         return new LocalNameFun(name, args);
     } else if (name == "string") {
         return new StringFun(name, args);
+    } else if (name == "concat") {
+        return new ConcatFun(name, args);
+    } else if (name == "starts-with") {
+        return new StartsWithFun(name, args);
+    } else if (name == "contains") {
+        return new StartsWithFun(name, args);
+    } else if (name == "substring-before") {
+        return new SubstringBeforeFun(name, args);
+    } else if (name == "substring-after") {
+        return new SubstringAfterFun(name, args);
+    } else if (name == "substring") {
+        return new SubstringFun(name, args);
+    } else if (name == "string-length") {
+        return new StringLengthFun(name, args);
+    } else if (name == "translate") {
+        return new TranslateFun(name, args);
+    } else if (name == "number") {
+        return new NumberFun(name, args);
+    } else if (name == "number") {
+        return new NumberFun(name, args);
+    } else if (name == "sum") {
+        return new SumFun(name, args);
+    } else if (name == "floor") {
+        return new FloorFun(name, args);
+    } else if (name == "celing") {
+        return new CeilingFun(name, args);
+    } else if (name == "round") {
+        return new RoundFun(name, args);
     } else if (name == "not") {
         return new NotFun(name, args);
     } else if (name == "true") {
@@ -142,3 +386,13 @@ Fun::checkArgs(const std::string& name, size_t expectedSize) const {
     }
 }
 
+void
+Fun::checkArgsGe(const std::string& name, size_t expectedSize) const {
+    size_t nArgs = _args == nullptr ? 0 : _args->size();
+    if (nArgs < expectedSize) {
+        std::stringstream ss;
+        ss << "Fun::checkArgs, wrong number arguments to function: " << name
+           << " expected greater than or equal to: "<< expectedSize << " actual: " << nArgs;
+        throw std::runtime_error(ss.str());
+    }
+}
