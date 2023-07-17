@@ -168,6 +168,17 @@ Value::getString() const {
     }
 }
 
+const Node&
+Value::getNode(size_t pos) const {
+    if (_type != NodeSet) {
+        throw std::runtime_error("Value::getNode(): Value is  not a node set");
+    }
+    if (pos >= _d.ns->size()) {
+        throw std::runtime_error("Value::getNode(): pos is larger than nodes set size");
+    }
+    return (*_d.ns)[pos];
+}
+
 const std::vector<Node>&
 Value::getNodeSet() const {
     return *_d.ns;

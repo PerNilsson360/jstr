@@ -70,6 +70,7 @@ public:
      * @return a string representation of the value.
      */
     std::string getStringValue() const;
+    const Node& getNode(size_t pos) const;
     const std::vector<Node>& getNodeSet() const;
     Value getNodeSetSize() const;
     Value getLocalName() const;
