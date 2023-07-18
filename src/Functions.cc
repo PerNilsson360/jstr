@@ -272,7 +272,18 @@ struct SumFun : Fun {
         Value v = (*i)->eval(d, pos);
         double r(0);
         for (const Node& n : v.getNodeSet()) {
-            r += n.getNumber();
+            const std::string& s = n.getString();
+            if (s.empty()) {
+                r = NAN;
+                break;
+            } else {
+                try {
+                    r += std::stod(s);
+                } catch (const std::exception& e) {
+                    r = NAN;
+                    break;
+                }
+            }
         }
         return Value(r);
     }
@@ -405,13 +416,11 @@ Fun::create(const std::string& name, const std::list<const Expr*>* args) {
         return new TranslateFun(name, args);
     } else if (name == "number") {
         return new NumberFun(name, args);
-    } else if (name == "number") {
-        return new NumberFun(name, args);
     } else if (name == "sum") {
         return new SumFun(name, args);
     } else if (name == "floor") {
         return new FloorFun(name, args);
-    } else if (name == "celing") {
+    } else if (name == "ceiling") {
         return new CeilingFun(name, args);
     } else if (name == "round") {
         return new RoundFun(name, args);

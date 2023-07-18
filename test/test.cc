@@ -178,6 +178,41 @@ testNumbers() {
         Value r(eval("-/a/b div /a/c", json));
         assert(r.getNumber() == -3);
     }
+    // Sum
+    {
+        // <a>3</a>
+        const char* j = R"({"a":3})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("sum(/a)", json));
+        assert(r.getNumber() == 3);
+    }
+    {
+        // <a><b>1</b><b>2</b><b>3</b></a>
+        const char* j = R"({"a":{"b":[1, 2, 3]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("sum(/a)", json));
+        assert(r.getNumber() == 123);
+        r =eval("sum(/a/b)", json);
+        assert(r.getNumber() == 6);
+    }
+    // floor
+    {
+        nlohmann::json json;
+        Value r(eval("floor(2.6)", json));
+        assert(r.getNumber() == 2);
+    }
+    // celing
+    {
+        nlohmann::json json;
+        Value r(eval("ceiling(2.6)", json));
+        assert(r.getNumber() == 3);
+    }
+    // round
+    {
+        nlohmann::json json;
+        Value r(eval("round(2.5)", json));
+        assert(r.getNumber() == 3);
+    }
 }
 
 void
