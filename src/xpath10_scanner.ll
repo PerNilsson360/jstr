@@ -38,9 +38,39 @@
 # undef yywrap
 # define yywrap() 1
 
+// [28]   	ExprToken	   ::=   	'(' | ')' | '[' | ']' | '.' | '..' | '@' | ',' | '::'	
+// | NameTest	
+// | NodeType	
+// | Operator	
+// | FunctionName	
+// | AxisName	
+// | Literal	
+// | Number	
+// | VariableReference	
+// [29]   	Literal	   ::=   	'"' [^"]* '"'	
+// | "'" [^']* "'"	
+// [30]   	Number	   ::=   	Digits ('.' Digits?)?	
+// | '.' Digits	
+// [31]   	Digits	   ::=   	[0-9]+	
+// [32]   	Operator	   ::=   	OperatorName	
+// | MultiplyOperator	
+// | '/' | '//' | '|' | '+' | '-' | '=' | '!=' | '<' | '<=' | '>' | '>='	
+// [33]   	OperatorName	   ::=   	'and' | 'or' | 'mod' | 'div'	
+// [34]   	MultiplyOperator	   ::=   	'*'	
+// [35]   	FunctionName	   ::=   	QName - NodeType	
+// [36]   	VariableReference	   ::=   	'$' QName	
+// [37]   	NameTest	   ::=   	'*'	
+// | NCName ':' '*'	
+// | QName	
+// [38]   	NodeType	   ::=   	'comment'	
+// | 'text'	
+// | 'processing-instruction'	
+// | 'node'	
+// [39]   	ExprWhitespace	   ::=   	S
+    
 // The location of the current token.
 static yy::location loc;
-// ro debug add debug to %option below
+// to debug add debug to %option below
 %}
 %option noyywrap nounput batch noinput
 

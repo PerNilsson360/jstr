@@ -147,14 +147,24 @@ inline std::string stripLiteral(const std::string& s) {
 Xpath :
   Expr                                          { driver.result.reset($1); }
 
+// [1]   	LocationPath	           ::=   	RelativeLocationPath	
+//                                              | AbsoluteLocationPath	
 LocationPath :
   RelativeLocationPath                          { $$ = $1; }	
 | AbsoluteLocationPath                          { $$ = $1; }
+
+
+// [2]   	AbsoluteLocationPath	   ::=   	'/' RelativeLocationPath?	
+//                                              | AbbreviatedAbsoluteLocationPath	
 
 AbsoluteLocationPath :
   "/"                                           { $$ = new Path(new Root()); }
 | "/" RelativeLocationPath                      { static_cast<MultiExpr*>($2)->addFront(new Root()); $$ = $2; } 
 | AbbreviatedAbsoluteLocationPath               { $$ = $1; };
+
+// [3]   	RelativeLocationPath	   ::=   	Step	
+//                                              | RelativeLocationPath '/' Step	
+//                                              | AbbreviatedRelativeLocationPath
 
 RelativeLocationPath :
   Step	                                        { $$ = new Path($1); } 
@@ -162,8 +172,8 @@ RelativeLocationPath :
 | AbbreviatedRelativeLocationPath               { $$ = $1; };
 
 
-// [4] Step	   ::=   AxisSpecifier NodeTest Predicate*	
-//			       | AbbreviatedStep
+// [4] Step	                            ::=     AxisSpecifier NodeTest Predicate*	
+//			                                    | AbbreviatedStep
 Step :
   NodeTest                                      { $$ = Step::create("", $1, nullptr);} 
 | NodeTest Predicates                           { $$ = Step::create("", $1, $2); }
@@ -171,24 +181,24 @@ Step :
 | AxisSpecifier NodeTest Predicates             { $$ = Step::create($1, $2, $3); }
 | AbbreviatedStep                               { $$ = Step::create("", $1, nullptr); }
 
-//[5] AxisSpecifier ::=   AxisName "::"	
-//                        | AbbreviatedAxisSpecifier
+// [5] AxisSpecifier                    ::=     AxisName "::"	
+//                                              | AbbreviatedAxisSpecifier
 AxisSpecifier :
   AxisName "::"                                 { $$ = $1; }
 
-// [6] AxisName	   ::=      'ancestor'	
-//                        | 'ancestor-or-self'	
-//                        | 'attribute'	
-//                        | 'child'	
-//                        | 'descendant'	
-//                        | 'descendant-or-self'	
-//                        | 'following'	
-//                        | 'following-sibling'	
-//                        | 'namespace'	
-//                        | 'parent'	
-//                        | 'preceding'	
-//                        | 'preceding-sibling'	
-//                        | 'self'
+// [6] AxisName	                        ::=     'ancestor'	
+//                                              | 'ancestor-or-self'	
+//                                              | 'attribute'	
+//                                              | 'child'	
+//                                              | 'descendant'	
+//                                              | 'descendant-or-self'	
+//                                              | 'following'	
+//                                              | 'following-sibling'	
+//                                              | 'namespace'	
+//                                              | 'parent'	
+//                                              | 'preceding'	
+//                                              | 'preceding-sibling'	
+//                                              | 'self'
 AxisName :
   "ancestor"	                                 { $$ = $1; }
 | "ancestor-or-self"	                         { $$ = $1; }
@@ -202,39 +212,50 @@ AxisName :
 //| "preceding-sibling"	                         { $$ = $1; }
 | "self"                                         { $$ = $1; }
 
+// [7] NodeTest	                          ::=    NameTest	
+//                                               | NodeType '(' ')'	
+//                                               | 'processing-instruction' '(' Literal ')'
 NodeTest :
   NameTest	                                     { $$ = $1; }
-//| NodeType "(" ")"                             {}
-//| "processing-instruction" "(" Literal ")"     {}
 
+// [8] Predicate	                      ::=    '[' PredicateExpr ']'	
 Predicates:
   Predicate                                      { $$ = new std::list<const Expr*>(1, $1); }
 | Predicate Predicates                           { $2->push_front($1); $$ = $2; }
 
+// [9] PredicateExpr	                  ::=    Expr
 Predicate:
   "[" PredicateExpr "]"	                         { $$ = new Predicate($2); }
 
+// [9] PredicateExpr	                  ::=    Expr
 PredicateExpr:
   Expr                                           { $$ = $1; }
 
-// AbbreviatedAbsoluteLocationPath	   ::=   	'//' RelativeLocationPath	
+// [10] AbbreviatedAbsoluteLocationPath	  ::=  	 '//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
   "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); }
 
-// AbbreviatedRelativeLocationPath	   ::=   	RelativeLocationPath '//' Step	
+// [119 AbbreviatedRelativeLocationPath	  ::=  	 RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
   RelativeLocationPath "//" Step	             { $$ = $1; $$->addRelativeDescendant($3); }
 
+// [12] AbbreviatedStep	                  ::=    '.'	
+//                                               | '..'	
 AbbreviatedStep:
   "."                                            { $$ = $1; }
 | ".."                                           { $$ = $1; }
   
-//AbbreviatedAxisSpecifier:
-//  "@"?
+// [13] AbbreviatedAxisSpecifier           ::=   "@"?
 
+// [14] Expr	                           ::=   OrExpr	
 Expr:
   OrExpr                                         { $$ = $1; };
 
+//[15]  PrimaryExpr	                       ::=   VariableReference	
+//                                               | '(' Expr ')'	
+//                                               | Literal	
+//                                               | Number	
+//                                               | FunctionCall
 PrimaryExpr :
 //VariableReference
   "(" Expr ")"	                                 { $$ = $2; }
@@ -242,50 +263,63 @@ PrimaryExpr :
 | "number"	                                     { $$ = new Number($1); }
 | FunctionCall                                   { $$ = $1; }
 
-//[16]   	FunctionCall	   ::=   	FunctionName "(" ( Argument ( "," Argument )* )? ")"
+//[16] FunctionCall	                       ::=   FunctionName "(" ( Argument ( "," Argument )* )? ")"
 FunctionCall :
   FunctionName "(" ")"                           { $$ = Fun::create($1, nullptr); }
 | FunctionName "(" Arguments ")"                 { $$ = Fun::create($1, $3); }
 
-//[17]   	Argument	   ::=   	Expr
+// [17]  Argument	                       ::=   Expr
 Arguments :
   Expr                                           { $$ = new std::list<const Expr*>(1, $1); }
 | Expr "," Arguments                             { $3->push_front($1); $$ = $3; }
 
+// [18] UnionExpr	                       ::=   PathExpr	
+//                                               | UnionExpr '|' PathExpr	
 UnionExpr :
   PathExpr	                                     { $$ = $1; }
 | UnionExpr "|" PathExpr	                     { $$ = new Union($1, $3); }
 
-//[19]   	PathExpr	   ::=   	LocationPath	
-//                                  | FilterExpr	
-//                                  | FilterExpr '/' RelativeLocationPath	
-//                                  | FilterExpr '//' RelativeLocationPath	
+// [19] PathExpr	                       ::=   LocationPath	
+//                                               | FilterExpr	
+//                                               | FilterExpr '/' RelativeLocationPath	
+//                                               | FilterExpr '//' RelativeLocationPath	
 PathExpr :
   LocationPath	                                 { $$ = $1; }
 | FilterExpr	                                 { $$ = $1; }
-//| FilterExpr "/" RelativeLocationPath	         {}
-//| FilterExpr "//" RelativeLocationPath	         {};
+//| FilterExpr "/" RelativeLocationPath	         {}  TODO what a bout these?
+//| FilterExpr "//" RelativeLocationPath	     {};
 
-//[20]   	FilterExpr	   ::=   	PrimaryExpr	
-//                                  | FilterExpr Predicate
+//[20] FilterExpr	                       ::=   PrimaryExpr	
+//                                               | FilterExpr Predicate
 FilterExpr :
   PrimaryExpr	                                 { $$ = $1; }
 //| FilterExpr Predicate                           {};
 
-
+// [21]   	OrExpr	   ::=   	AndExpr	
+// | OrExpr 'or' AndExpr	
 OrExpr :
   AndExpr                                        { $$ = $1; }
 | OrExpr "or" AndExpr	                         { $$ = new Or($1, $3); }
 
+// [22]   	AndExpr	   ::=   	EqualityExpr	
+// | AndExpr 'and' EqualityExpr	
 AndExpr	:
   EqualityExpr	                                 { $$ = $1; }
 | AndExpr "and" EqualityExpr	                 { $$ = new And($1, $3); }
 
+// [23]   	EqualityExpr	   ::=   	RelationalExpr	
+// | EqualityExpr '=' RelationalExpr	
+// | EqualityExpr '!=' RelationalExpr	
 EqualityExpr :
   RelationalExpr	                             { $$ = $1; }
 | EqualityExpr "=" RelationalExpr	             { $$ = new Eq($1, $3); }
 | EqualityExpr "!=" RelationalExpr               { $$ = new Ne($1, $3); }
 
+// [24]   	RelationalExpr	   ::=   	AdditiveExpr	
+// | RelationalExpr '<' AdditiveExpr	
+// | RelationalExpr '>' AdditiveExpr	
+// | RelationalExpr '<=' AdditiveExpr	
+// | RelationalExpr '>=' AdditiveExpr
 RelationalExpr :
   AdditiveExpr	                                 { $$ = $1; }
 | RelationalExpr "<" AdditiveExpr	             { $$ = new Lt($1, $3); }
@@ -293,17 +327,26 @@ RelationalExpr :
 | RelationalExpr "<=" AdditiveExpr	             { $$ = new Le($1, $3); }
 | RelationalExpr ">=" AdditiveExpr               { $$ = new Ge($1, $3); }
 
+// [25]   	AdditiveExpr	   ::=   	MultiplicativeExpr	
+// | AdditiveExpr '+' MultiplicativeExpr	
+// | AdditiveExpr '-' MultiplicativeExpr	
 AdditiveExpr :
   MultiplicativeExpr	                         { $$ = $1; }
 | AdditiveExpr "+" MultiplicativeExpr	         { $$ = new Plus($1, $3); }
 | AdditiveExpr "-" MultiplicativeExpr	         { $$ = new Minus($1, $3); }
 
+// [26]   	MultiplicativeExpr	   ::=   	UnaryExpr	
+// | MultiplicativeExpr MultiplyOperator UnaryExpr	
+// | MultiplicativeExpr 'div' UnaryExpr	
+// | MultiplicativeExpr 'mod' UnaryExpr	
 MultiplicativeExpr :
   UnaryExpr	                                     { $$ = $1; }
 | MultiplicativeExpr "*" UnaryExpr	             { $$ = new Mul($1, $3); }
 | MultiplicativeExpr "div" UnaryExpr	         { $$ = new Div($1, $3); }
 | MultiplicativeExpr "mod" UnaryExpr	         { $$ = new Mod($1, $3); }
 
+// [27]   	UnaryExpr	   ::=   	UnionExpr	
+// | '-' UnaryExpr
 UnaryExpr :
   UnionExpr	                                     { $$ = $1; }
 | "-" UnaryExpr                                  { $$ = new Minus($2, nullptr); }
@@ -319,37 +362,6 @@ NameTest :
 // | 'text'	
 // | 'processing-instruction'	
 // | 'node'
-
-
-/*
-Lexing 
-
-ExprToken	   ::=   	'(' | ')' | '[' | ']' | '.' | '..' | '@' | ',' | '::'	
-| NameTest	
-| NodeType	
-| Operator	
-| FunctionName	
-| AxisName	
-| Literal	
-| Number	
-| VariableReference
-	
-Literal	   ::=   	'"' [^"]* '"'	
-| "'" [^']* "'"	
-
-Number	   ::=   	Digits ('.' Digits?)?	
-| '.' Digits	
-
-[Digits	   ::=   	[0-9]+ 
-
-Operator	   ::=   	OperatorName	
-| MultiplyOperator	
-| '/' | '//' | '|' | '+' | '-' | '=' | '!=' | '<' | '<=' | '>' | '>='	
-
-OperatorName	   ::=   	'and' | 'or' | 'mod' | 'div'	
-
-MultiplyOperator	   ::=   	'*'	
-*/
 
 FunctionName :
   "identifier"                                    { $$ = $1; };
