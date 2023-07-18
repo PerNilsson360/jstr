@@ -135,7 +135,7 @@ libnljp_a_LIBADD =
 am_libnljp_a_OBJECTS = xpath10_parser.$(OBJEXT) \
 	xpath10_scanner.$(OBJEXT) Expr.$(OBJEXT) Functions.$(OBJEXT) \
 	Node.$(OBJEXT) Value.$(OBJEXT) xpath10_driver.$(OBJEXT) \
-	nljp.$(OBJEXT) test.$(OBJEXT)
+	nljp.$(OBJEXT)
 libnljp_a_OBJECTS = $(am_libnljp_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -154,8 +154,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/Expr.Po ./$(DEPDIR)/Functions.Po \
 	./$(DEPDIR)/Node.Po ./$(DEPDIR)/Value.Po ./$(DEPDIR)/nljp.Po \
-	./$(DEPDIR)/test.Po ./$(DEPDIR)/xpath10_driver.Po \
-	./$(DEPDIR)/xpath10_parser.Po ./$(DEPDIR)/xpath10_scanner.Po
+	./$(DEPDIR)/xpath10_driver.Po ./$(DEPDIR)/xpath10_parser.Po \
+	./$(DEPDIR)/xpath10_scanner.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -327,7 +327,7 @@ CLEANFILES = xpath10_parser.hh xpath10_parser.cc xpath10_scanner.cc location.hh 
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_YFLAGS = -t -v -d -Wno-yacc
 lib_LIBRARIES = libnljp.a
-libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll Expr.cc Functions.cc Node.cc Value.cc xpath10_driver.cc nljp.cc test.cc
+libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll Expr.cc Functions.cc Node.cc Value.cc xpath10_driver.cc nljp.cc
 AM_LFLAGS = -olex.yy.c
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -414,7 +414,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Node.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Value.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nljp.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_driver.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_parser.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_scanner.Po@am__quote@ # am--include-marker
@@ -584,7 +583,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
 	-rm -f ./$(DEPDIR)/nljp.Po
-	-rm -f ./$(DEPDIR)/test.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
 	-rm -f ./$(DEPDIR)/xpath10_scanner.Po
@@ -638,7 +636,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
 	-rm -f ./$(DEPDIR)/nljp.Po
-	-rm -f ./$(DEPDIR)/test.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
 	-rm -f ./$(DEPDIR)/xpath10_scanner.Po

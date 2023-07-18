@@ -61,6 +61,11 @@ testNumbers() {
         assert(r.getNumber() == -1);
     }
     {
+        nlohmann::json json;
+        Value r(eval("-1", json));
+        assert(r.getNumber() == -1);
+    }
+    {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
@@ -99,6 +104,24 @@ testNumbers() {
         nlohmann::json json;
         Value r(eval("4 div 2", json));
         assert(r.getNumber() == 2);
+    }
+    {
+        nlohmann::json json;
+        Value r(eval("4 div 0", json));
+        assert(std::isinf(r.getNumber()));
+        assert(r.getString() == "Infinity");
+    }
+    {
+        nlohmann::json json;
+        Value r(eval("-4 div 0", json));
+        assert(std::isinf(r.getNumber()));
+        assert(r.getString() == "-Infinity");
+    }
+    {
+        nlohmann::json json;
+        Value r(eval("0 div 0", json));
+        assert(std::isnan(r.getNumber()));
+        assert(r.getString() == "NaN");
     }
     {
         // <a>3</a>
@@ -713,6 +736,12 @@ testFilter() {
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("count(/a/b[. = 1])", json));
         assert(r.getNumber() == 1);
+        r = eval("count(/a/b[number() = 1])", json);
+        assert(r.getNumber() == 1);
+        r = eval("count(/a/b[string() = '1'])", json);
+        assert(r.getNumber() == 1);
+        r = eval("count(/a/b[boolean()])", json);
+        assert(r.getNumber() == 4);
         r = eval("count(/a/b[not(. = 1)])", json);
         assert(r.getNumber() == 3);
         r = eval("count(/a/b[not(. = 1)][not(. = 2)])", json);
@@ -855,6 +884,86 @@ testStringFunctions() {
         assert(r.getString() == "1");
         r = eval("string(//b)", json);
         assert(r.getString() == "1");
+    }
+    // Concat
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("concat(/, '')", json));
+        assert(r.getString() == "1234");
+        r = eval("concat(/, '5', 6)", json);
+        assert(r.getString() == "123456");
+    }
+    // starts-with
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("starts-with(/, '')", json));
+        assert(r.getBool());
+        r = eval("starts-with(/, '12')", json);
+        assert(r.getBool());
+        r = eval("starts-with(/, '1234')", json);
+        assert(r.getBool());
+        r = eval("starts-with('foo', 'bar')", json);
+        assert(!r.getBool());
+    }
+    // subsstring-before
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("substring-before(/, '4')", json));
+        assert(r.getString() == "123");
+        r = eval("substring-before(/, '1')", json);
+        assert(r.getString() == "");
+    }
+    // subsstring-after
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("substring-after(/, '1')", json));
+        assert(r.getString() == "234");
+        r = eval("substring-after(/, '4')", json);
+        assert(r.getString() == "");
+    }
+    // subsstring-after
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("substring-after(/, '1')", json));
+        assert(r.getString() == "234");
+        r = eval("substring-after(/, '4')", json);
+        assert(r.getString() == "");
+    }
+    // substring
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("substring(/, 2)", json));
+        assert(r.getString() == "34");
+        r = eval("substring(/, 4)", json);
+        assert(r.getString() == "");
+        r = eval("substring('12345', 2, 3)", json);
+        assert(r.getString() == "345");
+        r = eval("substring('12345', 1.5, 2.6)", json);
+        assert(r.getString() == "345");
+        r = eval("substring('12345', 0, 3)", json);
+        assert(r.getString() == "12");
+        r = eval("substring('12345', 0 div 0, 3)", json);
+        assert(r.getString() == "");
+        r = eval("substring('12345',1, 0 div 0)", json);
+        assert(r.getString() == "");
+        r = eval("substring('12345', -42)", json);
+        assert(r.getString() == "12345");
+        r = eval("substring('12345', -42, 1 div 0)", json);
+        assert(r.getString() == "12345");
+        r = eval("substring('12345', -1 div 0, 1 div 0)", json);
+        assert(r.getString() == "");
     }
 }
 

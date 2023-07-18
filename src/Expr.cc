@@ -696,6 +696,7 @@ Value
 Minus::eval(const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(d, pos);
     if (!_r) {
+        Value v(-l.getNumber());
         return Value(-l.getNumber());
     }
     Value r = _r->eval(d, pos);

@@ -40,6 +40,7 @@ public:
     Value(Value&& xd);
     Value(double d);
     Value(bool b);
+    Value(const char* s);
     Value(const std::string& s);
     Value(const std::string& name, const nlohmann::json& json);
     Value(const Node& node);

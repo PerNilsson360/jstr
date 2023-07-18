@@ -1,5 +1,6 @@
 #include <cmath>
 #include <sstream>
+#include <iostream>
 
 #include "Utils.hh"
 #include "Functions.hh"
@@ -161,26 +162,38 @@ struct SubstringFun : Fun {
         checkArgsTwoOrThree(name);
     }
     Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        size_t argsSize(_args->size()); 
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(d, pos);
+        Value str = (*i)->eval(d, pos);
         ++i;
-        Value right = (*i)->eval(d, pos);
-        ++i;
-        double len(0);
-        if (i != _args->end()) {
+        Value position = (*i)->eval(d, pos);
+        double len(-1);
+        if (argsSize > 2) {
+            ++i;
             Value length = (*i)->eval(d, pos);
             len = length.getNumber();
-            if (std::isnan(len) || std::isinf(len)) {
-                throw std::runtime_error("SubstringFun::eval, length is infinity or Nan.");
+            if (std::isnan(len)) {
+                return Value("");
+            }
+            if (std::isinf(len)) {
+                argsSize = 2;
             }
         }            
-        std::string l = left.getString();
-        std::string r = right.getString();
-        size_t p = l.find(r, 0);
-        if (p == std::string::npos) {
-            return Value();
+        const std::string& s = str.getString();
+        double p = position.getNumber();
+        if (std::isnan(p) || std::isnan(-p) || std::isinf(p)) {
+            return Value("");
+        } else if (p <= 0) {
+            p = 0;
+            if (argsSize == 3) {
+                int diff = 1 - p;
+                len -= diff;
+                if (len < 0) {
+                    argsSize = 2;
+                }
+            }
         }
-        return Value(l.substr(pos + len));
+        return  argsSize == 2 ? Value(s.substr(round(p))) : Value(s.substr(round(p), round(len)));
     }
 };
 
@@ -302,6 +315,22 @@ struct RoundFun : Fun {
 };
 
 // Booelan Functions
+struct BooleanFun : Fun {
+    BooleanFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgsZeroOrOne(name);
+    }
+    Value eval(const Value& d, size_t pos, bool firstStep = false) const override {
+        if (_args == nullptr || _args->empty()) {
+            const Node& n = d.getNode(pos);
+            return Value(n.getBool());
+        } else {
+            std::list<const Expr*>::const_iterator i = _args->begin();
+            Value arg = (*i)->eval(d, pos);
+            return Value(!arg.getBool());
+        }
+    }
+};
 
 // No fun, my babe No fun. No fun to hang around feelin' that same old way.
 // No fun to hang around freaked out for another day.
@@ -386,6 +415,8 @@ Fun::create(const std::string& name, const std::list<const Expr*>* args) {
         return new CeilingFun(name, args);
     } else if (name == "round") {
         return new RoundFun(name, args);
+    } else if (name == "boolean") {
+        return new BooleanFun(name, args);
     } else if (name == "not") {
         return new NotFun(name, args);
     } else if (name == "true") {

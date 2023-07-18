@@ -45,6 +45,10 @@ Value::Value(bool b) : _type(Bool) {
     _d.b = b;
 }
 
+Value::Value(const char* s) : _type(String) {
+    _d.s = new std::string(s);
+}
+
 Value::Value(const std::string& s) : _type(String) {
     _d.s = new std::string(s);
 }
@@ -157,7 +161,16 @@ Value::getString() const {
         if (std::isnan(_d.n)) {
             return "NaN";
         } else {
-            std::to_string(_d.n);
+            std::stringstream ss;
+            ss << _d.n;
+            const std::string& s = ss.str();
+            if (s == "inf") {   // TODO do this without string comparison
+                return "Infinity";
+            } else if (s == "-inf") {
+                return "-Infinity";
+            } else {
+                return s;
+            }
         }
     }
     case Bool: return _d.b ? "true" : "false";
