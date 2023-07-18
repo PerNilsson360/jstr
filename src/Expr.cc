@@ -88,20 +88,7 @@ std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>&
 }
 
 void
-addIfUnique(std::vector<Node>& ns, const Node& node) {
-    bool found(false);
-    for (const Node& n : ns) {
-        if (n == node) {
-            found = true;
-        }
-    }
-    if (!found) {
-        ns.emplace_back(node);
-    }
-}
-
-void
-addIfUnique(std::vector<Node>& result, std::vector<Node>& ns) {
+addIfUnique(std::vector<Node>& result, const std::vector<Node>& ns) {
     for (const Node& n : ns) {
         addIfUnique(result, n);
     }
@@ -594,7 +581,9 @@ Union::Union(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
 Union::eval(const Value& d, size_t pos, bool firstStep) const {
-  return Value();
+    Value l = _l->eval(d, pos);
+    Value r = _r->eval(d, pos);
+    return l.nodeSetUnion(r);
 }
 
 // Or

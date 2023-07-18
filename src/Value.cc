@@ -23,6 +23,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include "Utils.hh"
 #include "Value.hh"
 
 Value::Value() : _type(NodeSet) {
@@ -72,6 +73,18 @@ Value::Value(const Node& node) : _type(NodeSet) {
 
 Value::Value(const std::vector<Node>& ns) : _type(NodeSet) {
     _d.ns = new std::vector<Node>(ns);
+}
+
+Value
+Value::nodeSetUnion(const Value& v) const {
+    if (!(_type == NodeSet && v._type == NodeSet)) {
+        throw std::runtime_error("Union::eval both values must be node sets");
+    }
+    std::vector<Node> result = *_d.ns;
+    for (const Node& n : *v._d.ns) {
+        addIfUnique(result, n);
+    }
+    return Value(result);
 }
 
 Value&

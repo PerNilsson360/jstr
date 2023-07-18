@@ -76,16 +76,17 @@ public:
     Value getNodeSetSize() const;
     Value getLocalName() const;
     Value getRoot() const;
-    bool operator==(const Value& xd) const;
-    bool operator!=(const Value& xd) const;
-    bool operator<(const Value& xd) const;
-    bool operator<=(const Value& xd) const;
-    bool operator>(const Value& xd) const;
-    bool operator>=(const Value& xd) const;
+    Value nodeSetUnion(const Value& v) const;
+    bool operator==(const Value& v) const;
+    bool operator!=(const Value& v) const;
+    bool operator<(const Value& v) const;
+    bool operator<=(const Value& v) const;
+    bool operator>(const Value& v) const;
+    bool operator>=(const Value& v) const;
 private:
-    void checkOrderingRelationArgs(const Value& xd) const;
-    void assign(const Value& xd);
-    void exchange(Value&& xd);
+    void checkOrderingRelationArgs(const Value& v) const;
+    void assign(const Value& v);
+    void exchange(Value&& v);
     void clear();
     Type _type;
     union Data {
@@ -98,9 +99,9 @@ private:
 
 inline
 bool
-operator==(const Value& xd, double d) {
-    const std::vector<Node>& ns = xd.getNodeSet();
-    for (const Node& l : xd.getNodeSet()) {
+operator==(const Value& v, double d) {
+    const std::vector<Node>& ns = v.getNodeSet();
+    for (const Node& l : v.getNodeSet()) {
         if (l.getNumber() == d) {
             return true;
         }
@@ -110,9 +111,9 @@ operator==(const Value& xd, double d) {
 
 inline
 bool
-operator==(const Value& xd, const std::string& s) {
-    const std::vector<Node>& ns = xd.getNodeSet();
-    for (const Node& l : xd.getNodeSet()) {
+operator==(const Value& v, const std::string& s) {
+    const std::vector<Node>& ns = v.getNodeSet();
+    for (const Node& l : v.getNodeSet()) {
         const std::string& ls = l.getString();
         if (ls == s) {
             return true;
@@ -123,8 +124,8 @@ operator==(const Value& xd, const std::string& s) {
 
 inline
 bool
-operator==(const Value& xd, bool b) {
-    for (const Node& l : xd.getNodeSet()) {
+operator==(const Value& v, bool b) {
+    for (const Node& l : v.getNodeSet()) {
         if (l.getBool() == b) {
             return true;
         }
@@ -134,9 +135,9 @@ operator==(const Value& xd, bool b) {
 
 inline
 bool
-operator!=(const Value& xd, double d) {
-    const std::vector<Node>& ns = xd.getNodeSet();
-    for (const Node& l : xd.getNodeSet()) {
+operator!=(const Value& v, double d) {
+    const std::vector<Node>& ns = v.getNodeSet();
+    for (const Node& l : v.getNodeSet()) {
         if (l.getNumber() != d) {
             return true;
         }
@@ -146,9 +147,9 @@ operator!=(const Value& xd, double d) {
 
 inline
 bool
-operator!=(const Value& xd, const std::string& s) {
-    const std::vector<Node>& ns = xd.getNodeSet();
-    for (const Node& l : xd.getNodeSet()) {
+operator!=(const Value& v, const std::string& s) {
+    const std::vector<Node>& ns = v.getNodeSet();
+    for (const Node& l : v.getNodeSet()) {
         const std::string& ls = l.getString();
         if (ls != s) {
             return true;
@@ -159,8 +160,8 @@ operator!=(const Value& xd, const std::string& s) {
 
 inline
 bool
-operator!=(const Value& xd, bool b) {
-    for (const Node& l : xd.getNodeSet()) {
+operator!=(const Value& v, bool b) {
+    for (const Node& l : v.getNodeSet()) {
         if (l.getBool() != b) {
             return true;
         }
@@ -170,20 +171,20 @@ operator!=(const Value& xd, bool b) {
 
 inline
 std::ostream&
-operator<<(std::ostream& os, const Value& xd) {
-    Value::Type type = xd.getType();
+operator<<(std::ostream& os, const Value& v) {
+    Value::Type type = v.getType();
     switch(type) {
     case Value::Number:
-        os << "Number: " << xd.getNumber();
+        os << "Number: " << v.getNumber();
         break;
     case Value::Bool:
-        os << "Bool: " << xd.getBool();
+        os << "Bool: " << v.getBool();
         break;
     case Value::String:
-        os << "String: " << xd.getString();
+        os << "String: " << v.getString();
         break;
     case Value::NodeSet: {
-        os << xd.getNodeSet();
+        os << v.getNodeSet();
     }
         break;
     default:

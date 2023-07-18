@@ -278,6 +278,16 @@ testLogic() {
         Value r(eval("/a and /a/b and /a/c and /a/d", json));
         assert(r.getBool());
     }
+    // Union
+    {
+        // <a><b>1</b><c>true</c><d>foo</d></a>
+        const char* j = R"({"a":{"b":1,"c":true,"d":"foo"}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("/a/b | /a/c", json));
+        assert(r.getStringValue() == "1true");
+        r = eval("/a/b | /a/c | /a/d", json);
+        assert(r.getStringValue() == "1truefoo");
+    }
 }
 
 void
