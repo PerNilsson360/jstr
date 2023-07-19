@@ -75,6 +75,7 @@ inline std::string stripLiteral(const std::string& s) {
   DOUBLE_DOT         ".."
   COMMA              ","
   DOUBLE_COLON       "::"
+  DOLLAR             "$"
   AND                "and"
   OR                 "or"
   DIV                "div"
@@ -139,6 +140,7 @@ inline std::string stripLiteral(const std::string& s) {
 %type  <Expr*> UnaryExpr
 %type  <std::string> NameTest
 %type  <std::string> FunctionName
+%type  <Expr*> VariableReference
 
 %printer { yyoutput << $$; } <*>;
 %%
@@ -257,8 +259,8 @@ Expr:
 //                                               | Number	
 //                                               | FunctionCall
 PrimaryExpr :
-//VariableReference
-  "(" Expr ")"	                                 { $$ = $2; }
+  VariableReference                               { $$ = $1; }
+| "(" Expr ")"	                                 { $$ = $2; }
 | "literal"	                                     { $$ = new Literal(stripLiteral($1)); }
 | "number"	                                     { $$ = new Number($1); }
 | FunctionCall                                   { $$ = $1; }
@@ -351,34 +353,26 @@ UnaryExpr :
   UnionExpr	                                     { $$ = $1; }
 | "-" UnaryExpr                                  { $$ = new Minus($2, nullptr); }
 
+// [35]   	FunctionName	   ::=   	QName - NodeType 	
+FunctionName :
+  "identifier"                                    { $$ = $1; };
+
+// [36 ] VariableReference	   ::=   	'$' QName	
+VariableReference :
+  "$" "identifier"                                { $$ = new VarRef($2); }
+
+// [37] NameTest	   ::=   	'*'	
+// | NCName ':' '*'	
+// | QName	
 NameTest :
   "*"                                            { $$ = $1; }
 | "identifier"                                   { $$ = $1; }
-//| NCName ':' '*'	
-//| QName                                        {};
 
-// NodeType	   ::=
+// [38 ]NodeType	   ::=
 //   'comment'	
 // | 'text'	
 // | 'processing-instruction'	
 // | 'node'
-
-FunctionName :
-  "identifier"                                    { $$ = $1; };
-
-/*
-VariableReference	   ::=   	'$' QName	
-NameTest	   ::=   	'*'	
-| NCName ':' '*'	
-| QName	
-
-NodeType	   ::=   	'comment'	
-| 'text'	
-| 'processing-instruction'	
-| 'node'	
-
-ExprWhitespace	   ::=   	S
- */
 
 %%
 void

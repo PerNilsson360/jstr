@@ -27,14 +27,14 @@
 #include <list>
 #include <stdexcept>
 
+#include "Env.hh"
 #include "Value.hh"
 
 class Expr {
 public:
     Expr() = default;
     virtual ~Expr() = default;
-    virtual Value eval(const Value& d, size_t pos, bool firstStep = false) const = 0;
-private:
+    virtual Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const = 0;
 };
 
 class UnaryExpr {
@@ -73,24 +73,22 @@ protected:
 
 class Root : public Expr {
 public:
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const;
 };
 
 class Path : public Expr, public MultiExpr {
 public:
     Path(Expr* e);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
     void addAbsoluteDescendant();
     void addRelativeDescendant(Expr* Step);
-private:
 };
 
 class Step : public Expr, public StrExpr {
 public:
     Step(const std::string& s, const std::list<const Expr*>* preds);
     ~Step();
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
     static Expr* create(const std::string& axisName,
                              const std::string& nodeTest,
                              std::list<const Expr*>* predicates);
@@ -103,7 +101,7 @@ protected:
                           bool firstStep,
                           const std::vector<Node>& nodeSet,
                           std::vector<Node>& result) const = 0;
-    void evalFilter(std::vector<Node>& result) const;
+    void evalFilter(const Env& e, std::vector<Node>& result) const;
     const std::list<const Expr*>* _preds;
 };
 
@@ -170,8 +168,7 @@ protected:
 class Predicate : public Expr, UnaryExpr {
 public:
     Predicate(const Expr* e);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class DescendantAll : public Step { // TODO not really a step
@@ -237,27 +234,24 @@ protected:
 
 class ContextItem : public Expr {
 public:
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Parent : public Expr {
 public:
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Literal : public Expr, StrExpr {
 public:
     Literal(const std::string& l);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Number : public Expr {
 public:
     Number(double d);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 private:
     double _d;
 };
@@ -265,106 +259,97 @@ private:
 class Args : public Expr, public MultiExpr {
 public:
     Args(const Expr* e);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Union : public Expr, BinaryExpr {
 public:
     Union(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
   
 class Or : public Expr, BinaryExpr {
 public:
     Or(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class And : public Expr, BinaryExpr {
 public:
     And(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Eq : public Expr, BinaryExpr {
 public:
     Eq(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Ne : public Expr, BinaryExpr {
 public:
     Ne(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Lt : public Expr, BinaryExpr {
 public:
     Lt(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Gt : public Expr, BinaryExpr {
 public:
     Gt(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Le : public Expr, BinaryExpr {
 public:
     Le(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Ge : public Expr, BinaryExpr {
 public:
     Ge(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Plus : public Expr, BinaryExpr {
 public:
     Plus(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Minus : public Expr, BinaryExpr {
 public:
     Minus(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Mul : public Expr, BinaryExpr {
 public:
     Mul(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Div : public Expr, BinaryExpr {
 public:
     Div(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Mod : public Expr, BinaryExpr {
 public:
     Mod(const Expr* l, const Expr* r);
-    Value eval(const Value& d, size_t pos, bool firstStep = false) const override;
-private:
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+};
+
+class VarRef : public Expr, StrExpr {
+public:
+    VarRef(const std::string& s);
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 #endif

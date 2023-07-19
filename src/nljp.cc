@@ -11,5 +11,7 @@ eval(const std::string& xpath, const nlohmann::json& json) {
         ss << "nljp::eval failed to parse exp: " << xpath;
         throw std::runtime_error(ss.str());
     }
-    return driver.result->eval(Value(Node("", json)), 0);
+    Value context(Node("", json));
+    Env env(context);
+    return driver.result->eval(env, context, 0);
 }

@@ -30,12 +30,12 @@ Value::Value() : _type(NodeSet) {
     _d.ns = new std::vector<Node>();
 }
 
-Value::Value(const Value& xd) {
-    assign(xd);
+Value::Value(const Value& v) : _type(Number) { // type here is just dummy
+    assign(v);
 }
 
-Value::Value(Value&& xd) {
-    exchange(std::move(xd));
+Value::Value(Value&& v) : _type(Number) { // type here is just dummy
+    exchange(std::move(v));
 }
 
 Value::Value(double n) : _type(Number){
@@ -88,14 +88,14 @@ Value::nodeSetUnion(const Value& v) const {
 }
 
 Value&
-Value::operator=(const Value& xd) {
-    assign(xd);
+Value::operator=(const Value& v) {
+    assign(v);
     return *this;
 }
 
 Value&
-Value::operator=(Value&& xd) {
-    exchange(std::move(xd));
+Value::operator=(Value&& v) {
+    exchange(std::move(v));
     return *this;
 }
 
@@ -308,29 +308,29 @@ Value::operator!=(const Value& xd) const {
     }
 }
 
-bool Value::operator<(const Value& xd) const {
-    checkOrderingRelationArgs(xd);
-    return getNumber() < xd.getNumber();
+bool Value::operator<(const Value& v) const {
+    checkOrderingRelationArgs(v);
+    return getNumber() < v.getNumber();
 }
 
-bool Value::operator<=(const Value& xd) const {
-    checkOrderingRelationArgs(xd);
-    return getNumber() <= xd.getNumber();
+bool Value::operator<=(const Value& v) const {
+    checkOrderingRelationArgs(v);
+    return getNumber() <= v.getNumber();
 }
 
-bool Value::operator>(const Value& xd) const {
-    checkOrderingRelationArgs(xd);
-    return getNumber() > xd.getNumber();
+bool Value::operator>(const Value& v) const {
+    checkOrderingRelationArgs(v);
+    return getNumber() > v.getNumber();
 }
 
-bool Value::operator>=(const Value& xd) const {
-    checkOrderingRelationArgs(xd);
-    return getNumber() >= xd.getNumber();
+bool Value::operator>=(const Value& v) const {
+    checkOrderingRelationArgs(v);
+    return getNumber() >= v.getNumber();
 }
 
 void
-Value::checkOrderingRelationArgs(const Value& xd) const {
-    if (!isValue() || !xd.isValue()) {
+Value::checkOrderingRelationArgs(const Value& v) const {
+    if (!isValue() || !v.isValue()) {
         std::string m("Value::checkOrderingRelationArgs, can not compare node sets");
         throw std::runtime_error(m);
     }

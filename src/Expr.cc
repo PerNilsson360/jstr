@@ -73,7 +73,7 @@ MultiExpr::getExprs() {
 
 // Root
 Value
-Root::eval(const Value& d, size_t pos, bool firstStep) const {
+Root::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return d.getRoot();
 }
 
@@ -105,11 +105,11 @@ checkLocalName(const Node& n, const std::string& name) {
 Path::Path(Expr* e) : MultiExpr(e) {}
 
 Value
-Path::eval(const Value& d, size_t pos, bool firstStep) const {
+Path::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     std::vector<Node> result = d.getNodeSet();
     bool first(true);
-    for (const Expr* e : _exprs) {
-        const Value& tmp = e->eval(result, pos, first);
+    for (const Expr* exp : _exprs) {
+        const Value& tmp = exp->eval(e, result, pos, first);
         result = tmp.getNodeSet();
         first = false;
     }
@@ -170,23 +170,23 @@ Step::~Step() {
 }
 
 Value
-Step::eval(const Value& d, size_t pos, bool firstStep) const {
+Step::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     std::vector<Node> result;
     const std::vector<Node>& ns = d.getNodeSet();
     if (!ns.empty()) {
         evalStep(pos, firstStep, ns, result);
-        evalFilter(result);
+        evalFilter(e, result);
     }
     return Value(result);
 }
 
 void
-Step::evalFilter(std::vector<Node>& result) const {
+Step::evalFilter(const Env& e, std::vector<Node>& result) const {
     if (_preds != nullptr) {
-        for (const Expr* e : *_preds) {
+        for (const Expr* pred : *_preds) {
             std::vector<size_t> keepIndexes;
             for (int i = 0; i < result.size(); i++) {
-                Value r = e->eval(result, i);
+                Value r = pred->eval(e, result, i);
                 if (r.getType() == Value::Number) {
                     if (i + 1 == r.getNumber()) {
                         keepIndexes.emplace_back(i);
@@ -421,8 +421,8 @@ SelfStep::evalStep(size_t pos,
 Predicate::Predicate(const Expr* e) : UnaryExpr(e) {}
 
 Value
-Predicate::eval(const Value& d, size_t pos, bool firstStep) const {
-    return _e->eval(d, pos);
+Predicate::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    return _e->eval(e, d, pos);
 }
 
 // Descendant
@@ -564,7 +564,7 @@ FollowingSiblingSearch::evalStep(size_t pos,
 Literal::Literal(const std::string& l) : StrExpr(l) {}
 
 Value
-Literal::eval(const Value& d, size_t pos, bool firstStep) const {
+Literal::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
   return Value(_s);
 }
 
@@ -572,7 +572,7 @@ Literal::eval(const Value& d, size_t pos, bool firstStep) const {
 Number::Number(double d) : _d(d) {}
 
 Value
-Number::eval(const Value& d, size_t pos, bool firstStep) const {
+Number::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return Value(_d);
 }
 
@@ -580,9 +580,9 @@ Number::eval(const Value& d, size_t pos, bool firstStep) const {
 Union::Union(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Union::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Union::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return l.nodeSetUnion(r);
 }
 
@@ -590,9 +590,9 @@ Union::eval(const Value& d, size_t pos, bool firstStep) const {
 Or::Or(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Or::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Or::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getBool() || r.getBool());
 }
 
@@ -600,9 +600,9 @@ Or::eval(const Value& d, size_t pos, bool firstStep) const {
 And::And(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-And::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+And::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getBool() && r.getBool());
 }
 
@@ -610,9 +610,9 @@ And::eval(const Value& d, size_t pos, bool firstStep) const {
 Eq::Eq(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Eq::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Eq::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return l == r;
 }
 
@@ -621,9 +621,9 @@ Eq::eval(const Value& d, size_t pos, bool firstStep) const {
 Ne::Ne(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Ne::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Ne::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return l != r;
 }
 
@@ -631,9 +631,9 @@ Ne::eval(const Value& d, size_t pos, bool firstStep) const {
 Lt::Lt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Lt::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Lt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l < r);
 }
 
@@ -641,9 +641,9 @@ Lt::eval(const Value& d, size_t pos, bool firstStep) const {
 Gt::Gt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Gt::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Gt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l > r);
 }
 
@@ -651,9 +651,9 @@ Gt::eval(const Value& d, size_t pos, bool firstStep) const {
 Le::Le(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Le::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Le::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l <= r);
 }
 
@@ -661,9 +661,9 @@ Le::eval(const Value& d, size_t pos, bool firstStep) const {
 Ge::Ge(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Ge::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Ge::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l >= r);
 
 }
@@ -672,9 +672,9 @@ Ge::eval(const Value& d, size_t pos, bool firstStep) const {
 Plus::Plus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Plus::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Plus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() + r.getNumber());
 }
 
@@ -682,13 +682,13 @@ Plus::eval(const Value& d, size_t pos, bool firstStep) const {
 Minus::Minus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Minus::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
+Minus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
     if (!_r) {
         Value v(-l.getNumber());
         return Value(-l.getNumber());
     }
-    Value r = _r->eval(d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() - r.getNumber());
 }
 
@@ -696,9 +696,9 @@ Minus::eval(const Value& d, size_t pos, bool firstStep) const {
 Mul::Mul(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Mul::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Mul::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() * r.getNumber());
 }
 
@@ -706,9 +706,9 @@ Mul::eval(const Value& d, size_t pos, bool firstStep) const {
 Div::Div(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Div::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Div::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() / r.getNumber());
 }
 
@@ -716,10 +716,18 @@ Div::eval(const Value& d, size_t pos, bool firstStep) const {
 Mod::Mod(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Mod::eval(const Value& d, size_t pos, bool firstStep) const {
-    Value l = _l->eval(d, pos);
-    Value r = _r->eval(d, pos);
+Mod::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    Value l = _l->eval(e, d, pos);
+    Value r = _r->eval(e, d, pos);
     double result = static_cast<int64_t>(l.getNumber()) % static_cast<int64_t>(r.getNumber());
     return Value(result);
+}
+
+// VarRef
+VarRef::VarRef(const std::string& s) : StrExpr(s) {}
+
+Value
+VarRef::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+    return e.getVariable(_s);
 }
 

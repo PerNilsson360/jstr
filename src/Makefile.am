@@ -3,7 +3,7 @@ CLEANFILES = xpath10_parser.hh xpath10_parser.cc xpath10_scanner.cc location.hh 
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 AM_YFLAGS = -t -v -d -Wno-yacc
 lib_LIBRARIES = libnljp.a
-libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll Expr.cc Functions.cc Node.cc Value.cc xpath10_driver.cc nljp.cc
+libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Functions.cc Node.cc Value.cc Env.cc nljp.cc
 AM_LFLAGS = -olex.yy.c
 
 clean-local:
