@@ -53,6 +53,8 @@ testNumbers() {
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b + /a/c", json));
         assert(r.getNumber() == 4);
+        r = eval("/a/b+/a/c", json);
+        assert(r.getNumber() == 4);
     }
     // -
     {
@@ -78,6 +80,8 @@ testNumbers() {
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b - /a/c", json));
         assert(r.getNumber() == 2);
+        r = eval("/a/b - /a/c", json);
+        assert(r.getNumber() == 2);
     }
     // *
     {
@@ -97,6 +101,8 @@ testNumbers() {
         const char* j = R"({"a":{"b":3,"c":1}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b * /a/c", json));
+        assert(r.getNumber() == 3);
+        r= eval("/a/b * /a/c", json);
         assert(r.getNumber() == 3);
     }
     // div
@@ -292,6 +298,12 @@ testLogic() {
 
 void
 testPaths() {
+    {
+        // <a><b>1</b><c>2</c></a>
+        const char* j = R"({"%@":{"&#":3,"?^":1}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("/%@/&# | /%@/?^", json));
+    }
     {
         // <a><b>1</b><b>2</b><b>3</b></a>
         const char* j = R"({"a":{"b":[1, 2, 3]}})";
@@ -579,6 +591,8 @@ testRelations() {
         assert(r.getBool());
         r = eval("/a/b/c = /a/d", json);
         assert(r.getBool());
+        r = eval("/a/b/c=/a/d", json);
+        assert(r.getBool());
     }
     // !=
     {
@@ -617,6 +631,8 @@ testRelations() {
         r = eval("/a/b/c != /a/d/c", json);
         assert(!r.getBool());
         r = eval("/a/b/c != /a/d", json);
+        assert(!r.getBool());
+        r = eval("/a/b/c!=/a/d", json);
         assert(!r.getBool());
     }
     // <

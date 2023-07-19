@@ -74,10 +74,9 @@ static yy::location loc;
 %}
 %option noyywrap nounput batch noinput
 
-
-id    [a-zA-Z][a-zA-Z_0-9\-]*
+id    [^0-9'"=!<>\-+*/|()\[\].,: \n\t][^'"=!<>+*/:()\[\],  \n\t"]*
 digit [0-9]+
-blank [ \t]
+blank [ \t\n]
 
 %{
   // Code run each time a pattern is matched.
