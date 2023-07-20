@@ -10,7 +10,7 @@ struct CurrentFun : Fun {
         Fun(args) {
         checkArgs(name, 0);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         return e.getCurrent();
     }
 };
@@ -20,7 +20,7 @@ struct LastFun : Fun {
         Fun(args) {
         checkArgs(name, 0);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         double size = d.getNodeSet().size(); 
         return Value(size);
     }
@@ -31,7 +31,7 @@ struct PositionFun : Fun {
         Fun(args) {
         checkArgs(name, 0);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         double position = pos + 1;
         return Value(position);
     }
@@ -42,9 +42,9 @@ struct CountFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(e, d, pos);
+        Value arg = (*i)->evalExpr(e, d, pos);
         return arg.getNodeSetSize();
     }
 };
@@ -54,13 +54,13 @@ struct LocalNameFun : Fun {
         Fun(args) {
         checkArgsZeroOrOne(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
             return n.getLocalName();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
-            Value arg = (*i)->eval(e, d, pos);
+            Value arg = (*i)->evalExpr(e, d, pos);
             return arg.getLocalName();
         }
     }
@@ -72,13 +72,13 @@ struct StringFun : Fun {
         Fun(args) {
         checkArgsZeroOrOne(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
             return n.getString();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
-            Value arg = (*i)->eval(e, d, pos);
+            Value arg = (*i)->evalExpr(e, d, pos);
             return Value(arg.getString());
         }
     }
@@ -89,10 +89,10 @@ struct ConcatFun : Fun {
         Fun(args) {
         checkArgsGe(name, 2);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::string s;
         for (const Expr* arg : *_args) {
-            Value val = arg->eval(e, d, pos);
+            Value val = arg->evalExpr(e, d, pos);
             s += val.getString();
         }
         return Value(s);
@@ -104,11 +104,11 @@ struct StartsWithFun : Fun {
         Fun(args) {
         checkArgs(name, 2);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(e, d, pos);
+        Value left = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value right = (*i)->eval(e, d, pos);
+        Value right = (*i)->evalExpr(e, d, pos);
         std::string l = left.getString();
         std::string r = right.getString();
         return Value(l.rfind(r, 0) == 0);
@@ -120,11 +120,11 @@ struct ContainsFun : Fun {
         Fun(args) {
         checkArgs(name, 2);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(e, d, pos);
+        Value left = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value right = (*i)->eval(e, d, pos);
+        Value right = (*i)->evalExpr(e, d, pos);
         std::string l = left.getString();
         std::string r = right.getString();
         return Value(l.find(r, 0) != std::string::npos);
@@ -136,11 +136,11 @@ struct SubstringBeforeFun : Fun {
         Fun(args) {
         checkArgs(name, 2);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(e, d, pos);
+        Value left = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value right = (*i)->eval(e, d, pos);
+        Value right = (*i)->evalExpr(e, d, pos);
         std::string l = left.getString();
         std::string r = right.getString();
         size_t p = l.find(r, 0);
@@ -153,11 +153,11 @@ struct SubstringAfterFun : Fun {
         Fun(args) {
         checkArgs(name, 2);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(e, d, pos);
+        Value left = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value right = (*i)->eval(e, d, pos);
+        Value right = (*i)->evalExpr(e, d, pos);
         std::string l = left.getString();
         std::string r = right.getString();
         size_t p = l.find(r, 0);
@@ -170,16 +170,16 @@ struct SubstringFun : Fun {
         Fun(args) {
         checkArgsTwoOrThree(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         size_t argsSize(_args->size()); 
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value str = (*i)->eval(e, d, pos);
+        Value str = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value position = (*i)->eval(e, d, pos);
+        Value position = (*i)->evalExpr(e, d, pos);
         double len(-1);
         if (argsSize > 2) {
             ++i;
-            Value length = (*i)->eval(e, d, pos);
+            Value length = (*i)->evalExpr(e, d, pos);
             len = length.getNumber();
             if (std::isnan(len)) {
                 return Value("");
@@ -211,7 +211,7 @@ struct StringLengthFun : Fun {
         Fun(args) {
         checkArgsZeroOrOne(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         double l;
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
@@ -219,7 +219,7 @@ struct StringLengthFun : Fun {
             l = s.size();
         } else  {
             std::list<const Expr*>::const_iterator i = _args->begin();
-            Value v = (*i)->eval(e, d, pos);
+            Value v = (*i)->evalExpr(e, d, pos);
             const std::string& s = v.getString();
             l = s.size();
         }
@@ -232,13 +232,13 @@ struct TranslateFun : Fun {
         Fun(args) {
         checkArgs(name, 3);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value left = (*i)->eval(e, d, pos);
+        Value left = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value source = (*i)->eval(e, d, pos);
+        Value source = (*i)->evalExpr(e, d, pos);
         ++i;
-        Value target = (*i)->eval(e, d, pos);
+        Value target = (*i)->evalExpr(e, d, pos);
         std::string l = left.getString();
         const std::string& s = source.getString();
         const std::string& t = target.getString();
@@ -259,13 +259,13 @@ struct NumberFun : Fun {
         Fun(args) {
         checkArgsZeroOrOne(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
             return n.getNumber();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
-            Value v = (*i)->eval(e, d, pos);
+            Value v = (*i)->evalExpr(e, d, pos);
             return Value(v.getNumber());
         }
     }
@@ -276,9 +276,9 @@ struct SumFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value v = (*i)->eval(e, d, pos);
+        Value v = (*i)->evalExpr(e, d, pos);
         double r(0);
         for (const Node& n : v.getNodeSet()) {
             const std::string& s = n.getString();
@@ -303,9 +303,9 @@ struct FloorFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value v = (*i)->eval(e, d, pos);
+        Value v = (*i)->evalExpr(e, d, pos);
         return Value(floor(v.getNumber()));
     }
 };
@@ -315,9 +315,9 @@ struct CeilingFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value v = (*i)->eval(e, d, pos);
+        Value v = (*i)->evalExpr(e, d, pos);
         return Value(ceil(v.getNumber()));
     }
 };
@@ -327,9 +327,9 @@ struct RoundFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value v = (*i)->eval(e, d, pos);
+        Value v = (*i)->evalExpr(e, d, pos);
         return Value(round(v.getNumber()));
     }
 };
@@ -340,13 +340,13 @@ struct BooleanFun : Fun {
         Fun(args) {
         checkArgsZeroOrOne(name);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
             return Value(n.getBool());
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
-            Value arg = (*i)->eval(e, d, pos);
+            Value arg = (*i)->evalExpr(e, d, pos);
             return Value(!arg.getBool());
         }
     }
@@ -359,9 +359,9 @@ struct NotFun : Fun {
         Fun(args) {
         checkArgs(name, 1);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
-        Value arg = (*i)->eval(e, d, pos);
+        Value arg = (*i)->evalExpr(e, d, pos);
         return Value(!arg.getBool());
     }
 };
@@ -371,7 +371,7 @@ struct TrueFun : Fun {
         Fun(args) {
         checkArgs(name, 0);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         return Value(true);
     }
 };
@@ -381,7 +381,7 @@ struct FalseFun : Fun {
         Fun(args) {
         checkArgs(name, 0);
     }
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         return Value(false);
     }
 };

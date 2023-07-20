@@ -26,9 +26,90 @@
 #include "Expr.hh"
 #include "Value.hh"
 
+namespace {
+    
+std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>& keepIndexes) {
+    std::vector<Node> result;
+    for (size_t i : keepIndexes) {
+        result.emplace_back(ns[i]);
+    }
+    return result;
+}
 
-// UnaryExpr
-UnaryExpr::UnaryExpr(const Expr* e) : _e(e) {}
+void
+addIfUnique(std::vector<Node>& result, const std::vector<Node>& ns) {
+    for (const Node& n : ns) {
+        addIfUnique(result, n);
+    }
+}
+
+bool
+checkLocalName(const Node& n, const std::string& name) {
+    return name.empty() || name == "*" || n.getLocalName() == name;
+}
+
+}
+
+// Expr
+Expr::Expr() : _preds(nullptr) {
+}
+
+Expr::~Expr() {
+    deleteExprs(_preds);
+    _preds = nullptr;
+}
+
+Value
+Expr::eval(const Env& e, const Value& v, size_t pos, bool firstStep) const {
+    Value val = evalExpr(e, v, pos, firstStep);
+    return evalFilter(e, val);
+}
+
+void
+Expr::addPredicates(const std::list<const Expr*>* preds) {
+    _preds = preds;
+}
+
+const std::list<const Expr*>*
+Expr::takePredicates() {
+    const std::list<const Expr*>* result = _preds;
+    _preds = nullptr;
+    return result;
+}
+
+Value
+Expr::evalFilter(const Env& env, const Value& val) const {
+    if (_preds == nullptr) {
+        return val;
+    }
+    if (val.getType() != Value::NodeSet) {
+        bool keep(true);
+        for (const Expr* pred : *_preds) {
+            Value r = pred->eval(env, val, 0);
+            keep &= r.getBool();
+        }
+        return keep ? val : Value();
+    } else {
+        std::vector<Node> result = val.getNodeSet();
+        for (const Expr* pred : *_preds) {
+            std::vector<size_t> keepIndexes;
+            for (int i = 0; i < result.size(); i++) {
+                Value r = pred->eval(env, result, i);
+                if (r.getType() == Value::Number) {
+                    if (i + 1 == r.getNumber()) {
+                        keepIndexes.emplace_back(i);
+                    }
+                } else {
+                    if (r.getBool()) {
+                        keepIndexes.emplace_back(i);
+                    }
+                }
+            }
+            result = filter(result, keepIndexes);
+        }
+        return Value(result);
+    }
+}
 
 // BinaryExpr
 BinaryExpr::BinaryExpr(const Expr* l, const Expr* r) : _l(l), _r(r) {}
@@ -73,39 +154,15 @@ MultiExpr::getExprs() {
 
 // Root
 Value
-Root::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Root::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return d.getRoot();
-}
-
-namespace {
-    
-std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>& keepIndexes) {
-    std::vector<Node> result;
-    for (size_t i : keepIndexes) {
-        result.emplace_back(ns[i]);
-    }
-    return result;
-}
-
-void
-addIfUnique(std::vector<Node>& result, const std::vector<Node>& ns) {
-    for (const Node& n : ns) {
-        addIfUnique(result, n);
-    }
-}
-
-bool
-checkLocalName(const Node& n, const std::string& name) {
-    return name.empty() || name == "*" || n.getLocalName() == name;
-}
-
 }
 
 // Path
 Path::Path(Expr* e) : MultiExpr(e) {}
 
 Value
-Path::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Path::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     std::vector<Node> result = d.getNodeSet();
     bool first(true);
     for (const Expr* exp : _exprs) {
@@ -124,15 +181,17 @@ Path::addAbsoluteDescendant() {
     Step* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
-        descendant = new DescendantAll(s->takePredicates());
+        descendant = new DescendantAll();
+        descendant->addPredicates(s->takePredicates());
         _exprs.pop_front();
        delete step;
     } else if (Step::isSelfOrParentStep(step)) {
-        descendant = new DescendantAll(nullptr);
+        descendant = new DescendantAll();
     } else {
         Step* s = static_cast<Step*>(step);
         const std::string& stepName = s->getString();
-        descendant = new DescendantSearch(stepName, s->takePredicates());
+        descendant = new DescendantSearch(stepName);
+        descendant->addPredicates(s->takePredicates());
         _exprs.pop_front();
        delete step;
     }
@@ -145,15 +204,17 @@ Path::addRelativeDescendant(Expr* step) {
     Step* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
-        descendant = new DescendantAll(s->takePredicates());
+        descendant = new DescendantAll();
+        descendant->addPredicates(s->takePredicates());
        delete step;
     } else if (Step::isSelfOrParentStep(step)) {
-        descendant = new DescendantAll(nullptr);
+        descendant = new DescendantAll();
         _exprs.push_back(step);
     } else {
         Step* s = static_cast<Step*>(step);
         const std::string& stepName = s->getString();
-        descendant = new DescendantSearch(stepName, s->takePredicates());
+        descendant = new DescendantSearch(stepName);
+        descendant->addPredicates(s->takePredicates());
        delete step;
     }
     _exprs.push_back(descendant);
@@ -166,15 +227,17 @@ Path::addRelativeDescendant() {
     Step* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
-        descendant = new DescendantAll(s->takePredicates());
+        descendant = new DescendantAll();
+        descendant->addPredicates(s->takePredicates());
         _exprs.pop_front();
        delete step;
     } else if (Step::isSelfOrParentStep(step)) {
-        descendant = new DescendantAll(nullptr);
+        descendant = new DescendantAll();
     } else {
         Step* s = static_cast<Step*>(step);
         const std::string& stepName = s->getString();
-        descendant = new DescendantSearch(stepName, s->takePredicates());
+        descendant = new DescendantSearch(stepName);
+        descendant->addPredicates(s->takePredicates());
         _exprs.pop_front();
        delete step;
     }
@@ -182,101 +245,64 @@ Path::addRelativeDescendant() {
 }
 
 // Step
-Step::Step(const std::string& s, const std::list<const Expr*>* preds) :
-    StrExpr(s), _preds(preds) {
-}
-
-Step::~Step() {
-    deleteExprs(_preds);
+Step::Step(const std::string& s) : StrExpr(s) {
 }
 
 Value
-Step::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Step::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
     std::vector<Node> result;
-    const std::vector<Node>& ns = d.getNodeSet();
+    const std::vector<Node>& ns = val.getNodeSet();
     if (!ns.empty()) {
         evalStep(pos, firstStep, ns, result);
-        evalFilter(e, result);
     }
     return Value(result);
 }
 
-void
-Step::evalFilter(const Env& e, std::vector<Node>& result) const {
-    if (_preds != nullptr) {
-        for (const Expr* pred : *_preds) {
-            std::vector<size_t> keepIndexes;
-            for (int i = 0; i < result.size(); i++) {
-                Value r = pred->eval(e, result, i);
-                if (r.getType() == Value::Number) {
-                    if (i + 1 == r.getNumber()) {
-                        keepIndexes.emplace_back(i);
-                    }
-                } else {
-                    if (r.getBool()) {
-                        keepIndexes.emplace_back(i);
-                    }
-                }
-            }
-            result = filter(result, keepIndexes);
-        }
-    }
-}
-
-const std::list<const Expr*>*
-Step::takePredicates() {
-    const std::list<const Expr*>* result = _preds;
-    _preds = nullptr;
-    return result;
-}
-
 Expr*
-Step::create(const std::string& axisName,
-             const std::string& nodeTest,
-             std::list<const Expr*>* predicates) {
+Step::create(const std::string& axisName, const std::string& nodeTest) {
     if (axisName.empty()) {
         if (nodeTest == "..") {
-            return new ParentStep("", predicates);
+            return new ParentStep("");
         } else if (nodeTest == ".") {
-            return new SelfStep("", predicates);
+            return new SelfStep("");
         } else if (nodeTest == "*") {
-            return new AllStep("", predicates);
+            return new AllStep("");
         } else {
-            return new ChildStep(nodeTest, predicates);
+            return new ChildStep(nodeTest);
         }
     } else if (axisName == "ancestor") {
-        return new AncestorStep(nodeTest, predicates);
+        return new AncestorStep(nodeTest);
     }
     else if (axisName == "ancestor-or-self") {
-        return new AncestorSelfStep(nodeTest, predicates);
+        return new AncestorSelfStep(nodeTest);
     } else if (axisName == "child") {
         if (nodeTest == "*") {
-            return new AllStep(nodeTest, predicates);
+            return new AllStep(nodeTest);
         } else {
-            return new ChildStep(nodeTest, predicates);
+            return new ChildStep(nodeTest);
         }
     } else if (axisName == "descendant") {
         if (nodeTest == "*") {
-            return new DescendantAll(predicates);
+            return new DescendantAll();
         } else {
-            return new DescendantSearch(nodeTest, predicates);
+            return new DescendantSearch(nodeTest);
         }
     } else if (axisName == "descendant-or-self") {
         if (nodeTest == "*") {
-            return new DescendantOrSelfAll(predicates);
+            return new DescendantOrSelfAll();
         } else {
-            return new DescendantOrSelfSearch(nodeTest, predicates);
+            return new DescendantOrSelfSearch(nodeTest);
         }
     } else if (axisName == "following-sibling") {
         if (nodeTest == "*") {
-            return new FollowingSiblingAll(predicates);
+            return new FollowingSiblingAll();
         } else {
-            return new FollowingSiblingSearch(nodeTest, predicates);
+            return new FollowingSiblingSearch(nodeTest);
         }
     } else if (axisName == "parent") {
-        return new ParentStep(nodeTest, predicates);
+        return new ParentStep(nodeTest);
     } else if (axisName == "self") {
-        return new SelfStep(nodeTest, predicates);
+        return new SelfStep(nodeTest);
     }else {
         throw std::runtime_error("Step::create not a supported step");
     }
@@ -291,8 +317,7 @@ bool Step::isSelfOrParentStep(const Expr* step) {
         dynamic_cast<const ParentStep*>(step) != nullptr;
 }
 
-AncestorStep::AncestorStep(const std::string& s, const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+AncestorStep::AncestorStep(const std::string& s) : Step(s) {
 }
 
 void
@@ -323,9 +348,8 @@ AncestorStep::evalStep(size_t pos,
     }
 }
 
-AncestorSelfStep::AncestorSelfStep(const std::string& s,
-                                   const std::list<const Expr*>* preds) :
-    AncestorStep(s, preds) {
+AncestorSelfStep::AncestorSelfStep(const std::string& s) :
+    AncestorStep(s) {
 }
 
 void
@@ -348,8 +372,8 @@ AncestorSelfStep::evalStep(size_t pos,
     }
 }
 
-AllStep::AllStep(const std::string& s, const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+AllStep::AllStep(const std::string& s) :
+    Step(s) {
 }
 
 void
@@ -367,8 +391,8 @@ AllStep::evalStep(size_t pos,
     }
 }
 
-ChildStep::ChildStep(const std::string& s, const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+ChildStep::ChildStep(const std::string& s) :
+    Step(s) {
 }
 
 void
@@ -386,8 +410,8 @@ ChildStep::evalStep(size_t pos,
     }
 }
 
-ParentStep::ParentStep(const std::string& s, const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+ParentStep::ParentStep(const std::string& s) :
+    Step(s) {
 }
 
 void
@@ -411,8 +435,8 @@ ParentStep::evalStep(size_t pos,
     }
 }
 
-SelfStep::SelfStep(const std::string& s, const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+SelfStep::SelfStep(const std::string& s) :
+    Step(s) {
 }
 
 void
@@ -439,15 +463,16 @@ SelfStep::evalStep(size_t pos,
 }
 
 // Predicate
-Predicate::Predicate(const Expr* e) : UnaryExpr(e) {}
+Predicate::Predicate(const Expr* e) : _e(e) {
+}
 
 Value
-Predicate::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
-    return _e->eval(e, d, pos);
+Predicate::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    return _e->eval(env, val, pos);
 }
 
 // Descendant
-DescendantAll::DescendantAll(const std::list<const Expr*>* preds) : Step("", preds) {
+DescendantAll::DescendantAll() : Step("") {
 }
 
 void
@@ -460,8 +485,8 @@ DescendantAll::evalStep(size_t pos,
     }
 }
 
-DescendantOrSelfAll::DescendantOrSelfAll(const std::list<const Expr*>* preds) :
-    DescendantAll(preds) {
+DescendantOrSelfAll::DescendantOrSelfAll() :
+    DescendantAll() {
 }
 
 void
@@ -477,8 +502,7 @@ DescendantOrSelfAll::evalStep(size_t pos,
 }
 
 
-DescendantSearch::DescendantSearch(const std::string& s,
-                                   const std::list<const Expr*>* preds) : Step(s, preds) {
+DescendantSearch::DescendantSearch(const std::string& s) : Step(s) {
 }
 
 void
@@ -491,9 +515,8 @@ DescendantSearch::evalStep(size_t pos,
     }
 }
 
-DescendantOrSelfSearch::DescendantOrSelfSearch(const std::string& s,
-                                               const std::list<const Expr*>* preds) :
-    DescendantSearch(s, preds) {
+DescendantOrSelfSearch::DescendantOrSelfSearch(const std::string& s) :
+    DescendantSearch(s) {
 }
 
 void
@@ -525,8 +548,7 @@ findPosition(const Node& node, std::vector<Node>& children) {
 }
 }
 
-FollowingSiblingAll::FollowingSiblingAll(const std::list<const Expr*>* preds) :
-    Step("", preds) {
+FollowingSiblingAll::FollowingSiblingAll() : Step("") {
 }
 
 void
@@ -551,9 +573,7 @@ FollowingSiblingAll::evalStep(size_t pos,
     }
 }
 
-FollowingSiblingSearch::FollowingSiblingSearch(const std::string& s,
-                                               const std::list<const Expr*>* preds) :
-    Step(s, preds) {
+FollowingSiblingSearch::FollowingSiblingSearch(const std::string& s) : Step(s) {
 }
 
 void
@@ -585,7 +605,7 @@ FollowingSiblingSearch::evalStep(size_t pos,
 Literal::Literal(const std::string& l) : StrExpr(l) {}
 
 Value
-Literal::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Literal::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
   return Value(_s);
 }
 
@@ -593,7 +613,7 @@ Literal::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Number::Number(double d) : _d(d) {}
 
 Value
-Number::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Number::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return Value(_d);
 }
 
@@ -601,7 +621,7 @@ Number::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Union::Union(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Union::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Union::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return l.nodeSetUnion(r);
@@ -611,7 +631,7 @@ Union::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Or::Or(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Or::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Or::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l.getBool() || r.getBool());
@@ -621,7 +641,7 @@ Or::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 And::And(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-And::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+And::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l.getBool() && r.getBool());
@@ -631,18 +651,17 @@ And::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Eq::Eq(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Eq::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Eq::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return l == r;
 }
 
-
 // Ne
 Ne::Ne(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Ne::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Ne::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return l != r;
@@ -652,7 +671,7 @@ Ne::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Lt::Lt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Lt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Lt::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l < r);
@@ -662,7 +681,7 @@ Lt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Gt::Gt(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Gt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Gt::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l > r);
@@ -672,7 +691,7 @@ Gt::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Le::Le(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Le::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Le::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l <= r);
@@ -682,7 +701,7 @@ Le::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Ge::Ge(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Ge::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Ge::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l >= r);
@@ -693,7 +712,7 @@ Ge::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Plus::Plus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Plus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Plus::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() + r.getNumber());
@@ -703,7 +722,7 @@ Plus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Minus::Minus(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Minus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Minus::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     if (!_r) {
         Value v(-l.getNumber());
@@ -717,7 +736,7 @@ Minus::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Mul::Mul(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Mul::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Mul::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() * r.getNumber());
@@ -727,7 +746,7 @@ Mul::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Div::Div(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Div::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Div::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     return Value(l.getNumber() / r.getNumber());
@@ -737,7 +756,7 @@ Div::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Mod::Mod(const Expr* l, const Expr* r) : BinaryExpr(l, r) {}
 
 Value
-Mod::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+Mod::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
     double result = static_cast<int64_t>(l.getNumber()) % static_cast<int64_t>(r.getNumber());
@@ -748,7 +767,7 @@ Mod::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 VarRef::VarRef(const std::string& s) : StrExpr(s) {}
 
 Value
-VarRef::eval(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+VarRef::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return e.getVariable(_s);
 }
 

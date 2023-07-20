@@ -176,11 +176,11 @@ RelativeLocationPath :
 // [4] Step	                            ::=     AxisSpecifier NodeTest Predicate*	
 //			                                    | AbbreviatedStep
 Step :
-  NodeTest                                      { $$ = Step::create("", $1, nullptr);} 
-| NodeTest Predicates                           { $$ = Step::create("", $1, $2); }
-| AxisSpecifier NodeTest                        { $$ = Step::create($1, $2, nullptr); }
-| AxisSpecifier NodeTest Predicates             { $$ = Step::create($1, $2, $3); }
-| AbbreviatedStep                               { $$ = Step::create("", $1, nullptr); }
+  NodeTest                                      { $$ = Step::create("", $1);} 
+| NodeTest Predicates                           { $$ = Step::create("", $1); $$->addPredicates($2); }
+| AxisSpecifier NodeTest                        { $$ = Step::create($1, $2); }
+| AxisSpecifier NodeTest Predicates             { $$ = Step::create($1, $2); $$->addPredicates($3); }
+| AbbreviatedStep                               { $$ = Step::create("", $1); }
 
 // [5] AxisSpecifier                    ::=     AxisName "::"	
 //                                              | AbbreviatedAxisSpecifier

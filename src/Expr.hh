@@ -32,16 +32,19 @@
 
 class Expr {
 public:
-    Expr() = default;
-    virtual ~Expr() = default;
-    virtual Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const = 0;
-};
+    Expr();
+    virtual ~Expr();
+    Value eval(const Env& env, const Value& val, size_t pos, bool firstStep = false) const;
+    virtual Value evalExpr(const Env& env,
+                           const Value& val,
+                           size_t pos,
+                           bool firstStep = false) const = 0;
+    void addPredicates(const std::list<const Expr*>* preds);
+    const std::list<const Expr*>* takePredicates();
+private:
+    Value evalFilter(const Env& e, const Value& val) const;
+    const std::list<const Expr*>* _preds;
 
-class UnaryExpr {
-public:
-    UnaryExpr(const Expr* e);
-protected:
-    std::unique_ptr<const Expr> _e;
 };
 
 class BinaryExpr {
@@ -73,13 +76,14 @@ protected:
 
 class Root : public Expr {
 public:
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const;
+    Root() = default;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const;
 };
 
 class Path : public Expr, public MultiExpr {
 public:
     Path(Expr* e);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
     void addAbsoluteDescendant();
     void addRelativeDescendant(Expr* Step);
     void addRelativeDescendant();
@@ -87,13 +91,9 @@ public:
 
 class Step : public Expr, public StrExpr {
 public:
-    Step(const std::string& s, const std::list<const Expr*>* preds);
-    ~Step();
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
-    static Expr* create(const std::string& axisName,
-                             const std::string& nodeTest,
-                             std::list<const Expr*>* predicates);
-    const std::list<const Expr*>* takePredicates();
+    Step(const std::string& s);
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    static Expr* create(const std::string& axisName, const std::string& nodeTest);
     // TODO make this better
     static bool isAllStep(const Expr* step);
     static bool isSelfOrParentStep(const Expr* step);
@@ -102,13 +102,11 @@ protected:
                           bool firstStep,
                           const std::vector<Node>& nodeSet,
                           std::vector<Node>& result) const = 0;
-    void evalFilter(const Env& e, std::vector<Node>& result) const;
-    const std::list<const Expr*>* _preds;
 };
 
 class AllStep : public Step {
 public:
-    AllStep(const std::string& s, const std::list<const Expr*>* preds);
+    AllStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -118,7 +116,7 @@ protected:
 
 class AncestorStep : public Step {
 public:
-    AncestorStep(const std::string& s, const std::list<const Expr*>* preds);
+    AncestorStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -128,7 +126,7 @@ protected:
 
 class AncestorSelfStep : public AncestorStep {
 public:
-    AncestorSelfStep(const std::string& s, const std::list<const Expr*>* preds);
+    AncestorSelfStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -138,7 +136,7 @@ protected:
 
 class ChildStep : public Step {
 public:
-    ChildStep(const std::string& s, const std::list<const Expr*>* preds);
+    ChildStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -148,7 +146,7 @@ protected:
 
 class ParentStep : public Step {
 public:
-    ParentStep(const std::string& s, const std::list<const Expr*>* preds);
+    ParentStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -158,7 +156,7 @@ protected:
 
 class SelfStep : public Step {
 public:
-    SelfStep(const std::string& s, const std::list<const Expr*>* preds);
+    SelfStep(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -166,15 +164,17 @@ protected:
                   std::vector<Node>& result) const override;
 };
 
-class Predicate : public Expr, UnaryExpr {
+class Predicate : public Expr {
 public:
     Predicate(const Expr* e);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+private:
+    std::unique_ptr<const Expr> _e; 
 };
 
 class DescendantAll : public Step { // TODO not really a step
 public:
-    DescendantAll(const std::list<const Expr*>* preds);
+    DescendantAll();
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -184,7 +184,7 @@ protected:
 
 class DescendantOrSelfAll : public DescendantAll {
 public:
-    DescendantOrSelfAll(const std::list<const Expr*>* preds);
+    DescendantOrSelfAll();
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -194,7 +194,7 @@ protected:
 
 class DescendantSearch : public Step {
 public:
-    DescendantSearch(const std::string& s, const std::list<const Expr*>* preds);
+    DescendantSearch(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -204,7 +204,7 @@ protected:
 
 class DescendantOrSelfSearch : public DescendantSearch {
 public:
-    DescendantOrSelfSearch(const std::string& s, const std::list<const Expr*>* preds);
+    DescendantOrSelfSearch(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -215,7 +215,7 @@ protected:
 class FollowingSiblingAll : public Step {
 public:
 
-    FollowingSiblingAll(const std::list<const Expr*>* preds);
+    FollowingSiblingAll();
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -225,7 +225,7 @@ protected:
 
 class FollowingSiblingSearch : public Step {
 public:
-    FollowingSiblingSearch(const std::string& s, const std::list<const Expr*>* preds);
+    FollowingSiblingSearch(const std::string& s);
 protected:
     void evalStep(size_t pos,
                   bool firstStep,
@@ -235,24 +235,24 @@ protected:
 
 class ContextItem : public Expr {
 public:
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Parent : public Expr {
 public:
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Literal : public Expr, StrExpr {
 public:
     Literal(const std::string& l);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Number : public Expr {
 public:
     Number(double d);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 private:
     double _d;
 };
@@ -260,97 +260,97 @@ private:
 class Args : public Expr, public MultiExpr {
 public:
     Args(const Expr* e);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Union : public Expr, BinaryExpr {
 public:
     Union(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
   
 class Or : public Expr, BinaryExpr {
 public:
     Or(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class And : public Expr, BinaryExpr {
 public:
     And(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Eq : public Expr, BinaryExpr {
 public:
     Eq(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Ne : public Expr, BinaryExpr {
 public:
     Ne(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Lt : public Expr, BinaryExpr {
 public:
     Lt(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Gt : public Expr, BinaryExpr {
 public:
     Gt(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Le : public Expr, BinaryExpr {
 public:
     Le(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Ge : public Expr, BinaryExpr {
 public:
     Ge(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Plus : public Expr, BinaryExpr {
 public:
     Plus(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Minus : public Expr, BinaryExpr {
 public:
     Minus(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Mul : public Expr, BinaryExpr {
 public:
     Mul(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Div : public Expr, BinaryExpr {
 public:
     Div(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Mod : public Expr, BinaryExpr {
 public:
     Mod(const Expr* l, const Expr* r);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class VarRef : public Expr, StrExpr {
 public:
     VarRef(const std::string& s);
-    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 #endif
