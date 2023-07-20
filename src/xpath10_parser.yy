@@ -167,7 +167,6 @@ AbsoluteLocationPath :
 // [3]   	RelativeLocationPath	   ::=   	Step	
 //                                              | RelativeLocationPath '/' Step	
 //                                              | AbbreviatedRelativeLocationPath
-
 RelativeLocationPath :
   Step	                                        { $$ = new Path($1); } 
 | RelativeLocationPath "/" Step	                { $1->addBack($3); $$ = $1; }
@@ -235,7 +234,7 @@ PredicateExpr:
 
 // [10] AbbreviatedAbsoluteLocationPath	  ::=  	 '//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
-  "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); }
+  "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); } // TODO add root here ?
 
 // [119 AbbreviatedRelativeLocationPath	  ::=  	 RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
@@ -288,14 +287,14 @@ UnionExpr :
 PathExpr :
   LocationPath	                                 { $$ = $1; }
 | FilterExpr	                                 { $$ = $1; }
-//| FilterExpr "/" RelativeLocationPath	         {}  TODO what a bout these?
-//| FilterExpr "//" RelativeLocationPath	     {};
+| FilterExpr "/" RelativeLocationPath	         { $3->addFront($1); $$ = $3; }
+| FilterExpr "//" RelativeLocationPath	         { $3->addRelativeDescendant(); $3->addFront($1); $$ = $3; };
 
 //[20] FilterExpr	                       ::=   PrimaryExpr	
 //                                               | FilterExpr Predicate
 FilterExpr :
   PrimaryExpr	                                 { $$ = $1; }
-//| FilterExpr Predicate                           {};
+//| FilterExpr Predicate                         {}; TODO
 
 // [21]   	OrExpr	   ::=   	AndExpr	
 // | OrExpr 'or' AndExpr	
@@ -359,7 +358,7 @@ FunctionName :
 
 // [36 ] VariableReference	   ::=   	'$' QName	
 VariableReference :
-  "$" "identifier"                                { $$ = new VarRef($2); }
+"$" "identifier"                                { $$ = new VarRef($2); }
 
 // [37] NameTest	   ::=   	'*'	
 // | NCName ':' '*'	

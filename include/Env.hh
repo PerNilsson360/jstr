@@ -6,6 +6,7 @@
 
 class Env {
 public:
+    Env(const nlohmann::json& json);
     Env(const Value& context);
     const Value& getCurrent() const;
     void addVariable(const std::string& name, const Value& v);

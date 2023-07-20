@@ -24,6 +24,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "Env.hh"
+#include "Expression.hh"
 #include "nljp.hh"
 
 void
@@ -811,6 +813,8 @@ testFilter() {
         assert(r.getNumber() == 1);
         r = eval("count(/a/b[not(. = 1)][not(. = 2)][not(. = 3)][not(. = 4)])", json);
         assert(r.getNumber() == 0);
+        r = eval("count(/a/b[count(//b) = 4])", json);
+        assert(r.getNumber() == 4);
         r = eval("/a/b[1]", json);
         assert(r.getNumber() == 1);
         r = eval("/a/b[2]", json);
@@ -1045,6 +1049,57 @@ testStringValue() {
     }
 }
 
+void
+testEnv() {
+    {
+        // <a>3</a>
+        const char* j = R"({"a":3})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Env env(json);
+        Expression e("/a");
+        Value r = e.eval(env);
+        assert(r.getNumber() == 3);
+    }
+    {
+        // <a><b>1</b><b>2</b><b>3</b><b>4</b></a>
+        const char* j = R"({"a":{"b":[1,2,3,4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value b1 = eval("/a/b[. = 1]", json);
+        Env env(json);
+        env.addVariable("b1", b1);
+        Expression e1("$b1");
+        Value r(e1.eval(env));
+        assert(r.getNumber() == 1);
+        Expression e2("$b1 = current()/a/b[. = 1]");
+        r = e2.eval(env);
+        assert(r.getBool());
+        Expression e3("$b1 = current()//b[. = 1]");
+        r = e3.eval(env);
+        assert(r.getBool());
+        Value b4 = eval("/a/b[. = 4]", json);
+        env.addVariable("b4", b4);
+        Expression e4("$b1 < $b4");
+        r = e4.eval(env);
+        assert(r.getBool());
+        Expression e5("($b1 + 3) = $b4");
+        r = e5.eval(env);
+        assert(r.getBool());
+    }
+    {
+        //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
+        const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value d = eval("//d", json);
+        Env env(d);
+        Expression e1("local-name(current()/c[count(//e) = 2])");
+        Value r(e1.eval(env));
+        assert(r.getString() == "c");
+        Expression e2("count(current()//e)");
+        r = e2.eval(env);
+        assert(r.getNumber() == 1);
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1056,5 +1111,6 @@ main (int argc, char *argv[])
     testNodeSetFunctions();
     testStringFunctions();
     testStringValue();
+    testEnv();
     return 0;
 }

@@ -74,7 +74,7 @@ static yy::location loc;
 %}
 %option noyywrap nounput batch noinput
 
-id    [^0-9'"=!<>\-+*/|()\[\].,: \n\t][^'"=!<>+*/:()\[\],  \n\t"]*
+id    [^0-9'"\=!<>\-+*/|()\[\].,: \n\t$][^'"=!<>+*/:()\[\],  \n\t"]*
 digit [0-9]+
 blank [ \t\n]
 
@@ -112,6 +112,7 @@ blank [ \t\n]
 ".."                 return yy::xpath10_parser::make_DOUBLE_DOT(yytext, loc);
 ","                  return yy::xpath10_parser::make_COMMA(loc);
 "::"                 return yy::xpath10_parser::make_DOUBLE_COLON(loc);
+"$"                  return yy::xpath10_parser::make_DOLLAR(loc);
 "and"                return yy::xpath10_parser::make_AND(loc);
 "or"                 return yy::xpath10_parser::make_OR(loc);
 "div"                return yy::xpath10_parser::make_DIV(loc);

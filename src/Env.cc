@@ -4,6 +4,9 @@
 
 #include "Env.hh"
 
+Env::Env(const nlohmann::json& json) : _context(Value(Node("", json))) {
+}
+
 Env::Env(const Value& context) : _context(context) {
     if (context.getType() != Value::NodeSet) {
         throw std::runtime_error("Env::Env context is not a NodeSet");
@@ -16,8 +19,8 @@ Env::getCurrent() const {
 }
 
 void
-Env::addVariable(const std::string& name, const Value& v) {
-    if (!_vals.emplace(name, v).second) {
+Env::addVariable(const std::string& name, const Value& val) {
+    if (!_vals.emplace(name, val).second) {
         std::stringstream ss;
         ss << "Env::addVariable " << name << " is allready added.";
         throw std::runtime_error(ss.str());

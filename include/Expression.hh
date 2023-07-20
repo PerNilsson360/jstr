@@ -20,35 +20,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef _UTILS_HH_
-#define _UTILS_HH_
+#ifndef _EXPRESSION_HH_
+#define _EXPRESSION_HH_
 
-#include <list>
-#include "Expr.hh"
+#include "Value.hh"
 
-inline
-void
-addIfUnique(std::vector<Node>& ns, const Node& node) {
-    bool found(false);
-    for (const Node& n : ns) {
-        if (n == node) {
-            found = true;
-        }
-    }
-    if (!found) {
-        ns.emplace_back(node);
-    }
-}
+class Expr;
 
-inline
-void
-deleteExprs(const std::list<const Expr*>* l) {
-    if (l != nullptr) {
-        for (const Expr* e : *l) {
-            delete e;
-        }
-        delete l;
-    }
-}
+class Expression {
+public:
+    Expression(const std::string& s);
+    Expression(const Expression& expr) = delete;
+    Expression& operator=(const Expression& expr) = delete;
+    ~Expression();
+    Value eval(const Env& env) const;
+private:
+    const Expr* _expr;
+};
 
 #endif

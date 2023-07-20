@@ -50,11 +50,12 @@ public:
     ~Value();
     Type getType() const;
     /**
+     * Returns an indication if this is a primitive value or not.
      * @return true if this object represents a literal or a single node with a value.
      */
     bool isValue() const;
     double getNumber() const;
-    bool getBool() const;
+    bool getBool() const;       // TODO Rename to boolean
     /**
      * Primitiv values are converted to strings. For node sets the "string value"
      * of the first node is returned. If the node set is empty the empty string is

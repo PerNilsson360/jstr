@@ -82,6 +82,7 @@ public:
     Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
     void addAbsoluteDescendant();
     void addRelativeDescendant(Expr* Step);
+    void addRelativeDescendant();
 };
 
 class Step : public Expr, public StrExpr {

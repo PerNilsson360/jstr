@@ -20,35 +20,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef _UTILS_HH_
-#define _UTILS_HH_
+#include <sstream>
+#include <stdexcept>
 
-#include <list>
-#include "Expr.hh"
+#include "xpath10_driver.hh"
+#include "Expression.hh"
 
-inline
-void
-addIfUnique(std::vector<Node>& ns, const Node& node) {
-    bool found(false);
-    for (const Node& n : ns) {
-        if (n == node) {
-            found = true;
-        }
+Expression::Expression(const std::string& s) {
+    xpath10_driver driver;
+    if (driver.parse(s) != 0) {
+        std::stringstream ss;
+        ss << "Expression::Expression failed to parse exp: " << s;
+        throw std::runtime_error(ss.str());
     }
-    if (!found) {
-        ns.emplace_back(node);
-    }
+    _expr = driver.result.release();
 }
 
-inline
-void
-deleteExprs(const std::list<const Expr*>* l) {
-    if (l != nullptr) {
-        for (const Expr* e : *l) {
-            delete e;
-        }
-        delete l;
-    }
+Expression::~Expression() {
+    delete _expr;
+    _expr = nullptr;
 }
 
-#endif
+Value
+Expression::eval(const Env& env) const {
+    return _expr->eval(env, env.getCurrent(), 0);
+}
+

@@ -5,7 +5,16 @@
 #include "Utils.hh"
 #include "Functions.hh"
 
-// Fun
+struct CurrentFun : Fun {
+    CurrentFun(const std::string& name, const std::list<const Expr*>* args) :
+        Fun(args) {
+        checkArgs(name, 0);
+    }
+    Value eval(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
+        return e.getCurrent();
+    }
+};
+
 struct LastFun : Fun {
     LastFun(const std::string& name, const std::list<const Expr*>* args) :
         Fun(args) {
@@ -388,56 +397,58 @@ Fun::~Fun() {
 
  Fun*
 Fun::create(const std::string& name, const std::list<const Expr*>* args) {
-    if (name == "last") {
-        return new LastFun(name, args);
-    } else if (name == "position") {
-        return new PositionFun(name, args);
-    } else if (name == "count") {
-        return new CountFun(name, args);
-    } else if (name == "local-name") {
-        return new LocalNameFun(name, args);
-    } else if (name == "string") {
-        return new StringFun(name, args);
-    } else if (name == "concat") {
-        return new ConcatFun(name, args);
-    } else if (name == "starts-with") {
-        return new StartsWithFun(name, args);
-    } else if (name == "contains") {
-        return new StartsWithFun(name, args);
-    } else if (name == "substring-before") {
-        return new SubstringBeforeFun(name, args);
-    } else if (name == "substring-after") {
-        return new SubstringAfterFun(name, args);
-    } else if (name == "substring") {
-        return new SubstringFun(name, args);
-    } else if (name == "string-length") {
-        return new StringLengthFun(name, args);
-    } else if (name == "translate") {
-        return new TranslateFun(name, args);
-    } else if (name == "number") {
-        return new NumberFun(name, args);
-    } else if (name == "sum") {
-        return new SumFun(name, args);
-    } else if (name == "floor") {
-        return new FloorFun(name, args);
-    } else if (name == "ceiling") {
-        return new CeilingFun(name, args);
-    } else if (name == "round") {
-        return new RoundFun(name, args);
-    } else if (name == "boolean") {
-        return new BooleanFun(name, args);
-    } else if (name == "not") {
-        return new NotFun(name, args);
-    } else if (name == "true") {
-        return new TrueFun(name, args);
-    } else if (name == "false") {
-        return new FalseFun(name, args);
-    } else {
-        std::stringstream ss;
-        ss << "Fun::eval unkown function: " << name;
-        throw std::runtime_error(ss.str());
-    }
-}
+     if (name == "current") {
+         return new CurrentFun(name, args);
+     } else if (name == "last") {
+         return new LastFun(name, args);
+     } else if (name == "position") {
+         return new PositionFun(name, args);
+     } else if (name == "count") {
+         return new CountFun(name, args);
+     } else if (name == "local-name") {
+         return new LocalNameFun(name, args);
+     } else if (name == "string") {
+         return new StringFun(name, args);
+     } else if (name == "concat") {
+         return new ConcatFun(name, args);
+     } else if (name == "starts-with") {
+         return new StartsWithFun(name, args);
+     } else if (name == "contains") {
+         return new StartsWithFun(name, args);
+     } else if (name == "substring-before") {
+         return new SubstringBeforeFun(name, args);
+     } else if (name == "substring-after") {
+         return new SubstringAfterFun(name, args);
+     } else if (name == "substring") {
+         return new SubstringFun(name, args);
+     } else if (name == "string-length") {
+         return new StringLengthFun(name, args);
+     } else if (name == "translate") {
+         return new TranslateFun(name, args);
+     } else if (name == "number") {
+         return new NumberFun(name, args);
+     } else if (name == "sum") {
+         return new SumFun(name, args);
+     } else if (name == "floor") {
+         return new FloorFun(name, args);
+     } else if (name == "ceiling") {
+         return new CeilingFun(name, args);
+     } else if (name == "round") {
+         return new RoundFun(name, args);
+     } else if (name == "boolean") {
+         return new BooleanFun(name, args);
+     } else if (name == "not") {
+         return new NotFun(name, args);
+     } else if (name == "true") {
+         return new TrueFun(name, args);
+     } else if (name == "false") {
+         return new FalseFun(name, args);
+     } else {
+         std::stringstream ss;
+         ss << "Fun::eval unkown function: " << name;
+         throw std::runtime_error(ss.str());
+     }
+ }
 
 void
 Fun::checkArgs(const std::string& name, size_t expectedSize) const {
