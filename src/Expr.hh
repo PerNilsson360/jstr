@@ -77,7 +77,7 @@ protected:
 class Root : public Expr {
 public:
     Root() = default;
-    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
 class Path : public Expr, public MultiExpr {
@@ -92,76 +92,47 @@ public:
 class Step : public Expr, public StrExpr {
 public:
     Step(const std::string& s);
-    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
     static Expr* create(const std::string& axisName, const std::string& nodeTest);
     // TODO make this better
     static bool isAllStep(const Expr* step);
     static bool isSelfOrParentStep(const Expr* step);
 protected:
-    virtual void evalStep(size_t pos,
-                          bool firstStep,
-                          const std::vector<Node>& nodeSet,
-                          std::vector<Node>& result) const = 0;
 };
 
 class AllStep : public Step {
 public:
     AllStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class AncestorStep : public Step {
 public:
     AncestorStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class AncestorSelfStep : public AncestorStep {
 public:
     AncestorSelfStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class ChildStep : public Step {
 public:
     ChildStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class ParentStep : public Step {
 public:
     ParentStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class SelfStep : public Step {
 public:
     SelfStep(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class Predicate : public Expr {
@@ -175,67 +146,37 @@ private:
 class DescendantAll : public Step { // TODO not really a step
 public:
     DescendantAll();
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class DescendantOrSelfAll : public DescendantAll {
 public:
     DescendantOrSelfAll();
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class DescendantSearch : public Step {
 public:
     DescendantSearch(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class DescendantOrSelfSearch : public DescendantSearch {
 public:
     DescendantOrSelfSearch(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class FollowingSiblingAll : public Step {
 public:
-
     FollowingSiblingAll();
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class FollowingSiblingSearch : public Step {
 public:
     FollowingSiblingSearch(const std::string& s);
-protected:
-    void evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const override;
-};
-
-class ContextItem : public Expr {
-public:
-    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
 class Parent : public Expr {

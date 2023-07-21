@@ -42,12 +42,16 @@ addIfUnique(std::vector<Node>& result, const std::vector<Node>& ns) {
         addIfUnique(result, n);
     }
 }
-
+  
 bool
 checkLocalName(const Node& n, const std::string& name) {
     return name.empty() || name == "*" || n.getLocalName() == name;
 }
 
+std::vector<Node>& concatenate(std::vector<Node>& u, const std::vector<Node>& v) {
+    u.insert(u.end(), v.begin(), v.end());
+    return u;
+}
 }
 
 // Expr
@@ -162,15 +166,14 @@ Root::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
 Path::Path(Expr* e) : MultiExpr(e) {}
 
 Value
-Path::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
-    std::vector<Node> result = d.getNodeSet();
+Path::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    Value result = val;
     bool first(true);
     for (const Expr* exp : _exprs) {
-        const Value& tmp = exp->eval(e, result, pos, first);
-        result = tmp.getNodeSet();
+        result = exp->eval(env, result, pos, first);
         first = false;
     }
-    return Value(result);
+    return result;
 }
 
 // TODO can the 3 funs belo be stream-lined?
@@ -248,16 +251,6 @@ Path::addRelativeDescendant() {
 Step::Step(const std::string& s) : StrExpr(s) {
 }
 
-Value
-Step::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
-    std::vector<Node> result;
-    const std::vector<Node>& ns = val.getNodeSet();
-    if (!ns.empty()) {
-        evalStep(pos, firstStep, ns, result);
-    }
-    return Value(result);
-}
-
 Expr*
 Step::create(const std::string& axisName, const std::string& nodeTest) {
     if (axisName.empty()) {
@@ -320,11 +313,9 @@ bool Step::isSelfOrParentStep(const Expr* step) {
 AncestorStep::AncestorStep(const std::string& s) : Step(s) {
 }
 
-void
-AncestorStep::evalStep(size_t pos,
-                       bool firstStep,
-                       const std::vector<Node>& nodeSet,
-                       std::vector<Node>& result) const {
+Value
+AncestorStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
     std::vector<Node> tmp1;
     if (firstStep) {
         const Node& n = nodeSet[pos];
@@ -336,6 +327,7 @@ AncestorStep::evalStep(size_t pos,
             addIfUnique(tmp1, tmp2);
         }
     }
+    std::vector<Node> result;
     // TODO Could be more efficient with search instead of filter
     if (_s != "*") {
         for (const Node& n : tmp1) {
@@ -346,22 +338,22 @@ AncestorStep::evalStep(size_t pos,
     } else {
         result = tmp1;
     }
+    return Value(result);
 }
 
 AncestorSelfStep::AncestorSelfStep(const std::string& s) :
     AncestorStep(s) {
 }
 
-void
-AncestorSelfStep::evalStep(size_t pos,
-                           bool firstStep,
-                           const std::vector<Node>& nodeSet,
-                           std::vector<Node>& result) const {
-    AncestorStep::evalStep(pos, firstStep, nodeSet, result);
+Value
+AncestorSelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    Value tmp = AncestorStep::evalExpr(env, val, pos, firstStep);
+    std::vector<Node> result = tmp.getNodeSet();
     if (firstStep) {
         const Node& n = nodeSet[pos];
         if (checkLocalName(n, _s)) {
-            result.emplace_back(n);
+            result.emplace_back(n); // TODO should this not be added front
         }
     } else {
         for (const Node& n : nodeSet) {
@@ -370,17 +362,17 @@ AncestorSelfStep::evalStep(size_t pos,
             }
         }
     }
+    return Value(result);
 }
 
 AllStep::AllStep(const std::string& s) :
     Step(s) {
 }
 
-void
-AllStep::evalStep(size_t pos,
-                  bool firstStep,
-                  const std::vector<Node>& nodeSet,
-                  std::vector<Node>& result) const {
+Value
+AllStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     if (firstStep) {
         const Node& n = nodeSet[pos];
         n.getChildren(result);
@@ -389,17 +381,17 @@ AllStep::evalStep(size_t pos,
             n.getChildren(result);
         }
     }
+    return Value(result);
 }
 
 ChildStep::ChildStep(const std::string& s) :
     Step(s) {
 }
 
-void
-ChildStep::evalStep(size_t pos,
-                    bool firstStep,
-                    const std::vector<Node>& nodeSet,
-                    std::vector<Node>& result) const {
+Value
+ChildStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     if (firstStep) {
         const Node& n = nodeSet[pos];
         n.getChild(_s, result);
@@ -408,17 +400,17 @@ ChildStep::evalStep(size_t pos,
             n.getChild(_s, result);
         }
     }
+    return result;
 }
 
 ParentStep::ParentStep(const std::string& s) :
     Step(s) {
 }
 
-void
-ParentStep::evalStep(size_t pos,
-                     bool firstStep,
-                     const std::vector<Node>& nodeSet,
-                     std::vector<Node>& result) const {
+Value
+ParentStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     if (firstStep) {
         const Node& n = nodeSet[pos];
         const Node* parent = n.getParent();
@@ -433,32 +425,37 @@ ParentStep::evalStep(size_t pos,
             }
         }
     }
+    return Value(result);
 }
 
 SelfStep::SelfStep(const std::string& s) :
     Step(s) {
 }
 
-void
-SelfStep::evalStep(size_t pos,
-                   bool firstStep,
-                   const std::vector<Node>& nodeSet,
-                   std::vector<Node>& result) const {
-    if (firstStep) {
-        const Node& n = nodeSet[pos];
-        if (checkLocalName(n, _s)) {
-            result = std::vector<Node>(1, nodeSet[pos]);
-        }
+Value
+SelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    if (val.getType() != Value::NodeSet) {
+        return val;
     } else {
-        if (_s.empty() || _s == "*") {
-            result = nodeSet;
+        const std::vector<Node>& nodeSet = val.getNodeSet();
+        std::vector<Node> result;
+        if (firstStep) {
+            const Node& n = nodeSet[pos];
+            if (checkLocalName(n, _s)) {
+                result = std::vector<Node>(1, nodeSet[pos]); // TODO emplace_back
+            }
         } else {
-            for (const Node& n : nodeSet) {
-                if (n.getLocalName() == _s) {
-                    result.push_back(n);
+            if (_s.empty() || _s == "*") {
+                result = nodeSet;
+            } else {
+                for (const Node& n : nodeSet) {
+                    if (n.getLocalName() == _s) {
+                        result.emplace_back(n);
+                    }
                 }
             }
         }
+        return Value(result);
     }
 }
 
@@ -475,59 +472,58 @@ Predicate::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep
 DescendantAll::DescendantAll() : Step("") {
 }
 
-void
-DescendantAll::evalStep(size_t pos,
-                        bool firstStep,
-                        const std::vector<Node>& nodeSet,
-                        std::vector<Node>& result) const {
+Value
+DescendantAll::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     for (const Node& n : nodeSet) {
         n.getSubTreeNodes(result);
     }
+    return Value(result);
 }
 
 DescendantOrSelfAll::DescendantOrSelfAll() :
     DescendantAll() {
 }
 
-void
-DescendantOrSelfAll::evalStep(size_t pos,
-                              bool firstStep,
-                              const std::vector<Node>& nodeSet,
-                              std::vector<Node>& result) const {
-    
+Value
+DescendantOrSelfAll::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     for (const Node& n : nodeSet) {
         result.emplace_back(n);
     }
-    DescendantAll::evalStep(pos, firstStep, nodeSet, result);
+    const Value& d = DescendantAll::evalExpr(env, val, pos, firstStep); // TODO avoid extra copy
+    return concatenate(result, d.getNodeSet());
 }
 
 
 DescendantSearch::DescendantSearch(const std::string& s) : Step(s) {
 }
 
-void
-DescendantSearch::evalStep(size_t pos,
-                           bool firstStep,
-                           const std::vector<Node>& nodeSet,
-                           std::vector<Node>& result) const {
+Value
+DescendantSearch::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     for (const Node& n : nodeSet) {
         n.search(_s, result);
     }
+    return Value(result);
 }
 
 DescendantOrSelfSearch::DescendantOrSelfSearch(const std::string& s) :
     DescendantSearch(s) {
 }
 
-void
-DescendantOrSelfSearch::evalStep(size_t pos,
-                                 bool firstStep,
-                                 const std::vector<Node>& nodeSet,
-                                 std::vector<Node>& result) const {
+Value
+DescendantOrSelfSearch::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     for (const Node& n : nodeSet) {
         result.emplace_back(n);
     }
-    DescendantSearch::evalStep(pos, firstStep, nodeSet, result);
+    const Value& d = DescendantSearch::evalExpr(env, val, pos, firstStep);
+    return concatenate(result, d.getNodeSet());
 }
 
 // FollowingSibling
@@ -551,11 +547,10 @@ findPosition(const Node& node, std::vector<Node>& children) {
 FollowingSiblingAll::FollowingSiblingAll() : Step("") {
 }
 
-void
-FollowingSiblingAll::evalStep(size_t pos,
-                               bool firstStep,
-                               const std::vector<Node>& nodeSet,
-                               std::vector<Node>& result) const {
+Value
+FollowingSiblingAll::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     if (!firstStep) {
         // All nodes in this node set must have same parent right!
         pos = 0;
@@ -563,7 +558,7 @@ FollowingSiblingAll::evalStep(size_t pos,
     const Node& node = nodeSet[pos];
     const Node* parent = node.getParent();
     if (parent == nullptr) {
-        return;
+        return Value(result);
     }
     std::vector<Node> children;
     parent->getChildren(children);
@@ -571,16 +566,16 @@ FollowingSiblingAll::evalStep(size_t pos,
     for (size_t i = position, size = children.size(); i < size; i++) {
         result.emplace_back(children[i]);
     }
+    return Value(result);
 }
 
 FollowingSiblingSearch::FollowingSiblingSearch(const std::string& s) : Step(s) {
 }
 
-void
-FollowingSiblingSearch::evalStep(size_t pos,
-                                 bool firstStep,
-                                 const std::vector<Node>& nodeSet,
-                                 std::vector<Node>& result) const {
+Value
+FollowingSiblingSearch::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<Node>& nodeSet = val.getNodeSet();
+    std::vector<Node> result;
     if (!firstStep) {
         // All nodes in this node set must have same parent right!
         pos = 0;
@@ -588,7 +583,7 @@ FollowingSiblingSearch::evalStep(size_t pos,
     const Node& node = nodeSet[pos];
     const Node* parent = node.getParent();
     if (parent == nullptr) {
-        return;
+        return Value(result);
     }
     std::vector<Node> children;
     parent->getChildren(children);
@@ -599,6 +594,7 @@ FollowingSiblingSearch::evalStep(size_t pos,
             result.emplace_back(child);
         }
     }
+    return Value(result);
 }
 
 // Literal

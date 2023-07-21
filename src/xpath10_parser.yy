@@ -288,13 +288,13 @@ PathExpr :
   LocationPath	                                 { $$ = $1; }
 | FilterExpr	                                 { $$ = $1; }
 | FilterExpr "/" RelativeLocationPath	         { $3->addFront($1); $$ = $3; }
-| FilterExpr "//" RelativeLocationPath	         { $3->addRelativeDescendant(); $3->addFront($1); $$ = $3; };
+| FilterExpr "//" RelativeLocationPath	         { $3->addRelativeDescendant(); $3->addFront($1); $$ = $3;};
 
 //[20] FilterExpr	                       ::=   PrimaryExpr	
 //                                               | FilterExpr Predicate
 FilterExpr :
   PrimaryExpr	                                 { $$ = $1; }
-//| FilterExpr Predicate                         {}; TODO
+| FilterExpr Predicate                           { $$ = $1; $$->addPredicates(new std::list<const Expr*>(1, $2));};
 
 // [21]   	OrExpr	   ::=   	AndExpr	
 // | OrExpr 'or' AndExpr	

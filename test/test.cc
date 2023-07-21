@@ -855,6 +855,11 @@ testFilter() {
         r = eval("/a/*[count(following-sibling::*) = 1]", json);
         assert(r.getStringValue() == "1");
     }
+    {
+        nlohmann::json json;
+        Value r(eval("(1 + 2)[. = 3]", json));
+        assert(r.getBool()); 
+    }
 }
 
 void

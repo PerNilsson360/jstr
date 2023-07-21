@@ -205,9 +205,13 @@ Value::getNode(size_t pos) const {
     return (*_d.ns)[pos];
 }
 
+namespace {
+    const std::vector<Node> _emptyNodeSet;
+}
+
 const std::vector<Node>&
 Value::getNodeSet() const {
-    return *_d.ns;
+    return _type == NodeSet ? *_d.ns : _emptyNodeSet;
 }
 
 Value
