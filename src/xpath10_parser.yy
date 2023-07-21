@@ -296,31 +296,31 @@ FilterExpr :
   PrimaryExpr	                                 { $$ = $1; }
 | FilterExpr Predicate                           { $$ = $1; $$->addPredicates(new std::list<const Expr*>(1, $2));};
 
-// [21]   	OrExpr	   ::=   	AndExpr	
-// | OrExpr 'or' AndExpr	
+// [21] OrExpr	                           ::=   AndExpr	
+//                                               | OrExpr 'or' AndExpr	
 OrExpr :
   AndExpr                                        { $$ = $1; }
 | OrExpr "or" AndExpr	                         { $$ = new Or($1, $3); }
 
-// [22]   	AndExpr	   ::=   	EqualityExpr	
-// | AndExpr 'and' EqualityExpr	
+// [22] AndExpr	                           ::=   EqualityExpr	
+//                                               | AndExpr 'and' EqualityExpr	
 AndExpr	:
   EqualityExpr	                                 { $$ = $1; }
 | AndExpr "and" EqualityExpr	                 { $$ = new And($1, $3); }
 
-// [23]   	EqualityExpr	   ::=   	RelationalExpr	
-// | EqualityExpr '=' RelationalExpr	
-// | EqualityExpr '!=' RelationalExpr	
+// [23] EqualityExpr	                   ::=   RelationalExpr	
+//                                               | EqualityExpr '=' RelationalExpr	
+//                                               | EqualityExpr '!=' RelationalExpr	
 EqualityExpr :
   RelationalExpr	                             { $$ = $1; }
 | EqualityExpr "=" RelationalExpr	             { $$ = new Eq($1, $3); }
 | EqualityExpr "!=" RelationalExpr               { $$ = new Ne($1, $3); }
 
-// [24]   	RelationalExpr	   ::=   	AdditiveExpr	
-// | RelationalExpr '<' AdditiveExpr	
-// | RelationalExpr '>' AdditiveExpr	
-// | RelationalExpr '<=' AdditiveExpr	
-// | RelationalExpr '>=' AdditiveExpr
+// [24] RelationalExpr	                   ::=   AdditiveExpr	
+//                                               | RelationalExpr '<' AdditiveExpr	
+//                                               | RelationalExpr '>' AdditiveExpr	
+//                                               | RelationalExpr '<=' AdditiveExpr	
+//                                               | RelationalExpr '>=' AdditiveExpr
 RelationalExpr :
   AdditiveExpr	                                 { $$ = $1; }
 | RelationalExpr "<" AdditiveExpr	             { $$ = new Lt($1, $3); }
@@ -328,50 +328,49 @@ RelationalExpr :
 | RelationalExpr "<=" AdditiveExpr	             { $$ = new Le($1, $3); }
 | RelationalExpr ">=" AdditiveExpr               { $$ = new Ge($1, $3); }
 
-// [25]   	AdditiveExpr	   ::=   	MultiplicativeExpr	
-// | AdditiveExpr '+' MultiplicativeExpr	
-// | AdditiveExpr '-' MultiplicativeExpr	
+// [25] AdditiveExpr	                   ::=   MultiplicativeExpr	
+//                                               | AdditiveExpr '+' MultiplicativeExpr	
+//                                               | AdditiveExpr '-' MultiplicativeExpr	
 AdditiveExpr :
   MultiplicativeExpr	                         { $$ = $1; }
 | AdditiveExpr "+" MultiplicativeExpr	         { $$ = new Plus($1, $3); }
 | AdditiveExpr "-" MultiplicativeExpr	         { $$ = new Minus($1, $3); }
 
-// [26]   	MultiplicativeExpr	   ::=   	UnaryExpr	
-// | MultiplicativeExpr MultiplyOperator UnaryExpr	
-// | MultiplicativeExpr 'div' UnaryExpr	
-// | MultiplicativeExpr 'mod' UnaryExpr	
+// [26] MultiplicativeExpr	               ::=   UnaryExpr	
+//                                               | MultiplicativeExpr MultiplyOperator UnaryExpr	
+//                                               | MultiplicativeExpr 'div' UnaryExpr	
+//                                               | MultiplicativeExpr 'mod' UnaryExpr	
 MultiplicativeExpr :
   UnaryExpr	                                     { $$ = $1; }
 | MultiplicativeExpr "*" UnaryExpr	             { $$ = new Mul($1, $3); }
 | MultiplicativeExpr "div" UnaryExpr	         { $$ = new Div($1, $3); }
 | MultiplicativeExpr "mod" UnaryExpr	         { $$ = new Mod($1, $3); }
 
-// [27]   	UnaryExpr	   ::=   	UnionExpr	
-// | '-' UnaryExpr
+// [27] UnaryExpr	                       ::=   UnionExpr	
+//                                               | '-' UnaryExpr
 UnaryExpr :
   UnionExpr	                                     { $$ = $1; }
 | "-" UnaryExpr                                  { $$ = new Minus($2, nullptr); }
 
-// [35]   	FunctionName	   ::=   	QName - NodeType 	
+// [35] FunctionName	                   ::=   QName - NodeType 	
 FunctionName :
-  "identifier"                                    { $$ = $1; };
+  "identifier"                                   { $$ = $1; };
 
-// [36 ] VariableReference	   ::=   	'$' QName	
+// [36 ] VariableReference	               ::=  '$' QName	
 VariableReference :
-"$" "identifier"                                { $$ = new VarRef($2); }
+"$" "identifier"                                 { $$ = new VarRef($2); }
 
-// [37] NameTest	   ::=   	'*'	
-// | NCName ':' '*'	
-// | QName	
+// [37] NameTest	                       ::=   '*'	
+//                                               | NCName ':' '*'	
+//                                               | QName	
 NameTest :
   "*"                                            { $$ = $1; }
 | "identifier"                                   { $$ = $1; }
 
-// [38 ]NodeType	   ::=
-//   'comment'	
-// | 'text'	
-// | 'processing-instruction'	
-// | 'node'
+// [38 ]NodeType	                       ::=   'comment'	
+//                                               | 'text'	
+//                                               | 'processing-instruction'	
+//                                               | 'node'
 
 %%
 void
