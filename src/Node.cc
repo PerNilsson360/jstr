@@ -22,7 +22,60 @@
 
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include "Node.hh"
+#include <Jstr.hh>
+
+namespace {
+    using namespace Jstr::Xpath;
+    
+void
+getString(const nlohmann::json& json, std::string& r) {
+    if (json.is_string()) {
+        r += json.get<std::string>(); // Dont want quotation marks you get with dump
+    }else if (json.is_primitive()) {
+        r += json.dump();       // TODO: check is number NAN "NaN" which is xml syntax
+    } else {
+        for (const nlohmann::json& j: json) {
+            getString(j, r);
+        }
+    }
+}
+
+void
+search(Node parent, const nlohmann::json& j, const std::string& name, std::vector<Node>& result) {
+    if (j.is_object()) {
+        for (const auto& item : j.items()) {
+            const nlohmann::json& value = item.value();
+            const std::string& key = item.key();
+            if (key == name) {
+                if (value.is_array()) {
+                    // the stringValue becomes nicer if you first add array nodes then search
+                    for (size_t i = 0, size = value.size(); i < size; i++) {
+                        result.emplace_back(Node(new Node(parent), name, value, i));
+                    }
+                    for (size_t i = 0, size = value.size(); i < size; i++) {
+                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
+                    }
+                } else {
+                    result.emplace_back(Node(new Node(parent), name, value));
+                    ::search(Node(new Node(parent), key, value), value, name, result);
+                }
+            } else {
+                if (value.is_array()) {
+                    for (size_t i = 0, size = value.size(); i < size; i++) {
+                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
+                    }
+                } else {
+                    ::search(Node(new Node(parent), key, value), value, name, result);
+                }
+            }
+        }
+    }
+}
+
+}
+
+namespace Jstr {
+namespace Xpath {
 
 Node::Node() : _parent(nullptr), _json(nullptr), _i(-1) {}
 
@@ -101,23 +154,6 @@ Node::getBool() const {
     }   
 }
 
-namespace {
-    
-void
-getString(const nlohmann::json& json, std::string& r) {
-    if (json.is_string()) {
-        r += json.get<std::string>(); // Dont want quotation marks you get with dump
-    }else if (json.is_primitive()) {
-        r += json.dump();       // TODO: check is number NAN "NaN" which is xml syntax
-    } else {
-        for (const nlohmann::json& j: json) {
-            getString(j, r);
-        }
-    }
-}
-
-}
-
 std::string
 Node::getString() const {
     std::string r;
@@ -140,41 +176,6 @@ Node::getAncestors(std::vector<Node>& result) const {
     for (const Node* parent = getParent(); parent != nullptr; parent = parent->getParent()) {
         result.emplace_back(*parent);
     }
-}
-
-namespace {
-void
-search(Node parent, const nlohmann::json& j, const std::string& name, std::vector<Node>& result) {
-    if (j.is_object()) {
-        for (const auto& item : j.items()) {
-            const nlohmann::json& value = item.value();
-            const std::string& key = item.key();
-            if (key == name) {
-                if (value.is_array()) {
-                    // the stringValue becomes nicer if you first add array nodes then search
-                    for (size_t i = 0, size = value.size(); i < size; i++) {
-                        result.emplace_back(Node(new Node(parent), name, value, i));
-                    }
-                    for (size_t i = 0, size = value.size(); i < size; i++) {
-                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
-                    }
-                } else {
-                    result.emplace_back(Node(new Node(parent), name, value));
-                    ::search(Node(new Node(parent), key, value), value, name, result);
-                }
-            } else {
-                if (value.is_array()) {
-                    for (size_t i = 0, size = value.size(); i < size; i++) {
-                        ::search(Node(new Node(parent), key, value[i]), value[i], name, result);
-                    }
-                } else {
-                    ::search(Node(new Node(parent), key, value), value, name, result);
-                }
-            }
-        }
-    }
-}
-
 }
 
 void
@@ -251,4 +252,7 @@ Node::assign(const Node& node) {
     _json = node._json;
     _i = node._i;
     _parent.reset(node._parent == nullptr ? nullptr : new Node(*node._parent));
+}
+
+}
 }

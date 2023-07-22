@@ -23,10 +23,8 @@
 #include <memory>
 #include <cassert>
 #include <iostream>
+#include <Jstr.hh>
 
-#include "Env.hh"
-#include "Expression.hh"
-#include "nljp.hh"
 
 using namespace Jstr::Xpath;
 

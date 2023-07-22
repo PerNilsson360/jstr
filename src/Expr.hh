@@ -27,8 +27,10 @@
 #include <list>
 #include <stdexcept>
 
-#include "Env.hh"
-#include "Value.hh"
+#include <Jstr.hh>
+
+namespace Jstr {
+namespace Xpath {
 
 class Expr {
 public:
@@ -294,4 +296,6 @@ public:
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
+}
+}
 #endif

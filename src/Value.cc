@@ -23,8 +23,12 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <Jstr.hh>
 #include "Utils.hh"
-#include "Value.hh"
+
+
+namespace Jstr {
+namespace Xpath {
 
 Value::Value() : _type(NodeSet) {
     _d.ns = new std::vector<Node>();
@@ -397,4 +401,7 @@ Value::clear() {
     default:
         ;                       // nothing to delete
     }
+}
+
+}
 }

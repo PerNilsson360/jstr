@@ -5,6 +5,9 @@
 #include "Utils.hh"
 #include "Functions.hh"
 
+namespace Jstr {
+namespace Xpath {
+
 struct CurrentFun : Fun {
     CurrentFun(const std::string& name, const std::list<const Expr*>* args) :
         Fun(args) {
@@ -492,4 +495,7 @@ Fun::checkArgsGe(const std::string& name, size_t expectedSize) const {
            << " expected greater than or equal to: "<< expectedSize << " actual: " << nArgs;
         throw std::runtime_error(ss.str());
     }
+}
+
+}
 }

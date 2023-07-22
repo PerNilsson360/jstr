@@ -22,11 +22,13 @@
 
 #include <iostream>
 #include <sstream>
+#include <Jstr.hh>
+
 #include "Utils.hh"
 #include "Expr.hh"
-#include "Value.hh"
 
 namespace {
+using namespace Jstr::Xpath;    
     
 std::vector<Node> filter(const std::vector<Node>& ns, const std::vector<size_t>& keepIndexes) {
     std::vector<Node> result;
@@ -53,6 +55,10 @@ std::vector<Node>& concatenate(std::vector<Node>& u, const std::vector<Node>& v)
     return u;
 }
 }
+
+namespace Jstr {
+namespace Xpath {
+
 
 // Expr
 Expr::Expr() : _preds(nullptr) {
@@ -324,7 +330,7 @@ AncestorStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstS
         for (const Node& n : nodeSet) {
             std::vector<Node> tmp2;
             n.getAncestors(tmp2);
-            addIfUnique(tmp1, tmp2);
+            ::addIfUnique(tmp1, tmp2);
         }
     }
     std::vector<Node> result;
@@ -767,3 +773,5 @@ VarRef::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const
     return e.getVariable(_s);
 }
 
+}
+}

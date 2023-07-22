@@ -24,7 +24,12 @@
 #define _UTILS_HH_
 
 #include <list>
+#include <Jstr.hh>
+
 #include "Expr.hh"
+
+namespace Jstr {
+namespace Xpath {
 
 inline
 void
@@ -49,6 +54,9 @@ deleteExprs(const std::list<const Expr*>* l) {
         }
         delete l;
     }
+}
+
+}
 }
 
 #endif

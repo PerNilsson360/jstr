@@ -22,13 +22,11 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <Jstr.hh>
 
-#include "Expression.hh"
 #include "xpath10_driver.hh"
-#include "nljp.hh"
 
-namespace Jstr {
-    
+namespace Jstr {    
 namespace Xpath {
     
 Value

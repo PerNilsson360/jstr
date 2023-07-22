@@ -20,14 +20,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#include <nljp.hh>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
+
+#include <Jstr.hh>
 
 namespace {
 

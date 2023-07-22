@@ -4,7 +4,7 @@ AM_CPPFLAGS = -g -I$(top_srcdir)/include
 AM_YFLAGS = -t -v -d -Wno-yacc
 AM_LFLAGS = -olex.yy.c
 lib_LIBRARIES = libnljp.a
-libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Expression.cc Functions.cc Node.cc Value.cc Env.cc nljp.cc
+libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Expression.cc Functions.cc Node.cc Value.cc Env.cc Jstr.cc
 bin_PROGRAMS = jstr
 jstr_SOURCES = main.cc $(libnljp_a_SOURCES)
 

@@ -33,11 +33,16 @@
 #include <string>
 #include "Expr.hh"
 #include "Functions.hh"
+
 class xpath10_driver;
+
 inline std::string stripLiteral(const std::string& s) {
 	size_t len = s.size();
 	return len == 2 ?  ""  : s.substr(1, len - 2);
 }
+
+using namespace Jstr::Xpath;
+
 }
 // The parsing context.
 %param { xpath10_driver& driver }

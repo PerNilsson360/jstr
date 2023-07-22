@@ -21,8 +21,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
-
-#include "nljp.hh"
+#include <Jstr.hh>
 
 
 bool

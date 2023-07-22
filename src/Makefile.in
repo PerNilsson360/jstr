@@ -138,12 +138,12 @@ libnljp_a_LIBADD =
 am_libnljp_a_OBJECTS = xpath10_parser.$(OBJEXT) \
 	xpath10_scanner.$(OBJEXT) xpath10_driver.$(OBJEXT) \
 	Expr.$(OBJEXT) Expression.$(OBJEXT) Functions.$(OBJEXT) \
-	Node.$(OBJEXT) Value.$(OBJEXT) Env.$(OBJEXT) nljp.$(OBJEXT)
+	Node.$(OBJEXT) Value.$(OBJEXT) Env.$(OBJEXT) Jstr.$(OBJEXT)
 libnljp_a_OBJECTS = $(am_libnljp_a_OBJECTS)
 am__objects_1 = xpath10_parser.$(OBJEXT) xpath10_scanner.$(OBJEXT) \
 	xpath10_driver.$(OBJEXT) Expr.$(OBJEXT) Expression.$(OBJEXT) \
 	Functions.$(OBJEXT) Node.$(OBJEXT) Value.$(OBJEXT) \
-	Env.$(OBJEXT) nljp.$(OBJEXT)
+	Env.$(OBJEXT) Jstr.$(OBJEXT)
 am_jstr_OBJECTS = main.$(OBJEXT) $(am__objects_1)
 jstr_OBJECTS = $(am_jstr_OBJECTS)
 jstr_LDADD = $(LDADD)
@@ -164,8 +164,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/Env.Po ./$(DEPDIR)/Expr.Po \
 	./$(DEPDIR)/Expression.Po ./$(DEPDIR)/Functions.Po \
-	./$(DEPDIR)/Node.Po ./$(DEPDIR)/Value.Po ./$(DEPDIR)/main.Po \
-	./$(DEPDIR)/nljp.Po ./$(DEPDIR)/xpath10_driver.Po \
+	./$(DEPDIR)/Jstr.Po ./$(DEPDIR)/Node.Po ./$(DEPDIR)/Value.Po \
+	./$(DEPDIR)/main.Po ./$(DEPDIR)/xpath10_driver.Po \
 	./$(DEPDIR)/xpath10_parser.Po ./$(DEPDIR)/xpath10_scanner.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -339,7 +339,7 @@ AM_CPPFLAGS = -g -I$(top_srcdir)/include
 AM_YFLAGS = -t -v -d -Wno-yacc
 AM_LFLAGS = -olex.yy.c
 lib_LIBRARIES = libnljp.a
-libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Expression.cc Functions.cc Node.cc Value.cc Env.cc nljp.cc
+libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Expression.cc Functions.cc Node.cc Value.cc Env.cc Jstr.cc
 jstr_SOURCES = main.cc $(libnljp_a_SOURCES)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -471,10 +471,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Expr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Expression.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Functions.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Jstr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Node.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Value.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nljp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_driver.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_parser.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_scanner.Po@am__quote@ # am--include-marker
@@ -644,10 +644,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/Expr.Po
 	-rm -f ./$(DEPDIR)/Expression.Po
 	-rm -f ./$(DEPDIR)/Functions.Po
+	-rm -f ./$(DEPDIR)/Jstr.Po
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/nljp.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
 	-rm -f ./$(DEPDIR)/xpath10_scanner.Po
@@ -700,10 +700,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/Expr.Po
 	-rm -f ./$(DEPDIR)/Expression.Po
 	-rm -f ./$(DEPDIR)/Functions.Po
+	-rm -f ./$(DEPDIR)/Jstr.Po
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
 	-rm -f ./$(DEPDIR)/main.Po
-	-rm -f ./$(DEPDIR)/nljp.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
 	-rm -f ./$(DEPDIR)/xpath10_scanner.Po

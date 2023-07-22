@@ -24,7 +24,10 @@
 #include <stdexcept>
 
 #include "xpath10_driver.hh"
-#include "Expression.hh"
+#include <Jstr.hh>
+
+namespace Jstr {
+namespace Xpath {
 
 Expression::Expression(const std::string& s) {
     xpath10_driver driver;
@@ -46,3 +49,5 @@ Expression::eval(const Env& env) const {
     return _expr->eval(env, env.getCurrent(), 0);
 }
 
+}
+}
