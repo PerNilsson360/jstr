@@ -9,6 +9,7 @@ AC_PROG_RANLIB
 AC_CONFIG_FILES([
  Makefile
  src/Makefile
+ include/Makefile
  test/Makefile
 ])
 AC_OUTPUT
