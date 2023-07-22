@@ -8,8 +8,9 @@ Env::Env(const nlohmann::json& json) : _context(Value(Node("", json))) {
 }
 
 Env::Env(const Value& context) : _context(context) {
-    if (context.getType() != Value::NodeSet) {
-        throw std::runtime_error("Env::Env context is not a NodeSet");
+    const std::vector<Node>& nodeSet = context.getNodeSet();
+    if (context.getType() == Value::NodeSet && nodeSet.size() != 1) {
+        throw std::runtime_error("Env::Env context node set must have size 1.");
     }
 }
 

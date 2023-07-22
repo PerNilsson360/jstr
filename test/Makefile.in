@@ -85,7 +85,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-check_PROGRAMS = test$(EXEEXT)
+check_PROGRAMS = test$(EXEEXT) test_schematron$(EXEEXT)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -99,6 +99,9 @@ CONFIG_CLEAN_VPATH_FILES =
 am_test_OBJECTS = test.$(OBJEXT)
 test_OBJECTS = $(am_test_OBJECTS)
 test_DEPENDENCIES = $(top_srcdir)/src/libnljp.a
+am_test_schematron_OBJECTS = test_schematron.$(OBJEXT)
+test_schematron_OBJECTS = $(am_test_schematron_OBJECTS)
+test_schematron_DEPENDENCIES = $(top_srcdir)/src/libnljp.a
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -114,7 +117,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/test.Po
+am__depfiles_remade = ./$(DEPDIR)/test.Po \
+	./$(DEPDIR)/test_schematron.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -129,8 +133,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(test_SOURCES)
-DIST_SOURCES = $(test_SOURCES)
+SOURCES = $(test_SOURCES) $(test_schematron_SOURCES)
+DIST_SOURCES = $(test_SOURCES) $(test_schematron_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -461,6 +465,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 test_SOURCES = test.cc
 test_LDADD = $(top_srcdir)/src/libnljp.a
+test_schematron_SOURCES = test_schematron.cc
+test_schematron_LDADD = $(top_srcdir)/src/libnljp.a
 TESTS = $(check_PROGRAMS)
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 all: all-am
@@ -504,6 +510,10 @@ test$(EXEEXT): $(test_OBJECTS) $(test_DEPENDENCIES) $(EXTRA_test_DEPENDENCIES)
 	@rm -f test$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_OBJECTS) $(test_LDADD) $(LIBS)
 
+test_schematron$(EXEEXT): $(test_schematron_OBJECTS) $(test_schematron_DEPENDENCIES) $(EXTRA_test_schematron_DEPENDENCIES) 
+	@rm -f test_schematron$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_schematron_OBJECTS) $(test_schematron_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -511,6 +521,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_schematron.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -732,6 +743,13 @@ test.log: test$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_schematron.log: test_schematron$(EXEEXT)
+	@p='test_schematron$(EXEEXT)'; \
+	b='test_schematron'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -825,6 +843,7 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/test.Po
+	-rm -f ./$(DEPDIR)/test_schematron.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -871,6 +890,7 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/test.Po
+	-rm -f ./$(DEPDIR)/test_schematron.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -26,7 +26,20 @@
 #include <nlohmann/json.hpp>
 #include "Value.hh"
 
+namespace Jstr {
+
+namespace Xpath {
+
 Value
 eval(const std::string& xpath, const nlohmann::json& json);
 
+}
+
+namespace Schematron {
+
+bool eval(const nlohmann::json& schematron, const nlohmann::json& data, std::ostream& out);
+
+}
+
+}
 #endif

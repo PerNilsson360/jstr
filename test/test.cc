@@ -28,6 +28,8 @@
 #include "Expression.hh"
 #include "nljp.hh"
 
+using namespace Jstr::Xpath;
+
 void
 testNumbers() {
     // NaN

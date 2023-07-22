@@ -23,6 +23,7 @@
 #ifndef _EXPRESSION_HH_
 #define _EXPRESSION_HH_
 
+#include "Env.hh"
 #include "Value.hh"
 
 class Expr;
