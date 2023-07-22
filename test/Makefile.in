@@ -467,7 +467,7 @@ test_SOURCES = test.cc
 test_LDADD = $(top_srcdir)/src/libnljp.a
 test_schematron_SOURCES = test_schematron.cc
 test_schematron_LDADD = $(top_srcdir)/src/libnljp.a
-TESTS = $(check_PROGRAMS)
+TESTS = $(check_PROGRAMS) test_schematron_1.sh test_schematron_2.sh 
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 all: all-am
 
@@ -746,6 +746,20 @@ test.log: test$(EXEEXT)
 test_schematron.log: test_schematron$(EXEEXT)
 	@p='test_schematron$(EXEEXT)'; \
 	b='test_schematron'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_schematron_1.sh.log: test_schematron_1.sh
+	@p='test_schematron_1.sh'; \
+	b='test_schematron_1.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_schematron_2.sh.log: test_schematron_2.sh
+	@p='test_schematron_2.sh'; \
+	b='test_schematron_2.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

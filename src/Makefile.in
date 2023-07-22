@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -86,6 +87,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+bin_PROGRAMS = jstr$(EXEEXT)
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -96,6 +98,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libdir)"
+PROGRAMS = $(bin_PROGRAMS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -123,7 +127,6 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)"
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
 AM_V_AR = $(am__v_AR_@AM_V@)
@@ -137,6 +140,13 @@ am_libnljp_a_OBJECTS = xpath10_parser.$(OBJEXT) \
 	Expr.$(OBJEXT) Expression.$(OBJEXT) Functions.$(OBJEXT) \
 	Node.$(OBJEXT) Value.$(OBJEXT) Env.$(OBJEXT) nljp.$(OBJEXT)
 libnljp_a_OBJECTS = $(am_libnljp_a_OBJECTS)
+am__objects_1 = xpath10_parser.$(OBJEXT) xpath10_scanner.$(OBJEXT) \
+	xpath10_driver.$(OBJEXT) Expr.$(OBJEXT) Expression.$(OBJEXT) \
+	Functions.$(OBJEXT) Node.$(OBJEXT) Value.$(OBJEXT) \
+	Env.$(OBJEXT) nljp.$(OBJEXT)
+am_jstr_OBJECTS = main.$(OBJEXT) $(am__objects_1)
+jstr_OBJECTS = $(am_jstr_OBJECTS)
+jstr_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -154,9 +164,9 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/Env.Po ./$(DEPDIR)/Expr.Po \
 	./$(DEPDIR)/Expression.Po ./$(DEPDIR)/Functions.Po \
-	./$(DEPDIR)/Node.Po ./$(DEPDIR)/Value.Po ./$(DEPDIR)/nljp.Po \
-	./$(DEPDIR)/xpath10_driver.Po ./$(DEPDIR)/xpath10_parser.Po \
-	./$(DEPDIR)/xpath10_scanner.Po
+	./$(DEPDIR)/Node.Po ./$(DEPDIR)/Value.Po ./$(DEPDIR)/main.Po \
+	./$(DEPDIR)/nljp.Po ./$(DEPDIR)/xpath10_driver.Po \
+	./$(DEPDIR)/xpath10_parser.Po ./$(DEPDIR)/xpath10_scanner.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -196,8 +206,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libnljp_a_SOURCES)
-DIST_SOURCES = $(libnljp_a_SOURCES)
+SOURCES = $(libnljp_a_SOURCES) $(jstr_SOURCES)
+DIST_SOURCES = $(libnljp_a_SOURCES) $(jstr_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -327,9 +337,10 @@ BUILT_SOURCES = xpath10_parser.hh xpath10_parser.cc xpath10_scanner.cc location.
 CLEANFILES = xpath10_parser.hh xpath10_parser.cc xpath10_scanner.cc location.hh position.hh stack.hh xpath10_parser.output
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 AM_YFLAGS = -t -v -d -Wno-yacc
+AM_LFLAGS = -olex.yy.c
 lib_LIBRARIES = libnljp.a
 libnljp_a_SOURCES = xpath10_parser.yy xpath10_scanner.ll xpath10_driver.cc Expr.cc Expression.cc Functions.cc Node.cc Value.cc Env.cc nljp.cc
-AM_LFLAGS = -olex.yy.c
+jstr_SOURCES = main.cc $(libnljp_a_SOURCES)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -364,6 +375,48 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(bindir)" && rm -f $$files
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 install-libLIBRARIES: $(lib_LIBRARIES)
 	@$(NORMAL_INSTALL)
 	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
@@ -404,6 +457,10 @@ libnljp.a: $(libnljp_a_OBJECTS) $(libnljp_a_DEPENDENCIES) $(EXTRA_libnljp_a_DEPE
 	$(AM_V_AR)$(libnljp_a_AR) libnljp.a $(libnljp_a_OBJECTS) $(libnljp_a_LIBADD)
 	$(AM_V_at)$(RANLIB) libnljp.a
 
+jstr$(EXEEXT): $(jstr_OBJECTS) $(jstr_DEPENDENCIES) $(EXTRA_jstr_DEPENDENCIES) 
+	@rm -f jstr$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(jstr_OBJECTS) $(jstr_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -416,6 +473,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Functions.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Node.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Value.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nljp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_driver.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xpath10_parser.Po@am__quote@ # am--include-marker
@@ -535,9 +593,9 @@ distdir-am: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(PROGRAMS) $(LIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -578,7 +636,8 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES clean-local mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libLIBRARIES \
+	clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/Env.Po
@@ -587,6 +646,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/Functions.Po
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
+	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/nljp.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
@@ -613,7 +673,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLIBRARIES
+install-exec-am: install-binPROGRAMS install-libLIBRARIES
 
 install-html: install-html-am
 
@@ -642,6 +702,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/Functions.Po
 	-rm -f ./$(DEPDIR)/Node.Po
 	-rm -f ./$(DEPDIR)/Value.Po
+	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/nljp.Po
 	-rm -f ./$(DEPDIR)/xpath10_driver.Po
 	-rm -f ./$(DEPDIR)/xpath10_parser.Po
@@ -661,23 +722,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libLIBRARIES
+uninstall-am: uninstall-binPROGRAMS uninstall-libLIBRARIES
 
 .MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-generic clean-libLIBRARIES clean-local cscopelist-am \
-	ctags ctags-am distclean distclean-compile distclean-generic \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am \
-	install-libLIBRARIES install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-libLIBRARIES
+	clean-binPROGRAMS clean-generic clean-libLIBRARIES clean-local \
+	cscopelist-am ctags ctags-am distclean distclean-compile \
+	distclean-generic distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-libLIBRARIES install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-libLIBRARIES
 
 .PRECIOUS: Makefile
 

@@ -1,0 +1,18 @@
+{
+  "pattern": [
+    {
+      "name": "test-a",
+      "rule": [
+        {
+          "context": "/",
+          "assert": [
+            {
+              "test": "count(a)=2",
+              "message": "number of a items must be 2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
