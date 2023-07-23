@@ -56,7 +56,7 @@ main (int argc, char* argv[])
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "h:v:x:", long_options, &option_index);
+        c = getopt_long (argc, argv, "hvx:", long_options, &option_index);
 
         /* Detect the end of the options. */
         if (c == -1) {
@@ -80,6 +80,7 @@ main (int argc, char* argv[])
             break;
         case 'v':
             std::cout << Jstr::getVersion() << std::endl;
+            return 0;
             break;
         case 'x':
             xpath = optarg;
