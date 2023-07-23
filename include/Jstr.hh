@@ -30,6 +30,12 @@
 #include <nlohmann/json.hpp>
 
 namespace Jstr {
+    
+inline const char*
+getVersion() {
+    return "0.1.0";
+}
+
 namespace Xpath {
 
 // Node    
@@ -297,7 +303,7 @@ eval(const std::string& xpath, const nlohmann::json& json);
 
 }
 
- namespace Schematron {
+namespace Schematron {
 
 bool
 eval(const nlohmann::json& schematron, const nlohmann::json& data, std::ostream& out);

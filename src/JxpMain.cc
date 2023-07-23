@@ -47,15 +47,16 @@ main (int argc, char* argv[])
     int c;
     while (true) {
         static struct option long_options[] = {
-            {"help",     no_argument,       0, 'h'},
-            {"xpath",  required_argument, 0, 'x'},
+            {"help",    no_argument,       0, 'h'},
+            {"version", no_argument,       0, 'v'},
+            {"xpath",   required_argument, 0, 'x'},
             {0, 0, 0, 0}
         };
       
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "h:x:", long_options, &option_index);
+        c = getopt_long (argc, argv, "h:v:x:", long_options, &option_index);
 
         /* Detect the end of the options. */
         if (c == -1) {
@@ -77,15 +78,15 @@ main (int argc, char* argv[])
         case 'h':
             printHelp();
             break;
-          
+        case 'v':
+            std::cout << Jstr::getVersion() << std::endl;
+            break;
         case 'x':
             xpath = optarg;
             break;
-          
         case '?':
             /* getopt_long already printed an error message. */
             break;
-          
         default:
             return -1;
         }
