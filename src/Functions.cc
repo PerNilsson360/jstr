@@ -350,7 +350,7 @@ struct BooleanFun : Fun {
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value arg = (*i)->evalExpr(e, d, pos);
-            return Value(!arg.getBool());
+            return Value(arg.getBool());
         }
     }
 };

@@ -144,7 +144,7 @@ Value::getNumber() const {
 bool
 Value::getBool() const {
     switch(_type) {
-    case Number: return _d.n;
+    case Number: return !(_d.n == 0 || std::isnan(_d.n));
     case Bool: return _d.b;
     case String: return !_d.s->empty();
     case NodeSet: return !_d.ns->empty();

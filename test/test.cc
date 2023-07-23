@@ -227,6 +227,15 @@ void
 testLogic() {
     {
         nlohmann::json json;
+        Value r(eval("boolean(0)", json));
+        assert(!r.getBool());
+        r = eval("boolean(1)", json);
+        assert(r.getBool());
+        r =eval("boolean(number('foo'))", json);
+        assert(!r.getBool());
+    }
+    {
+        nlohmann::json json;
         Value r(eval("true() and true()", json));
         assert(r.getBool());
     }
