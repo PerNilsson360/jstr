@@ -5,9 +5,9 @@ It contains a library libjstr and two binaries **jxp** and **jstr**.
 
 ## Installation
 
-`./configure\
+./configure\
 ./make\
 ./make check\
-./make install`
+./make install
 
 ## Xpath 1.0
