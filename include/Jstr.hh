@@ -237,13 +237,13 @@ operator<<(std::ostream& os, const Value& v) {
     Value::Type type = v.getType();
     switch(type) {
     case Value::Number:
-        os << "Number: " << v.getNumber();
+        os << v.getNumber();
         break;
     case Value::Bool:
-        os << "Bool: " << v.getBool();
+        os << std::boolalpha << v.getBool();
         break;
     case Value::String:
-        os << "String: " << v.getString();
+        os << "\"" << v.getString() << "\"";
         break;
     case Value::NodeSet: {
         os << v.getNodeSet();

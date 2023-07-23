@@ -31,32 +31,31 @@
 
 namespace {
 
-    void
-    printHelp() {
-        std::cout << "Usage: jstr --schema=<schematron>" << std::endl;
-        std::cout << "Validates json data against a schematron file." << std::endl;
-        std::cout << "Json data is read from stdin errors are printed on stderr." << std::endl; 
-    }
-    
+void
+printHelp() {
+    std::cout << "Usage: jxp --xpath=<\"xpath\"" << std::endl;
+    std::cout << "Evaluates a xpath expression against a json object." << std::endl;
+    std::cout << "Json data is read from stdin and result is printed on stdout." << std::endl; 
+}
+
 }
 
 int
-main (int argc, char *argv[])
+main (int argc, char* argv[])
 {
-    std::string schema;
+    std::string xpath;
     int c;
     while (true) {
         static struct option long_options[] = {
             {"help",     no_argument,       0, 'h'},
-            {"schema",  required_argument, 0, 's'},
+            {"xpath",  required_argument, 0, 'x'},
             {0, 0, 0, 0}
         };
       
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "abc:d:f:",
-                         long_options, &option_index);
+        c = getopt_long (argc, argv, "h:x:", long_options, &option_index);
 
         /* Detect the end of the options. */
         if (c == -1) {
@@ -79,8 +78,8 @@ main (int argc, char *argv[])
             printHelp();
             break;
           
-        case 's':
-            schema = optarg;
+        case 'x':
+            xpath = optarg;
             break;
           
         case '?':
@@ -100,17 +99,16 @@ main (int argc, char *argv[])
         putchar ('\n');
     }
 
-    if (schema.empty()) {
+    if (xpath.empty()) {
         printHelp();
         return -1;
     }
-    std::ifstream ifs(schema);
-    if (!ifs.good()) {
-        std::cerr << "jstr: could not open schematron file: " << schema << std::endl;
-        return -1;
+    try {
+        nlohmann::json d = nlohmann::json::parse(std::cin);
+        Jstr::Xpath::Value value = Jstr::Xpath::eval(xpath, d);
+        std::cout << value << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "jxp, exception: " << e.what() << std::endl;
     }
-    nlohmann::json s = nlohmann::json::parse(ifs);
-    nlohmann::json d = nlohmann::json::parse(std::cin);
-    return Jstr::Schematron::eval(s, d, std::cerr) ? 0 : -1;
+    return 0;
 }
-
