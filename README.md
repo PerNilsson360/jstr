@@ -1,13 +1,13 @@
 # jstr - Json Schematron
 
 An implementation of Xpath 1.0 and a subset of Schematron for json.
-It contains a library libjstr and two binaries jxp and jstr.
+It contains a library libjstr and two binaries **jxp** and **jstr**.
 
 ## Installation
 
-./configure
+`./configure
 ./make
 ./make check
-./make install
+./make install`
 
 ## Xpath 1.0
