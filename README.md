@@ -1,5 +1,13 @@
-# jstr
-Schematron for Json.
+# jstr - Json Schematron
 
-jstr is a simple Json implemention of Schematron. It uses XPATH 1.0 as an
-embedded constraint language.
+An implementation of Xpath 1.0 and a subset of Schematron for json.
+It contains a library libjstr and two binaries jxp and jstr.
+
+## Installation
+
+./configure
+./make
+./make check
+./make install
+
+## Xpath 1.0
