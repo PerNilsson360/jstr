@@ -50,4 +50,4 @@ XPath 1.0 and a XML implementation. Having said that the intention is to follow
 ## XPath 1.0
 
 ## References
-[1] [XPath 1.0] (https://www.w3.org/TR/1999/REC-xpath-19991116/#NT-Number)
+[XPath 1.0] (https://www.w3.org/TR/1999/REC-xpath-19991116/#NT-Number)
