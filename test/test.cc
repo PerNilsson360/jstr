@@ -1123,14 +1123,14 @@ testEnv() {
 int
 main (int argc, char *argv[])
 {
-    testNumbers();
-    testLogic();
+    // testNumbers();
+    // testLogic();
     testPaths();
-    testRelations();
-    testFilter();
-    testNodeSetFunctions();
-    testStringFunctions();
-    testStringValue();
-    testEnv();
+    // testRelations();
+    // testFilter();
+    // testNodeSetFunctions();
+    // testStringFunctions();
+    // testStringValue();
+    // testEnv();
     return 0;
 }

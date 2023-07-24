@@ -368,6 +368,7 @@ Value::assign(const Value& xd) {
 
 void
 Value::exchange(Value&& xd) {
+    clear();
     _type = xd._type;
     switch(_type) {
     case Number:

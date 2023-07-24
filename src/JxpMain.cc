@@ -44,11 +44,13 @@ int
 main (int argc, char* argv[])
 {
     std::string xpath;
+    std::string json;
     int c;
     while (true) {
         static struct option long_options[] = {
             {"help",    no_argument,       0, 'h'},
             {"version", no_argument,       0, 'v'},
+            {"json",    optional_argument, 0, 'j'},
             {"xpath",   required_argument, 0, 'x'},
             {0, 0, 0, 0}
         };
@@ -81,6 +83,9 @@ main (int argc, char* argv[])
         case 'v':
             std::cout << Jstr::getVersion() << std::endl;
             return 0;
+        case 'j':
+            json = optarg;
+            break;
         case 'x':
             xpath = optarg;
             break;
@@ -99,13 +104,22 @@ main (int argc, char* argv[])
             printf ("%s ", argv[optind++]);
         putchar ('\n');
     }
-
     if (xpath.empty()) {
         printHelp();
         return -1;
     }
     try {
-        nlohmann::json d = nlohmann::json::parse(std::cin);
+        nlohmann::json d;
+        if (json.empty()) {
+            std::cout << "jxp: waiting for data on stdin." << std::endl;
+            d = nlohmann::json::parse(std::cin);
+        } else {
+            std::ifstream ifs(json);
+            if (!ifs.good()) {
+                return -1;
+            }
+            d = nlohmann::json::parse(ifs);
+        }
         Jstr::Xpath::Value value = Jstr::Xpath::eval(xpath, d);
         std::cout << value << std::endl;
     } catch (const std::exception& e) {
