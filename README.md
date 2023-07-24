@@ -91,8 +91,8 @@ echo '{}' | jxp --xpath="(5.5 + 1) div 2"
 ```
 
 It shows how to use the commandline program **jxp**. Since it reads JSON from 
-stdin we use echo and pipe a trivial JSON object to jxp. The result is shown on
-the second line.
+stdin we use echo to pipe a trivial JSON object to jxp. The result of the 
+command is shown on the second line.
 
 There are no boolean literals supported but there are functions that can be used
 instead.
@@ -108,8 +108,10 @@ jxp is compatible with JSON syntax.
 XPath supports string literals enclosed in single and double quotes. The 
 following example also shows some string functions.
 
-`echo '{}' | jxp --xpath="string-length('foo') + string-length(substring-before(\"foo-bar\", 'bar'))" \
-7`
+```
+echo '{}' | jxp --xpath="string-length('foo') + string-length(substring-before(\"foo-bar\", 'bar'))"
+7
+```
 
 The primitive types has casting functions.
 
@@ -117,6 +119,8 @@ The primitive types has casting functions.
 echo '{}' | jxp --xpath="string(number(not(boolean(0))) + 1)"
 "2" 
 ```
+So boolean(0) evaluates to false and number(true) is 1. Finaly the string 
+represetation of 1 + 1 is returned as a result.
 
 These functions also works for node sets. In XPath a node is defined as a node
 in a XML DOM tree. In this implementaion we can think of a node as a JSON 
@@ -125,7 +129,7 @@ object or primitive value.
 ## Node sets
 When a XPath expression is evaluated it needs to have a start node in these
 examples it is always the root node. Evaluating an expression results in a 
-value which can be of the above mentioned types the following is an example
+value which can be of the above mentioned types. The following is an example
 showing a result with a node set with cardinality one.
 
 ``` 
@@ -133,12 +137,13 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
 [{"a":{"b":1,"c":true,"d":"foo"}}] 
 ```
 
-Note that array notation is used and nodes are printed as json. 
+Note that array notation is used and nodes sets are printed as json and "/" 
+denotes the root object.
 
 ## Abreviated path expressions
 To retreive subsets of the data path expressions are used. They come in two
-flavors. Abreviated and non abreviated. The follwing shows a simeple usage
-using node names.
+flavors, abreviated and non abreviated. The follwing shows a simple usage
+of using node names to select child node sets.
 
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b"
@@ -154,15 +159,16 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="local-name(/a/b)"
 "b" 
 ```
 
-The XPath function name is not supported since it should print XML namespaces. 
-To get all children of a node the wildcard "*" is used.
+The XPath function "name" is not supported since it should print XML 
+namespaces which JSON does not support. To get all children of a node the 
+wildcard "*" is used.
 
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/*"
 [1, true, "foo"] 
 ```
 
-To get the number of nodes of the function "count" is used.
+To get the number of nodes of a node set the function "count" is used.
 
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)" \
@@ -192,12 +198,33 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b/.."
 ```
 
 ## Comparing values
+One of the most powerful XPath features is the equality operators "=" and "!=" 
+on primitive values they work pretty much as expected. There are some 
+conversions between types that needs to be considered [1] but they are as you 
+would expect. If at least one value is of node set type, these operators are 
+similar to existential quantification in logic. This means that it can be 
+used as universial quantification using a well known conversion shown below.
+
+Assume X is a set of numbers and we want to assert that all these values are 
+equal to 1 we can write the following (in pseudo logic syntax).
+
+```
+forall x in X. x = 1
+```
+This is equvivalent to the following (where ~ denotes not).
+
+```
+~(exist x in X. x != 1)
+```
+The following examples illustrates this.
+
+
 
 ## Filters
 
 ## Non abreviated path expression 
 
-# Schematron examples
+# Schematron
 
 ## References
 [1] nlohmann json (https://json.nlohmann.me/) \
