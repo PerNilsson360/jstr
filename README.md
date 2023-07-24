@@ -85,8 +85,10 @@ XPath 1.0 has the following types of values.
 With numbers you can use many of the normal mathematical functions. The 
 following is an example.
 
-``` echo '{}' | jxp --xpath="(5.5 + 1) div 2"
-3.25 ```
+``` 
+echo '{}' | jxp --xpath="(5.5 + 1) div 2"
+3.25 
+```
 
 It shows how to use the commandline program **jxp**. Since it reads JSON from 
 stdin we use echo and pipe a trivial JSON object to jxp. The result is shown on
@@ -95,8 +97,10 @@ the second line.
 There are no boolean literals supported but there are functions that can be used
 instead.
 
-``` echo '{}' | jxp --xpath="(false() and false()) or not(false())"
-true ```
+``` 
+echo '{}' | jxp --xpath="(false() and false()) or not(false())"
+true 
+```
 
 This example also illustrates boolean conectives. Also note that the output from
 jxp is compatible with JSON syntax.
@@ -109,8 +113,10 @@ following example also shows some string functions.
 
 The primitive types has casting functions.
 
-``` echo '{}' | jxp --xpath="string(number(not(boolean(0))) + 1)"
-"2" ```
+``` 
+echo '{}' | jxp --xpath="string(number(not(boolean(0))) + 1)"
+"2" 
+```
 
 These functions also works for node sets. In XPath a node is defined as a node
 in a XML DOM tree. In this implementaion we can think of a node as a JSON 
@@ -122,8 +128,10 @@ examples it is always the root node. Evaluating an expression results in a
 value which can be of the above mentioned types the following is an example
 showing a result with a node set with cardinality one.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
-[{"a":{"b":1,"c":true,"d":"foo"}}] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
+[{"a":{"b":1,"c":true,"d":"foo"}}] 
+```
 
 Note that array notation is used and nodes are printed as json. 
 
@@ -132,42 +140,56 @@ To retreive subsets of the data path expressions are used. They come in two
 flavors. Abreviated and non abreviated. The follwing shows a simeple usage
 using node names.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b"
-[1] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b"
+[1] 
+```
 
 The requested b node is printed as 1 which is its JSON value. The implemetation
 of the node also records the name of the node which can be seen in the 
 following example.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="local-name(/a/b)"
-"b" ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="local-name(/a/b)"
+"b" 
+```
 
 The XPath function name is not supported since it should print XML namespaces. 
 To get all children of a node the wildcard "*" is used.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/*"
-[1, true, "foo"] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/*"
+[1, true, "foo"] 
+```
 
 To get the number of nodes of the function "count" is used.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)" \
-3 ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)" \
+3 
+```
 
 It is also possible to get all the descendents of a node. The following seraches
 for all descendants.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//*"
-[{"b":1,"c":true,"d":"foo"}, 1, true, "foo"] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//*"
+[{"b":1,"c":true,"d":"foo"}, 1, true, "foo"] 
+```
 
 The following finds all "d" descendants.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//d"
-["foo"] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//d"
+["foo"] 
+```
 
 To navigate towards the root of the data tree ".." is used.
 
-``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b/.."
-[{"b":1,"c":true,"d":"foo"}] ```
+``` 
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b/.."
+[{"b":1,"c":true,"d":"foo"}] 
+```
 
 ## Comparing values
 
