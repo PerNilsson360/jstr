@@ -1,13 +1,13 @@
 # jstr - JSON Schematron
 
-An implementation of XPath 1.0 and a subset of Schematron for JSON. It contains
-a library libjstr and two binaries **jxp** and **jstr**.
+An implementation of XPath 1.0 and a subset of Schematron for JSON. It
+contains a library libjstr and two binaries **jxp** and **jstr**.
 
 ## Installation
 
-The library depends on nlohmann json [1]. The following commands will install
-**jxp** and **jstr** binaries, the **libjstr.a** library and the header file 
-**Jstr.hh**.
+The library depends on nlohmann json [1]. The following commands will
+install **jxp** and **jstr** binaries, the **libjstr.a** library and
+the header file **Jstr.hh**.
 
 ./configure\
 ./make\
@@ -18,8 +18,8 @@ The following will remove installed files:
 
 ./make uninstall
 
-Note that install and unistall targets most likely needs to be prefixed with 
-"sudo".
+Note that install and unistall targets most likely needs to be
+prefixed with "sudo".
 
 ## Using binaries
 ``` 
@@ -41,18 +41,19 @@ JSON data is read from stdin and the result is printed on stdout.
 - Link with libjstr.a
 
 ## Overview
-XPath [1] is a domain specific language that is designed for XML. It has been
-extensivly used as an emebeded langague. The following are some examples.
+XPath [1] is a domain specific language that is designed for XML. It
+has been extensivly used as an emebeded langague. The following are
+some examples.
 
 - XSLT [3], XPath is used when doing transformation of XML to XML.
 - YANG [4], XPath is used as a constraint language (semantic validation). 
 - Netconf [5], XPath is used as a query langauge for data.
 - Schematron [6], XPath is used for semantic validation.
 
-With this software it is possible to use XPath as a query language for JSON 
-data. It is also possible to enforce semantic constraints on JSON data using
-schematron. Structural and "simple" data constraints should be enforced by
-validation using JSON schema [7].
+With this software it is possible to use XPath as a query language for
+JSON encoded data. It is also possible to enforce semantic constraints
+on JSON data using schematron. Structural and "simple" datac onstraints
+should be enforced by validation using JSON schema [7].
 
 Schematron [6] is a XML language but this software implements a subset of it 
 using JSON. Schematron is a realtive simple language and relies on XPath to 
