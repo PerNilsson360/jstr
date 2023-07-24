@@ -33,9 +33,9 @@ namespace {
 
 void
 printHelp() {
-    std::cout << "Usage: jxp --xpath=<\"xpath\"" << std::endl;
-    std::cout << "Evaluates a xpath expression against a json object." << std::endl;
-    std::cout << "Json data is read from stdin and result is printed on stdout." << std::endl; 
+    std::cout << "Usage: jxp --xpath=\"xpath\"" << std::endl;
+    std::cout << "Evaluates a xpath expression against a JSON object." << std::endl;
+    std::cout << "JSON data is read from stdin and result is printed on stdout." << std::endl; 
 }
 
 }
@@ -77,11 +77,10 @@ main (int argc, char* argv[])
             break;
         case 'h':
             printHelp();
-            break;
+            return 0;
         case 'v':
             std::cout << Jstr::getVersion() << std::endl;
             return 0;
-            break;
         case 'x':
             xpath = optarg;
             break;

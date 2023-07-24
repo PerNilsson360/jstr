@@ -33,9 +33,9 @@ namespace {
 
 void
 printHelp() {
-    std::cout << "Usage: jstr --schema=<schematron>" << std::endl;
+    std::cout << "Usage: jstr --schema=schematron-file" << std::endl;
     std::cout << "Validates json data against a schematron file." << std::endl;
-    std::cout << "Json data is read from stdin and the result is printed on stdout." << std::endl;
+    std::cout << "JSON data is read from stdin and the result is printed on stdout." << std::endl;
 }
     
 }
@@ -77,11 +77,10 @@ main (int argc, char* argv[])
             break;
         case 'h':
             printHelp();
-            break;
+            return 0;
         case 'v':
             std::cout << Jstr::getVersion() << std::endl;
             return 0;
-            break;
         case 's':
             schema = optarg;
             break;
