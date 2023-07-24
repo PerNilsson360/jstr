@@ -19,15 +19,19 @@ The following will remove installed files:
 ./make uninstall
 
 ## Using binaries
-``` jxp --help
+``` 
+jxp --help
 Usage: jxp --xpath="xpath"
 Evaluates a xpath expression against a JSON object.
-JSON data is read from stdin and result is printed on stdout. ```
+JSON data is read from stdin and result is printed on stdout. 
+```
 
-``` jstr --help
+``` 
+jstr --help
 Usage: jstr --schema=schematron-file
 Validates json data against a schematron file.
-JSON data is read from stdin and the result is printed on stdout. ```
+JSON data is read from stdin and the result is printed on stdout. 
+```
 
 ## Using the library.
 - Include Jstr.hh
@@ -136,7 +140,7 @@ of the node also records the name of the node which can be seen in the
 following example.
 
 ``` echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="local-name(/a/b)"
-"b"```
+"b" ```
 
 The XPath function name is not supported since it should print XML namespaces. 
 To get all children of a node the wildcard "*" is used.
