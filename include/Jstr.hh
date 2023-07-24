@@ -278,11 +278,13 @@ public:
      */
     Env(const Value& context);
     const Value& getCurrent() const;
+    const Value& getRoot() const;
     void addVariable(const std::string& name, const Value& v);
     const Value& getVariable(const std::string& name) const;
 private:
     std::map<std::string, Value> _vals;
     Value _context;
+    std::unique_ptr<Value> _root;
 };
 
 class Expr;

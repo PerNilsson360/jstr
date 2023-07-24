@@ -869,6 +869,12 @@ testFilter() {
         Value r(eval("(1 + 2)[. = 3]", json));
         assert(r.getBool()); 
     }
+    {
+        const char* j = R"({"a":{"b":[1, 2, 3, 4]}})";
+        nlohmann::json json = nlohmann::json::parse(j);
+        Value r(eval("1[count(/a/b) = 4]", json));
+        assert(r.getNumber() == 1);
+    }
 }
 
 void

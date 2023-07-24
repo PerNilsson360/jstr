@@ -30,12 +30,16 @@ namespace Jstr {
 namespace Xpath {
 
 Env::Env(const nlohmann::json& json) : _context(Value(Node("", json))) {
+    _root.reset(new Value(_context));
 }
 
 Env::Env(const Value& context) : _context(context) {
     const std::vector<Node>& nodeSet = context.getNodeSet();
-    if (context.getType() == Value::NodeSet && nodeSet.size() != 1) {
-        throw std::runtime_error("Env::Env context node set must have size 1.");
+    if (context.getType() == Value::NodeSet) {
+        _root.reset(new Value(context.getRoot()));
+        if (nodeSet.size() != 1) {
+            throw std::runtime_error("Env::Env context node set must have size 1.");
+        }
     }
 }
 
@@ -44,6 +48,14 @@ Env::getCurrent() const {
     return _context;
 }
 
+const Value&
+Env::getRoot() const {
+    if (!_root) {
+        throw std::runtime_error("Env::Env context node is not node set, i.e. no root present");
+    }
+    return *_root;
+}
+    
 void
 Env::addVariable(const std::string& name, const Value& val) {
     if (!_vals.emplace(name, val).second) {

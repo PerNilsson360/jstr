@@ -165,7 +165,7 @@ MultiExpr::getExprs() {
 // Root
 Value
 Root::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
-    return d.getRoot();
+    return e.getRoot();
 }
 
 // Path

@@ -84,24 +84,20 @@ XPath 1.0 has the following types of values.
 
 With numbers you can use many of the normal mathematical functions. The 
 following is an example.
-
 ``` 
 echo '{}' | jxp --xpath="(5.5 + 1) div 2"
 3.25 
 ```
-
 It shows how to use the commandline program **jxp**. Since it reads JSON from 
 stdin we use echo to pipe a trivial JSON object to jxp. The result of the 
 command is shown on the second line.
 
 There are no boolean literals supported but there are functions that can be used
 instead.
-
 ``` 
 echo '{}' | jxp --xpath="(false() and false()) or not(false())"
 true 
 ```
-
 This example also illustrates boolean conectives. Also note that the output from
 jxp is compatible with JSON syntax.
 
@@ -112,15 +108,14 @@ following example also shows some string functions.
 echo '{}' | jxp --xpath="string-length('foo') + string-length(substring-before(\"foo-bar\", 'bar'))"
 7
 ```
-
 The primitive types has casting functions.
 
 ``` 
 echo '{}' | jxp --xpath="string(number(not(boolean(0))) + 1)"
 "2" 
 ```
-So boolean(0) evaluates to false and number(true) is 1. Finaly the string 
-represetation of 1 + 1 is returned as a result.
+So boolean(0) evaluates to false and number(true) is 1. Finnaly the string 
+representation of 1 + 1 is returned as a result.
 
 These functions also works for node sets. In XPath a node is defined as a node
 in a XML DOM tree. In this implementaion we can think of a node as a JSON 
@@ -131,12 +126,10 @@ When a XPath expression is evaluated it needs to have a start node in these
 examples it is always the root node. Evaluating an expression results in a 
 value which can be of the above mentioned types. The following is an example
 showing a result with a node set with cardinality one.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
 [{"a":{"b":1,"c":true,"d":"foo"}}] 
 ```
-
 Note that array notation is used and nodes sets are printed as json and "/" 
 denotes the root object.
 
@@ -144,63 +137,70 @@ denotes the root object.
 To retreive subsets of the data path expressions are used. They come in two
 flavors, abreviated and non abreviated. The follwing shows a simple usage
 of using node names to select child node sets.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b"
 [1] 
 ```
-
 The requested b node is printed as 1 which is its JSON value. The implemetation
 of the node also records the name of the node which can be seen in the 
 following example.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="local-name(/a/b)"
 "b" 
 ```
-
 The XPath function "name" is not supported since it should print XML 
 namespaces which JSON does not support. To get all children of a node the 
 wildcard "*" is used.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/*"
 [1, true, "foo"] 
 ```
+Now we can explore what string function returns for a node set, from [2].
 
-To get the number of nodes of a node set the function "count" is used.
+"The string function converts an object to a string as follows:
+ - A node-set is converted to a string by returning the string-value of the 
+   node in the node-set that is first in document order. If the node-set is 
+   empty, an empty string is returned."
+
+"The string-value of an element node is the concatenation of the string-values 
+of all text node descendants of the element node in document order."
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="string(/a/*)"
+"1"
+```
+The first node in the above nodes set is the node with local-name "b" its value
+is 1. This value is returned as a string.
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="string(/a)"
+"1truefoo"
+```
+For this case the result is the concatenation of all the descendants value. To 
+get the number of nodes of a node set the function "count" is used.
 
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)" \
 3 
 ```
-
 It is also possible to get all the descendents of a node. The following seraches
 for all descendants.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//*"
 [{"b":1,"c":true,"d":"foo"}, 1, true, "foo"] 
 ```
-
 The following finds all "d" descendants.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//d"
 ["foo"] 
 ```
-
 To navigate towards the root of the data tree ".." is used.
-
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b/.."
 [{"b":1,"c":true,"d":"foo"}] 
 ```
-
 ## Comparing values
-One of the most powerful XPath features is the equality operators "=" and "!=" 
-on primitive values they work pretty much as expected. There are some 
-conversions between types that needs to be considered [1] but they are as you 
+One of the most powerful XPath features are the equality operators "=" and 
+"!=". on primitive values they work pretty much as expected. There are some 
+conversions between types that needs to be considered [2], but they are as you 
 would expect. If at least one value is of node set type, these operators are 
 similar to existential quantification in logic. This means that it can be 
 used as universial quantification using a well known conversion shown below.
@@ -218,10 +218,65 @@ This is equvivalent to the following (where ~ denotes not).
 ```
 The following examples illustrates this.
 
+```
+echo '{"a":{"b":[2, 2, 3]}}' | jxp --xpath="/a/b = 1"
+false
+```
+No be nodes are equal to 1.
 
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b = 1"
+true
+```
+There exist a b element that is equal to 1.
 
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="not(/a/b != 1)"
+false
+```
+All b nodes are not equal to 1.
+```
+echo '{"a":{"b":[1, 1, 1]}}' | jxp --xpath="not(/a/b != 1)"
+true
+```
+Finally all b nodes are equal to 1. Ordering relations <, <= >= are only 
+available for numbers.
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b < 1"
+jxp, exception: Value::checkOrderingRelationArgs, can not compare node sets
+```
+```
+echo '{"a":{"b":[1]}}' | jxp --xpath="/a/b < 1"
+false
+```
 ## Filters
-
+A filter in XPath is denoted by a pair of square brackets. It is typicaly 
+applied on path expressions which returns node sets. But they can be applied on
+primitive values. Conceptually each filter expressions is evaluated on each 
+value of a node set and if it evaluate to true the corresponsing node is kept. 
+Otherwise it is filtered away. The following filters away all elements that are
+not equalt to 1.
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b[. = 1]"
+[1]
+```
+Using the count function we can check if all b nodes are less than 4.
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="count(/a/b[. < 4]) = count(/a/b)"
+true
+```
+The following contrived example illustrates that filters can be applied to 
+primitive values and that filters can contain abritrary XPath expressions.
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 3]"
+1
+```
+In this example a empty node set is returned as an indication of that "no value"
+was returned.
+```
+echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 2]"
+[]
+```
 ## Non abreviated path expression 
 
 # Schematron
