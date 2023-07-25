@@ -51,7 +51,7 @@ public:
     const nlohmann::json& getJson() const;
     bool isValue() const;
     double getNumber() const;
-    bool getBool() const;
+    bool getBoolean() const;
     std::string getString() const;
     const std::string& getLocalName() const;
     bool isArrayChild() const;
@@ -122,7 +122,7 @@ public:
      */
     bool isValue() const;
     double getNumber() const;
-    bool getBool() const;       // TODO Rename to boolean
+    bool getBoolean() const;
     /**
      * Primitiv values are converted to strings. For node sets the "string value"
      * of the first node is returned. If the node set is empty the empty string is
@@ -194,7 +194,7 @@ inline
 bool
 operator==(const Value& v, bool b) {
     for (const Node& l : v.getNodeSet()) {
-        if (l.getBool() == b) {
+        if (l.getBoolean() == b) {
             return true;
         }
     }
@@ -230,7 +230,7 @@ inline
 bool
 operator!=(const Value& v, bool b) {
     for (const Node& l : v.getNodeSet()) {
-        if (l.getBool() != b) {
+        if (l.getBoolean() != b) {
             return true;
         }
     }
@@ -246,7 +246,7 @@ operator<<(std::ostream& os, const Value& v) {
         os << v.getNumber();
         break;
     case Value::Bool:
-        os << std::boolalpha << v.getBool();
+        os << std::boolalpha << v.getBoolean();
         break;
     case Value::String:
         os << "\"" << v.getString() << "\"";

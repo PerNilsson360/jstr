@@ -142,14 +142,14 @@ Value::getNumber() const {
 }
 
 bool
-Value::getBool() const {
+Value::getBoolean() const {
     switch(_type) {
     case Number: return !(_d.n == 0 || std::isnan(_d.n));
     case Bool: return _d.b;
     case String: return !_d.s->empty();
     case NodeSet: return !_d.ns->empty();
     default:
-        throw std::runtime_error("Value::getBool(): unkown type");
+        throw std::runtime_error("Value::getBoolean(): unkown type");
     }
 }
 
@@ -264,19 +264,19 @@ Value::operator==(const Value& xd) const {
     } else if (_type == NodeSet) {
         switch (xd._type) {
         case Number: return *this == xd.getNumber();
-        case Bool: return *this == xd.getBool();
+        case Bool: return *this == xd.getBoolean();
         case String: return *this == xd.getString();
         default: throw std::runtime_error("Value::operator==, unkown type _type==NodeSet");
         }
     } else if (xd._type == NodeSet){
         switch (_type) {
         case Number: return xd == getNumber();
-        case Bool: return xd == getBool();
+        case Bool: return xd == getBoolean();
         case String: return xd == getString();
         default: throw std::runtime_error("Value::operator==, unkown type xd._type==NodeSet");
         }
     } else if (_type == Bool || xd._type == Bool) {
-        return getBool() == xd.getBool();
+        return getBoolean() == xd.getBoolean();
     } else if (_type == Number || xd._type == Bool) {
         return getNumber() == xd.getNumber();
     } else {
@@ -296,19 +296,19 @@ Value::operator!=(const Value& xd) const {
     } else if (_type == NodeSet) {
         switch (xd._type) {
         case Number: return *this != xd.getNumber();
-        case Bool: return *this != xd.getBool();
+        case Bool: return *this != xd.getBoolean();
         case String: return *this != xd.getString();
         default: throw std::runtime_error("Value::operator!=, unkown type _type==NodeSet");
         }
     } else if (xd._type == NodeSet){
         switch (_type) {
         case Number: return xd != getNumber();
-        case Bool: return xd != getBool();
+        case Bool: return xd != getBoolean();
         case String: return xd != getString();
         default: throw std::runtime_error("Value::operator!=, unkown type xd._type==NodeSet");
         }
     } else if (_type == Bool || xd._type == Bool) {
-        return getBool() != xd.getBool();
+        return getBoolean() != xd.getBoolean();
     } else if (_type == Number || xd._type == Number) {
         return getNumber() != xd.getNumber();
     } else {

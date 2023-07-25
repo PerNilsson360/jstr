@@ -346,11 +346,11 @@ struct BooleanFun : Fun {
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
             const Node& n = d.getNode(pos);
-            return Value(n.getBool());
+            return Value(n.getBoolean());
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value arg = (*i)->evalExpr(e, d, pos);
-            return Value(arg.getBool());
+            return Value(arg.getBoolean());
         }
     }
 };
@@ -365,7 +365,7 @@ struct NotFun : Fun {
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         std::list<const Expr*>::const_iterator i = _args->begin();
         Value arg = (*i)->evalExpr(e, d, pos);
-        return Value(!arg.getBool());
+        return Value(!arg.getBoolean());
     }
 };
 

@@ -228,72 +228,72 @@ testLogic() {
     {
         nlohmann::json json;
         Value r(eval("boolean(0)", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("boolean(1)", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r =eval("boolean(number('foo'))", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("true() and true()", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("true() and false()", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a and 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("true() or true()", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("false() or false()", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("1 or false()", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("'foo' or false()", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("not(false())", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         nlohmann::json json;
         Value r(eval("not(true())", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         // <a>3</a>
         const char* j = R"({"a":3})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("not(/a and 1)", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         // <a><b>1</b><c>true</c><d>foo</d></a>
         const char* j = R"({"a":{"b":1,"c":true,"d":"foo"}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a and /a/b and /a/c and /a/d", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     // Union
     {
@@ -568,114 +568,114 @@ testRelations() {
     {
         nlohmann::json json;
         Value r(eval("1 = 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = (eval("1 = 2", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("true() = true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("false() = false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true() = false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("'a' = 'a'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("\"a\" = \"a\"", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("'a' = 'b'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e = 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e = '1'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e = '2'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e = true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e = false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c = /a/d/c", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c = /a/d", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c=/a/d", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     // !=
     {
         nlohmann::json json;
         Value r(eval("1 != 1", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = (eval("1 != 2", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true() != true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("false() != false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("true() != false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("'a' != 'a'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("\"a\" != \"a\"", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("'a' != 'b'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e != 1", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e != '1'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e != '2'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e != true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e != false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c != /a/d/c", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c != /a/d", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c!=/a/d", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     // <
     {
         nlohmann::json json;
         Value r(eval("1 < 1", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = (eval("1 < 2", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true()  < true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("false() < false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("false() < true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("'a' < 1", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e < 2", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e < '1'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e < '2'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e < true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e < false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         bool exception(false);
         try {
             r = eval("/a/b/c < /a/d/c", json);
@@ -688,32 +688,32 @@ testRelations() {
     {
         nlohmann::json json;
         Value r(eval("1 <= 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = (eval("1 <= 2", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true()  <= true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("false() <= false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true() <= false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("'a' <= 1", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e <= 2", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e <= '0.5'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e <= '2'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e <= true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e <= false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         bool exception(false);
         try {
             r = eval("/a/b/c <= /a/d/c", json);
@@ -726,32 +726,32 @@ testRelations() {
         {
         nlohmann::json json;
         Value r(eval("1 > 1", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = (eval("2 > 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true()  > true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("false() > false()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("true() > false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("'a' > 1", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e > 2", json));
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e > '0.5'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e > '2'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e > true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e > false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         bool exception(false);
         try {
             r = eval("/a/b/c > /a/d/c", json);
@@ -764,32 +764,32 @@ testRelations() {
         {
         nlohmann::json json;
         Value r(eval("1 >= 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = (eval("2 >= 1", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("true()  >= true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("false() >= false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("false() >= true()", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("'a' >= 1", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>
         const char* j = R"({"a":{"b":{"c":{"e":1}},"d":{"c":{"e":1}}}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("/a/b/c/e >= 0.5", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e >= '2'", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
         r = eval("/a/b/c/e >= '0.5'", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e >= true()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("/a/b/c/e >= false()", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         bool exception(false);
         try {
             r = eval("/a/b/c >= /a/d/c", json);
@@ -867,7 +867,7 @@ testFilter() {
     {
         nlohmann::json json;
         Value r(eval("(1 + 2)[. = 3]", json));
-        assert(r.getBool()); 
+        assert(r.getBoolean()); 
     }
     {
         const char* j = R"({"a":{"b":[1, 2, 3, 4]}})";
@@ -986,13 +986,13 @@ testStringFunctions() {
         const char* j = R"({"a":{"b":[1,2,3,4]}})";
         nlohmann::json json = nlohmann::json::parse(j);
         Value r(eval("starts-with(/, '')", json));
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("starts-with(/, '12')", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("starts-with(/, '1234')", json);
-        assert(r.getBool());
+        assert(r.getBoolean());
         r = eval("starts-with('foo', 'bar')", json);
-        assert(!r.getBool());
+        assert(!r.getBoolean());
     }
     // subsstring-before
     {
@@ -1092,18 +1092,18 @@ testEnv() {
         assert(r.getNumber() == 1);
         Expression e2("$b1 = current()/a/b[. = 1]");
         r = e2.eval(env);
-        assert(r.getBool());
+        assert(r.getBoolean());
         Expression e3("$b1 = current()//b[. = 1]");
         r = e3.eval(env);
-        assert(r.getBool());
+        assert(r.getBoolean());
         Value b4 = eval("/a/b[. = 4]", json);
         env.addVariable("b4", b4);
         Expression e4("$b1 < $b4");
         r = e4.eval(env);
-        assert(r.getBool());
+        assert(r.getBoolean());
         Expression e5("($b1 + 3) = $b4");
         r = e5.eval(env);
-        assert(r.getBool());
+        assert(r.getBoolean());
     }
     {
         //<a><b><c><e>1</e></c></b><d><c><e>1</e></c></d></a>

@@ -96,7 +96,7 @@ Expr::evalFilter(const Env& env, const Value& val) const {
         bool keep(true);
         for (const Expr* pred : *_preds) {
             Value r = pred->eval(env, val, 0);
-            keep &= r.getBool();
+            keep &= r.getBoolean();
         }
         return keep ? val : Value();
     } else {
@@ -110,7 +110,7 @@ Expr::evalFilter(const Env& env, const Value& val) const {
                         keepIndexes.emplace_back(i);
                     }
                 } else {
-                    if (r.getBool()) {
+                    if (r.getBoolean()) {
                         keepIndexes.emplace_back(i);
                     }
                 }
@@ -636,7 +636,7 @@ Value
 Or::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
-    return Value(l.getBool() || r.getBool());
+    return Value(l.getBoolean() || r.getBoolean());
 }
 
 // And
@@ -646,7 +646,7 @@ Value
 And::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     Value l = _l->eval(e, d, pos);
     Value r = _r->eval(e, d, pos);
-    return Value(l.getBool() && r.getBool());
+    return Value(l.getBoolean() && r.getBoolean());
 }
 
 // Eq

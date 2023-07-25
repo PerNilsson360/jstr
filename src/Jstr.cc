@@ -71,7 +71,7 @@ evalExpression(const Expression& expr,
                const std::string& message,
                std::ostream& out) {
     Value r = expr.eval(env);
-    bool result = r.getBool();
+    bool result = r.getBoolean();
     if (!result) {
         out << name << ", error: " << message << std::endl;
     }

@@ -139,7 +139,7 @@ Node::getNumber() const {
 }
 
 bool
-Node::getBool() const {
+Node::getBoolean() const {
     const nlohmann::json& j = getJson();
     if (j.is_number()) {
         double d = j.get<double>();
