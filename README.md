@@ -18,7 +18,7 @@ The following will remove installed files:
 
 ./make uninstall
 
-Note that install and unistall targets most likely needs to be
+Note that install and uninstall targets most likely needs to be
 prefixed with "sudo".
 
 ## Using binaries
@@ -42,21 +42,21 @@ JSON data is read from stdin and the result is printed on stdout.
 
 ## Overview
 XPath [1] is a domain specific language that is designed for XML. It
-has been extensivly used as an emebeded langague. The following are
+has been extensivly used as an embedded language. The following are
 some examples.
 
 - XSLT [3], XPath is used when doing transformation of XML to XML.
 - YANG [4], XPath is used as a constraint language (semantic validation). 
-- Netconf [5], XPath is used as a query langauge for data.
+- Netconf [5], XPath is used as a query language for data.
 - Schematron [6], XPath is used for semantic validation.
 
 With this software it is possible to use XPath as a query language for
 JSON encoded data. It is also possible to enforce semantic constraints
-on JSON data using schematron. Structural and "simple" datac onstraints
+on JSON data using schematron. Structural and "simple" data constraints
 should be enforced by validation using JSON schema [7].
 
 Schematron [6] is a XML language but this software implements a subset of it 
-using JSON. Schematron is a realtive simple language and relies on XPath to 
+using JSON. Schematron is a relative simple language and relies on XPath to 
 query and compare data.
 
 XPath has some features that are XML specific these are skipped in this 
@@ -66,13 +66,13 @@ implementation. The following are some examples:
 - Namespaces.
 - Processing instructions.
 
-Also since there are diferences between the internal data trees used by JSON and
-XML there might be subtle semantic differencis between this implementation of
-XPath 1.0 and a standard complient XML implementation. Having said that the 
+Also since there are differences between the internal data trees used by JSON and
+XML there might be subtle semantic differences between this implementation of
+XPath 1.0 and a standard compliant XML implementation. Having said that the 
 intention is to follow [1] as much as possible.
 
 Also note that XPath 1.0 is a small language compared to XPath 3.1 this has some
-benefits and ofcourse also some drawbacks.
+benefits and of course also some drawbacks.
 
 ## XPath 1.0 tutorial
 The following is a XPath 1.0 tutorial. It also shows how to use the tool jxp.
@@ -91,7 +91,7 @@ following is an example.
 echo '{}' | jxp --xpath="(5.5 + 1) div 2"
 3.25 
 ```
-It shows how to use the commandline program *jxp*. Since *jxp* reads JSON 
+It shows how to use the command line program *jxp*. Since *jxp* reads JSON 
 from stdin we use *echo* to pipe a trivial JSON object to *jxp*. The result of 
 the command is shown on the second line.
 
@@ -120,7 +120,7 @@ So boolean(0) evaluates to false and number(true) is 1. Finally the string
 representation of 1 + 1 which is 2 is returned as a result.
 
 These functions also works for node sets. In XPath a node is defined as a node
-in a XML DOM tree. In this implementaion we can think of a node as a JSON 
+in a XML DOM tree. In this implementation we can think of a node as a JSON 
 object or primitive value.
 
 ## Node sets
@@ -136,15 +136,15 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
 Note that array notation is used and nodes sets are printed as json and "/" 
 denotes the root node.
 
-## Abreviated path expressions
-Path expressions are used to retreive subsets of data nodes. Path Expressions 
-come in two flavors, abreviated and non abreviated. The follwing shows a simple
+## Abbreviated path expressions
+Path expressions are used to retrieve subsets of data nodes. Path Expressions 
+come in two flavors, abreviated and non abreviated. The following shows a simple
 usage of using node names to select child node sets.
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b"
 [1] 
 ```
-The requested b node is printed as 1 which is its JSON value. The implemetation
+The requested b node is printed as 1 which is its JSON value. The implementation
 of the node also records the name of the node which can be seen in the 
 following example.
 ``` 
@@ -181,10 +181,10 @@ In this case the result is the concatenation of all the descendants values. To
 get the number of nodes of a node set the function "count" is used.
 
 ``` 
-echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)" \
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="count(/a/*)"
 3 
 ```
-It is also possible to get all the descendents of a node. The following seraches
+It is also possible to get all the descendants of a node. The following searches
 for all descendants.
 ``` 
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="//*"
@@ -205,7 +205,7 @@ One of the most powerful XPath features are the equality operators "=" and
 "!=". On primitive values they work pretty much as expected. There are some 
 conversions between types that needs to be considered [2]. If at least one 
 value is of node set type, these operators are similar to existential 
-quantification in logic. This means that it can be used as universial 
+quantification in logic. This means that it can be used as universal 
 quantification using a well known conversion shown below.
 
 Assume X is a set of numbers and we want to assert that all these values are 
@@ -214,7 +214,7 @@ equal to 1 then we can write the following (in pseudo logic syntax).
 ```
 forall x in X. x = 1
 ```
-This is equvivalent to the following (where ~ denotes not).
+This is equivalent to the following (where ~ denotes not).
 
 ```
 ~(exist x in X. x != 1)
@@ -255,12 +255,12 @@ echo '{"a":{"b":[1]}}' | jxp --xpath="/a/b < 1"
 false
 ```
 ## Filters
-A filter in XPath is denoted by a pair of square brackets. It is typicaly 
+A filter in XPath is denoted by a pair of square brackets. It is typically 
 applied to path expressions which returns node sets. But they can also be 
 applied on primitive values. Conceptually each filter expressions is evaluated 
 on each value of a node set and if it evaluates to true the corresponding node 
 is kept, otherwise it is filtered away. The following example filters away all 
-"b" nodes that are not equalt to 1.
+"b" nodes that are not equal to 1.
 ```
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b[. = 1]"
 [1]
@@ -271,7 +271,7 @@ echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="count(/a/b[. < 4]) = count(/a/b)"
 true
 ```
 The following contrived example illustrates that filters can be applied to 
-primitive values and that filters can contain abritrary XPath expressions.
+primitive values and that filters can contain arbitrary XPath expressions.
 ```
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 3]"
 1
@@ -282,7 +282,7 @@ was returned.
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 2]"
 []
 ```
-## Non abreviated path expression 
+## Non abbreviated path expression 
 
 # Schematron
 
