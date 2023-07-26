@@ -59,8 +59,8 @@ struct LocalNameFun : Fun {
     }
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
-            const Node& n = d.getNode(pos);
-            return n.getLocalName();
+            const Node* n = d.getNode(pos);
+            return n->getLocalName();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value arg = (*i)->evalExpr(e, d, pos);
@@ -77,8 +77,8 @@ struct StringFun : Fun {
     }
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
-            const Node& n = d.getNode(pos);
-            return n.getString();
+            const Node* n = d.getNode(pos);
+            return n->getString();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value arg = (*i)->evalExpr(e, d, pos);
@@ -217,8 +217,8 @@ struct StringLengthFun : Fun {
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         double l;
         if (_args == nullptr || _args->empty()) {
-            const Node& n = d.getNode(pos);
-            const std::string& s = n.getString();
+            const Node* n = d.getNode(pos);
+            const std::string& s = n->getString();
             l = s.size();
         } else  {
             std::list<const Expr*>::const_iterator i = _args->begin();
@@ -264,8 +264,8 @@ struct NumberFun : Fun {
     }
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
-            const Node& n = d.getNode(pos);
-            return n.getNumber();
+            const Node* n = d.getNode(pos);
+            return n->getNumber();
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value v = (*i)->evalExpr(e, d, pos);
@@ -283,8 +283,8 @@ struct SumFun : Fun {
         std::list<const Expr*>::const_iterator i = _args->begin();
         Value v = (*i)->evalExpr(e, d, pos);
         double r(0);
-        for (const Node& n : v.getNodeSet()) {
-            const std::string& s = n.getString();
+        for (const Node* n : v.getNodeSet()) {
+            const std::string& s = n->getString();
             if (s.empty()) {
                 r = NAN;
                 break;
@@ -345,8 +345,8 @@ struct BooleanFun : Fun {
     }
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override {
         if (_args == nullptr || _args->empty()) {
-            const Node& n = d.getNode(pos);
-            return Value(n.getBoolean());
+            const Node* n = d.getNode(pos);
+            return Value(n->getBoolean());
         } else {
             std::list<const Expr*>::const_iterator i = _args->begin();
             Value arg = (*i)->evalExpr(e, d, pos);

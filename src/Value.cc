@@ -31,7 +31,7 @@ namespace Jstr {
 namespace Xpath {
 
 Value::Value() : _type(NodeSet) {
-    _d.ns = new std::vector<Node>();
+    _d.ns = new std::vector<const Node*>();
 }
 
 Value::Value(const Value& v) : _type(Number) { // type here is just dummy
@@ -58,25 +58,13 @@ Value::Value(const std::string& s) : _type(String) {
     _d.s = new std::string(s);
 }
 
-Value::Value(const std::string& name, const nlohmann::json& json) :
-    _type(NodeSet) {
-    _d.ns = new std::vector<Node>();
-    if (json.is_array()) {
-        for (size_t i = 0, size = json.size(); i < size; i++) {
-            _d.ns->emplace_back(Node(name, json, i));
-        }
-    } else {
-        _d.ns->emplace_back(Node(name, json));
-    }
+Value::Value(const Node* node) : _type(NodeSet) {
+    _d.ns = new std::vector<const Node*>();
+    _d.ns->emplace_back(node);
 }
 
-Value::Value(const Node& node) : _type(NodeSet) {
-    _d.ns = new std::vector<Node>();
-    _d.ns->emplace_back(Node(node));
-}
-
-Value::Value(const std::vector<Node>& ns) : _type(NodeSet) {
-    _d.ns = new std::vector<Node>(ns);
+Value::Value(const std::vector<const Node*>& ns) : _type(NodeSet) {
+    _d.ns = new std::vector<const Node*>(ns);
 }
 
 Value
@@ -84,8 +72,8 @@ Value::nodeSetUnion(const Value& v) const {
     if (!(_type == NodeSet && v._type == NodeSet)) {
         throw std::runtime_error("Union::eval both values must be node sets");
     }
-    std::vector<Node> result = *_d.ns;
-    for (const Node& n : *v._d.ns) {
+    std::vector<const Node*> result = *_d.ns;
+    for (const Node* n : *v._d.ns) {
         addIfUnique(result, n);
     }
     return Value(result);
@@ -113,7 +101,7 @@ Value::getType() const {
 }
 
 bool Value::isValue() const {
-    return _type != NodeSet || (_d.ns->size() == 1 && (*_d.ns)[0].isValue());
+    return _type != NodeSet || (_d.ns->size() == 1 && (*_d.ns)[0]->isValue());
 }
 
 double
@@ -161,8 +149,8 @@ Value::getStringValue() const {
     case String: return getString();
     case NodeSet: {
         std::string r;
-        for (const Node& n :  *_d.ns) {
-            r += n.getString(); // TODO: r should be input parameter
+        for (const Node* n :  *_d.ns) {
+            r += n->getString(); // TODO: r should be input parameter
         }
         return r;
     }
@@ -192,13 +180,13 @@ Value::getString() const {
     }
     case Bool: return _d.b ? "true" : "false";
     case String: return *(_d.s);
-    case NodeSet:  return _d.ns->empty() ? "" : _d.ns->begin()->getString();
+    case NodeSet:  return _d.ns->empty() ? "" : (*_d.ns->begin())->getString();
     default:
         throw std::runtime_error("Value::getString(): unkown type");
     }
 }
 
-const Node&
+const Node*
 Value::getNode(size_t pos) const {
     if (_type != NodeSet) {
         throw std::runtime_error("Value::getNode(): Value is  not a node set");
@@ -210,10 +198,10 @@ Value::getNode(size_t pos) const {
 }
 
 namespace {
-    const std::vector<Node> _emptyNodeSet;
+    const std::vector<const Node*> _emptyNodeSet;
 }
 
-const std::vector<Node>&
+const std::vector<const Node*>&
 Value::getNodeSet() const {
     return _type == NodeSet ? *_d.ns : _emptyNodeSet;
 }
@@ -233,7 +221,7 @@ Value::getNodeSetSize() const {
 Value
 Value::getLocalName() const {
     if (_type == NodeSet && !_d.ns->empty()) {
-        return Value(_d.ns->begin()->getLocalName());
+        return Value((*_d.ns->begin())->getLocalName());
     } else {
         return Value("");
     }
@@ -249,14 +237,14 @@ Value::getRoot() const {
     if (_d.ns->empty()) {
         throw std::runtime_error("Value::getRoot() node set is empty");
     }
-    return Value(_d.ns->begin()->getRoot());
+    return Value((*_d.ns->begin())->getRoot());
 }
 
 bool
 Value::operator==(const Value& xd) const {
     if (_type == NodeSet && xd._type == NodeSet) {
-        for (const Node& l : getNodeSet()) {
-            if (xd == l.getString()) {
+        for (const Node* l : getNodeSet()) {
+            if (xd == l->getString()) {
                 return true;
             }
         }
@@ -287,8 +275,8 @@ Value::operator==(const Value& xd) const {
 bool
 Value::operator!=(const Value& xd) const {
     if (_type == NodeSet && xd._type == NodeSet) {
-        for (const Node& l : getNodeSet()) {
-            if (xd != l.getString()) {
+        for (const Node* l : getNodeSet()) {
+            if (xd != l->getString()) {
                 return true;
             }
         }
@@ -359,7 +347,7 @@ Value::assign(const Value& xd) {
         _d.s = new std::string(*xd._d.s);
         break;
     case NodeSet:
-        _d.ns = new std::vector<Node>(*xd._d.ns);
+        _d.ns = new std::vector<const Node*>(*xd._d.ns);
         break;
     default:
         throw std::runtime_error("Value::assign: unkown type");

@@ -30,14 +30,14 @@ namespace Jstr {
 namespace Xpath {
     
 Value
-eval(const std::string& xpath, const nlohmann::json& json) {
+eval(const std::string& xpath, const Document& document) {
     xpath10_driver driver;
     if (driver.parse(xpath) != 0) {
         std::stringstream ss;
         ss << "nljp::eval failed to parse exp: " << xpath;
         throw std::runtime_error(ss.str());
     }
-    Value context(Node("", json));
+    Value context(document.getRoot());
     Env env(context);
     return driver.result->eval(env, context, 0);
 }
@@ -82,14 +82,13 @@ bool
 evalAssert(const std::string& name,
            const Value& context,
            const nlohmann::json& assert,
-           const nlohmann::json& data,
            std::ostream& out) {
     std::string test = getPropertyString(assert, "test", "schematron::evalAssert");
     std::string message = getPropertyString(assert, "message", "schematron::evalAssert");
     Expression expr(test);
     bool result(true);
     if (context.getType() == Value::NodeSet) {
-        for (const Node& n : context.getNodeSet()) {
+        for (const Node* n : context.getNodeSet()) {
             Value v(n);
             Env env(v);
             result &= evalExpression(expr, env, name, message, out);
@@ -104,10 +103,10 @@ evalAssert(const std::string& name,
 bool
 evalRule(const std::string& name,
          const nlohmann::json& rule,
-         const nlohmann::json& data,
+         const Document& document,
          std::ostream& out) {
     const std::string& ctx = getPropertyString(rule, "context", "schematron::evalRule");
-    Env env(data);
+    Env env(document.getRoot());
     Expression expr(ctx);
     Value context(expr.eval(env));
     if (!rule.contains("assert")) {
@@ -115,7 +114,7 @@ evalRule(const std::string& name,
     }
     const nlohmann::json& assert = rule["assert"];
     if (assert.is_object()) {
-        return evalAssert(name, context, assert, data, out);
+        return evalAssert(name, context, assert, out);
     } else if (assert.is_array()) {
         size_t size = assert.size();
         if (size == 0) {
@@ -127,7 +126,7 @@ evalRule(const std::string& name,
             if (!a.is_object()) {
                 throw std::runtime_error("schematron::evalRule assert in array is not object");
             }
-            result &= evalAssert(name, context, a, data, out);
+            result &= evalAssert(name, context, a, out);
         }
         return result;
     } else {
@@ -136,7 +135,7 @@ evalRule(const std::string& name,
 }
     
 bool
-evalPattern(const nlohmann::json& pattern, const nlohmann::json& data, std::ostream& out) {
+evalPattern(const nlohmann::json& pattern, const Document& document, std::ostream& out) {
     if (!pattern.contains("name")) {
         throw std::runtime_error("schematron::evalPattern can not find name");
     }
@@ -150,7 +149,7 @@ evalPattern(const nlohmann::json& pattern, const nlohmann::json& data, std::ostr
     }
     const nlohmann::json& rule = pattern["rule"];
     if (rule.is_object()) {
-        return evalRule(name, rule, data, out);
+        return evalRule(name, rule, document, out);
     } else if (rule.is_array()) {
         size_t size = rule.size();
         if (size == 0) {
@@ -162,7 +161,7 @@ evalPattern(const nlohmann::json& pattern, const nlohmann::json& data, std::ostr
             if (!r.is_object()) {
                 throw std::runtime_error("schematron::evalPattern rule in array is not object");
             }
-            result &= evalRule(name, r, data, out);
+            result &= evalRule(name, r, document, out);
         }
         return result;
     } else {
@@ -176,12 +175,13 @@ namespace Schematron {
     
 bool
 eval(const nlohmann::json& schematron, const nlohmann::json& data, std::ostream& out) {
+    Jstr::Xpath::Document document(data);
     if (!schematron.contains("pattern")) {
         throw std::runtime_error("schematron::eval can not find any patterns");
     }
     const nlohmann::json& pattern  = schematron["pattern"];
     if (pattern.is_object()) {
-        return evalPattern(pattern, data, out);
+        return evalPattern(pattern, document, out);
     } else if (pattern.is_array()) {
         size_t size = pattern.size();
         if (size == 0) {
@@ -193,7 +193,7 @@ eval(const nlohmann::json& schematron, const nlohmann::json& data, std::ostream&
             if (!p.is_object()) {
                 throw std::runtime_error("schematron::eval pattern in array is not object");
             }
-            result &= evalPattern(p, data, out);
+            result &= evalPattern(p, document, out);
         }
         return result;
     } else {

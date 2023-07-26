@@ -37,36 +37,33 @@ getVersion() {
 }
 
 namespace Xpath {
-
+    
 // Node    
 class Node {
 public:
     Node();
-    Node(const std::string& name, const nlohmann::json& json, int64_t i = -1);
-    Node(const Node* parent, const std::string& name, const nlohmann::json& json, int64_t i = -1);
-    Node(const Node& node);
-    Node& operator=(const Node& node);
-    Node getRoot() const;
+    Node(const Node* parent, const std::string& name, const nlohmann::json& json);
+    Node(const Node& node) = delete;
+    virtual ~Node();
+    Node& operator=(const Node& node) = delete;
+    const Node* getRoot() const;
     const Node* getParent() const;
-    const nlohmann::json& getJson() const;
-    bool isValue() const;
+    virtual const nlohmann::json& getJson() const;
+    virtual bool isValue() const;
     double getNumber() const;
     bool getBoolean() const;
     std::string getString() const;
     const std::string& getLocalName() const;
-    bool isArrayChild() const;
-    void getAncestors(std::vector<Node>& result) const;
-    void getChild(const std::string& name, std::vector<Node>& result) const;
-    void getChildren(std::vector<Node>& result) const;
-    void getSubTreeNodes(std::vector<Node>& result) const;
-    void search(const std::string& name, std::vector<Node>& result) const;
-    bool operator==(const Node& r) const;
-private:
-    void assign(const Node& node);
-    std::unique_ptr<const Node> _parent;
+    virtual bool isArrayChild() const;
+    void getAncestors(std::vector<const Node*>& result) const;
+    virtual void getChild(const std::string& name, std::vector<const Node*>& result) const = 0;
+    virtual void getChildren(std::vector<const Node*>& result) const = 0;
+    virtual void getSubTreeNodes(std::vector<const Node*>& result) const = 0;
+    virtual void search(const std::string& name, std::vector<const Node*>& result) const = 0;
+protected:
+    const Node* _parent;
     std::string _name;
     const nlohmann::json* _json;
-    int64_t _i;
 };
 
 inline
@@ -78,12 +75,12 @@ operator<<(std::ostream& os, const Node& n) {
 
 inline
 std::ostream&
-operator<<(std::ostream& os, const std::vector<Node>& ns) {
+operator<<(std::ostream& os, const std::vector<const Node*>& ns) {
     os << "[";
     bool first(true);
     std::string separator;
-    for (const Node& n : ns) {
-        os << separator << n;
+    for (const Node* n : ns) {
+        os << separator << *n;
         if (first) {
             separator = ", ";
         }
@@ -92,7 +89,18 @@ operator<<(std::ostream& os, const std::vector<Node>& ns) {
     return os;
 }
 
-
+// Document
+class Document {
+public:
+    Document() = delete;
+    explicit Document(const nlohmann::json& json);
+    Document(const Document& node) = delete;
+    Document& operator=(const Document& node) = delete;
+    const Node* getRoot() const;
+private:
+    std::unique_ptr<const Node> _root;
+};
+    
 // Value
 class Value {
 public:
@@ -109,9 +117,9 @@ public:
     Value(bool b);
     Value(const char* s);
     Value(const std::string& s);
-    Value(const std::string& name, const nlohmann::json& json);
-    Value(const Node& node);
-    Value(const std::vector<Node>& ns);
+    //Value(const std::string& name, const nlohmann::json& json);
+    Value(const Node* node);
+    Value(const std::vector<const Node*>& ns);
     Value& operator=(const Value& xd);
     Value& operator=(Value&& xd);
     ~Value();
@@ -139,8 +147,8 @@ public:
      * @return a string representation of the value.
      */
     std::string getStringValue() const;
-    const Node& getNode(size_t pos) const;
-    const std::vector<Node>& getNodeSet() const;
+    const Node* getNode(size_t pos) const;
+    const std::vector<const Node*>& getNodeSet() const;
     Value getNodeSetSize() const;
     Value getLocalName() const;
     Value getRoot() const;
@@ -161,16 +169,15 @@ private:
         double n;
         bool b;
         std::string* s;
-        std::vector<Node>* ns;
+        std::vector<const Node*>* ns;
     } _d;
 };
 
 inline
 bool
 operator==(const Value& v, double d) {
-    const std::vector<Node>& ns = v.getNodeSet();
-    for (const Node& l : v.getNodeSet()) {
-        if (l.getNumber() == d) {
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getNumber() == d) {
             return true;
         }
     }
@@ -180,10 +187,8 @@ operator==(const Value& v, double d) {
 inline
 bool
 operator==(const Value& v, const std::string& s) {
-    const std::vector<Node>& ns = v.getNodeSet();
-    for (const Node& l : v.getNodeSet()) {
-        const std::string& ls = l.getString();
-        if (ls == s) {
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getString() == s) {
             return true;
         }
     }
@@ -193,8 +198,8 @@ operator==(const Value& v, const std::string& s) {
 inline
 bool
 operator==(const Value& v, bool b) {
-    for (const Node& l : v.getNodeSet()) {
-        if (l.getBoolean() == b) {
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getBoolean() == b) {
             return true;
         }
     }
@@ -204,9 +209,9 @@ operator==(const Value& v, bool b) {
 inline
 bool
 operator!=(const Value& v, double d) {
-    const std::vector<Node>& ns = v.getNodeSet();
-    for (const Node& l : v.getNodeSet()) {
-        if (l.getNumber() != d) {
+    const std::vector<const Node*>& ns = v.getNodeSet();
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getNumber() != d) {
             return true;
         }
     }
@@ -216,10 +221,9 @@ operator!=(const Value& v, double d) {
 inline
 bool
 operator!=(const Value& v, const std::string& s) {
-    const std::vector<Node>& ns = v.getNodeSet();
-    for (const Node& l : v.getNodeSet()) {
-        const std::string& ls = l.getString();
-        if (ls != s) {
+    const std::vector<const Node*>& ns = v.getNodeSet();
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getString() != s) {
             return true;
         }
     }
@@ -229,8 +233,8 @@ operator!=(const Value& v, const std::string& s) {
 inline
 bool
 operator!=(const Value& v, bool b) {
-    for (const Node& l : v.getNodeSet()) {
-        if (l.getBoolean() != b) {
+    for (const Node* l : v.getNodeSet()) {
+        if (l->getBoolean() != b) {
             return true;
         }
     }
@@ -251,9 +255,8 @@ operator<<(std::ostream& os, const Value& v) {
     case Value::String:
         os << "\"" << v.getString() << "\"";
         break;
-    case Value::NodeSet: {
+    case Value::NodeSet:
         os << v.getNodeSet();
-    }
         break;
     default:
         os << "Uknown type";
@@ -265,12 +268,6 @@ operator<<(std::ostream& os, const Value& v) {
 // Env
 class Env {
 public:
-    /**
-     * Creates an environment with a context node supplied as a json object.
-     * The json object is a "top level" entity in the data tree.
-     * @param json a top level json entity.
-     */
-    Env(const nlohmann::json& json);
     /**
      * Creates an environment with a context node. The context node must be either
      * a primitivite value (number, boolean or string) or a node set with one node.
@@ -301,7 +298,7 @@ private:
 };
     
 Value
-eval(const std::string& xpath, const nlohmann::json& json);
+eval(const std::string& xpath, const Document& document);
 
 }
 

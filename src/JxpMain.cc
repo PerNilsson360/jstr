@@ -120,7 +120,8 @@ main (int argc, char* argv[])
             }
             d = nlohmann::json::parse(ifs);
         }
-        Jstr::Xpath::Value value = Jstr::Xpath::eval(xpath, d);
+        Jstr::Xpath::Document document(d);
+        Jstr::Xpath::Value value = Jstr::Xpath::eval(xpath, document);
         std::cout << value << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "jxp, exception: " << e.what() << std::endl;
