@@ -33,7 +33,6 @@ namespace Xpath {
 Env::Env(const Value& context) : _context(context) {
     const std::vector<const Node*>& nodeSet = context.getNodeSet();
     if (context.getType() == Value::NodeSet) {
-        _root.reset(new Value(context.getRoot()));
         if (nodeSet.size() != 1) {
             throw std::runtime_error("Env::Env context node set must have size 1.");
         }
@@ -45,13 +44,9 @@ Env::getCurrent() const {
     return _context;
 }
 
-const Value&
+Value
 Env::getRoot() const {
-    if (!_root) {
-        throw std::runtime_error("Env::Env context node is not node set, i.e. no root present");
-    }
-    const Value* root = _root.get();
-    return *root;
+    return _context.getRoot();
 }
     
 void

@@ -26,6 +26,12 @@
 #include <Jstr.hh>
 #include "Utils.hh"
 
+namespace {
+
+using namespace Jstr::Xpath;
+const std::vector<const Node*> _emptyNodeSet;
+
+}
 
 namespace Jstr {
 namespace Xpath {
@@ -197,10 +203,6 @@ Value::getNode(size_t pos) const {
     return (*_d.ns)[pos];
 }
 
-namespace {
-    const std::vector<const Node*> _emptyNodeSet;
-}
-
 const std::vector<const Node*>&
 Value::getNodeSet() const {
     return _type == NodeSet ? *_d.ns : _emptyNodeSet;
@@ -229,13 +231,8 @@ Value::getLocalName() const {
 
 Value
 Value::getRoot() const {
-    if (_type != NodeSet) {
-        std::stringstream ss;
-        ss << "Value::getRoot() node set is not NodeSet: " << _type << std::endl;
-        throw std::runtime_error(ss.str());
-    }
-    if (_d.ns->empty()) {
-        throw std::runtime_error("Value::getRoot() node set is empty");
+    if (_type != NodeSet || _d.ns->empty()) {
+        return Value(_emptyNodeSet);
     }
     return Value((*_d.ns->begin())->getRoot());
 }

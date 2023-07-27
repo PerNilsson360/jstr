@@ -1207,6 +1207,17 @@ testEnv() {
         r = e2.eval(env);
         assert(r.getNumber() == 1);
     }
+    {
+        Value d(1.0);
+        Env env(d);
+        Expression e1(".");
+        Value r(e1.eval(env));
+        assert(r.getNumber() == 1);
+        Expression e2("/");
+        r = e2.eval(env);
+        Value size = r.getNodeSetSize();
+        assert(size.getNumber() == 0);
+    }
 }
 
 int
