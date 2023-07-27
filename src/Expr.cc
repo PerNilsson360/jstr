@@ -437,7 +437,7 @@ SelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep)
         if (firstStep) {
             const Node* n = nodeSet[pos];
             if (checkLocalName(n, _s)) {
-                result = std::vector<const Node*>(1, nodeSet[pos]); // TODO emplace_back
+                result.emplace_back(nodeSet[pos]);
             }
         } else {
             if (_s.empty() || _s == "*") {

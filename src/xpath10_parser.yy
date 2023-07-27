@@ -239,7 +239,7 @@ PredicateExpr:
 
 // [10] AbbreviatedAbsoluteLocationPath	  ::=  	 '//' RelativeLocationPath	
 AbbreviatedAbsoluteLocationPath:
-  "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); } // TODO add root here ?
+  "//" RelativeLocationPath	                     { $$ = $2; $$->addAbsoluteDescendant(); }
 
 // [119 AbbreviatedRelativeLocationPath	  ::=  	 RelativeLocationPath '//' Step	
 AbbreviatedRelativeLocationPath:
