@@ -53,7 +53,7 @@ some examples.
 With this software it is possible to use XPath as a query language for
 JSON encoded data. It is also possible to enforce semantic constraints
 on JSON data using schematron. Structural and "simple" data constraints
-should be enforced by validation using JSON schema [7].
+should be enforced by JSON schema [7] validation.
 
 Schematron [6] is a XML language but this software implements a subset of it 
 using JSON. Schematron is a relative simple language and relies on XPath to 
@@ -255,12 +255,15 @@ echo '{"a":{"b":[1]}}' | jxp --xpath="/a/b < 1"
 false
 ```
 ## Filters
-A filter in XPath is denoted by a pair of square brackets. It is typically 
-applied to path expressions which returns node sets. But they can also be 
-applied on primitive values. Conceptually each filter expressions is evaluated 
-on each value of a node set and if it evaluates to true the corresponding node 
-is kept, otherwise it is filtered away. The following example filters away all 
-"b" nodes that are not equal to 1.
+
+A filter in XPath is denoted by a pair of square brackets. It is
+typically applied to path expressions which returns node sets. But
+they can also be applied on primitive values. Conceptually each filter
+expressions is evaluated on each value of a node set and if it
+evaluates to true the corresponding node is kept, otherwise it is
+filtered away. The following example filters away all "b" nodes that
+are not equal to 1.
+
 ```
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b[. = 1]"
 [1]
@@ -270,20 +273,77 @@ Using the count function we can check if all b nodes are less than 4.
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="count(/a/b[. < 4]) = count(/a/b)"
 true
 ```
-The following contrived example illustrates that filters can be applied to 
-primitive values and that filters can contain arbitrary XPath expressions.
+
+The following contrived example illustrates that filters can be
+applied to primitive values and that filters can contain arbitrary
+XPath expressions.
+
+
 ```
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 3]"
 1
 ```
-In this example a empty node set is returned as an indication of that "no value"
-was returned.
+
+In this example an empty node set is returned as an indication of that
+"no value" was returned.
+
 ```
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="1[count(/a/b) = 2]"
 []
 ```
-## Non abbreviated path expression 
+## Non abbreviated path expression
 
+XPath 1.0 supports a big selection of non abbreviated path
+expressions. Some seems to be adedd just for completenes. The the
+following example shows the non abbreviated way of selecting child
+node sets.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/child::a/child::b"
+[1]
+```
+
+In the above XPath expression we have two steps separated by the '/'
+character. Looking at the grammar in [2] we can see that a non
+abbreviated step contains an axis name and a node test separated by
+"::". The attribute axis and the namspace axis are not supported for
+obvious reasons. And node names and the wild card '*' are the only
+supported node tests. The following illustrates the wild chard node
+test.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/child::a/child::*"
+[1, true, "foo"]
+```
+
+The following two examples illustrates the descendant axis. First with
+a name as a node test.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/descendant::d"
+["foo"]
+```
+Then with the wildchard as node test.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/descendant::*"
+[{"b":1,"c":true,"d":"foo"}, 1, true, "foo"]
+```
+
+With the ancestor axis we can search towards the root for nodes.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/descendant::d/ancestor::a"
+[{"b":1,"c":true,"d":"foo"}]
+```
+
+What is returned is a set of nodes which the following shows.
+
+```
+echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/descendant::*/ancestor::a"
+jxp: waiting for data on stdin.
+[{"b":1,"c":true,"d":"foo"}]
+```
 # Schematron
 
 # Performance
