@@ -33,9 +33,10 @@ namespace {
 
 void
 printHelp() {
-    std::cout << "Usage: jxp --xpath=\"xpath\"" << std::endl;
+    std::cout << "Usage: jxp --json=<optional file> --xpath=\"xpath\"" << std::endl;
     std::cout << "Evaluates a xpath expression against a JSON object." << std::endl;
-    std::cout << "JSON data is read from stdin and result is printed on stdout." << std::endl; 
+    std::cout << "JSON data is either read from stdin or file." << std::endl;
+    std::cout << "Result is printed on stdout." << std::endl; 
 }
 
 }
