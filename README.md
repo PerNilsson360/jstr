@@ -40,6 +40,37 @@ JSON data is read from stdin and the result is printed on stdout.
 - Include Jstr.hh
 - Link with libjstr.a
 
+The following is a complete small example that is using libjstr to
+evaluate XPath expressions.
+
+```
+#include <cassert>
+#include <Jstr.hh>
+
+using namespace Jstr::Xpath;
+
+int
+main (int argc, char *argv[])
+{
+    nlohmann::json json = nlohmann::json::parse(R"({"a":{"b":1}})");
+    // Create a document to manage memory for internal Node obejcts.
+    Document document(json);
+    // Search for a all the b nodes. It happens to be only one so
+    // it can be used as a XPath context node.
+    // Here we are using the simple eval interface.
+    Value val = eval("//b", document);
+    // Here we are using the more complex Expression, Env interface.
+    // first "compile" a XPath expression.
+    Expression exp("count(../b) = 1");
+    // Create an Env object. It represents the XPath context.
+    Env env(val);
+    // Evaluate the expression given a XPath context.
+    Value result = exp.eval(env);
+    assert(result.getBoolean()); 
+    return 0;
+}
+``` 
+
 ## Overview
 XPath [1] is a domain specific language that is designed for XML. It
 has been extensivly used as an embedded language. The following are

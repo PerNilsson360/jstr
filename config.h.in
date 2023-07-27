@@ -6,8 +6,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the <nlohmann/json.hp> header file. */
-#undef HAVE_NLOHMANN_JSON_HP
+/* Define to 1 if you have the <nlohmann/json.hpp> header file. */
+#undef HAVE_NLOHMANN_JSON_HPP
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H

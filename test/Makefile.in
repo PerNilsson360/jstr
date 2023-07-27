@@ -85,7 +85,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-check_PROGRAMS = test$(EXEEXT) test_schematron$(EXEEXT)
+check_PROGRAMS = test$(EXEEXT) test_schematron$(EXEEXT) \
+	small_xpath_example$(EXEEXT)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -96,6 +97,9 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+am_small_xpath_example_OBJECTS = small_xpath_example.$(OBJEXT)
+small_xpath_example_OBJECTS = $(am_small_xpath_example_OBJECTS)
+small_xpath_example_DEPENDENCIES = $(top_srcdir)/src/libnljp.a
 am_test_OBJECTS = test.$(OBJEXT)
 test_OBJECTS = $(am_test_OBJECTS)
 test_DEPENDENCIES = $(top_srcdir)/src/libnljp.a
@@ -117,8 +121,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/test.Po \
-	./$(DEPDIR)/test_schematron.Po
+am__depfiles_remade = ./$(DEPDIR)/small_xpath_example.Po \
+	./$(DEPDIR)/test.Po ./$(DEPDIR)/test_schematron.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -133,8 +137,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(test_SOURCES) $(test_schematron_SOURCES)
-DIST_SOURCES = $(test_SOURCES) $(test_schematron_SOURCES)
+SOURCES = $(small_xpath_example_SOURCES) $(test_SOURCES) \
+	$(test_schematron_SOURCES)
+DIST_SOURCES = $(small_xpath_example_SOURCES) $(test_SOURCES) \
+	$(test_schematron_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -470,6 +476,8 @@ test_SOURCES = test.cc
 test_LDADD = $(top_srcdir)/src/libnljp.a
 test_schematron_SOURCES = test_schematron.cc
 test_schematron_LDADD = $(top_srcdir)/src/libnljp.a
+small_xpath_example_SOURCES = small_xpath_example.cc
+small_xpath_example_LDADD = $(top_srcdir)/src/libnljp.a
 TESTS = $(check_PROGRAMS) test_schematron_1.sh test_schematron_2.sh 
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 all: all-am
@@ -509,6 +517,10 @@ $(am__aclocal_m4_deps):
 clean-checkPROGRAMS:
 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
 
+small_xpath_example$(EXEEXT): $(small_xpath_example_OBJECTS) $(small_xpath_example_DEPENDENCIES) $(EXTRA_small_xpath_example_DEPENDENCIES) 
+	@rm -f small_xpath_example$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(small_xpath_example_OBJECTS) $(small_xpath_example_LDADD) $(LIBS)
+
 test$(EXEEXT): $(test_OBJECTS) $(test_DEPENDENCIES) $(EXTRA_test_DEPENDENCIES) 
 	@rm -f test$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_OBJECTS) $(test_LDADD) $(LIBS)
@@ -523,6 +535,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/small_xpath_example.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_schematron.Po@am__quote@ # am--include-marker
 
@@ -753,6 +766,13 @@ test_schematron.log: test_schematron$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+small_xpath_example.log: small_xpath_example$(EXEEXT)
+	@p='small_xpath_example$(EXEEXT)'; \
+	b='small_xpath_example'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test_schematron_1.sh.log: test_schematron_1.sh
 	@p='test_schematron_1.sh'; \
 	b='test_schematron_1.sh'; \
@@ -859,7 +879,8 @@ clean: clean-am
 clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/test.Po
+		-rm -f ./$(DEPDIR)/small_xpath_example.Po
+	-rm -f ./$(DEPDIR)/test.Po
 	-rm -f ./$(DEPDIR)/test_schematron.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -906,7 +927,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/test.Po
+		-rm -f ./$(DEPDIR)/small_xpath_example.Po
+	-rm -f ./$(DEPDIR)/test.Po
 	-rm -f ./$(DEPDIR)/test_schematron.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
