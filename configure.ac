@@ -1,4 +1,4 @@
-AC_INIT([amnljp], [1.0], [bug-automake@gnu.org])
+AC_INIT([amjstr], [0.1.0], [bug-automake@gnu.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CXX
 AC_PROG_YACC
@@ -13,4 +13,8 @@ AC_CONFIG_FILES([
  test/Makefile
 ])
 AC_OUTPUT
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([nlohmann/json.hpp],
+[], [AC_MSG_ERROR([required libraries are missing])])
+AC_LANG_POP([C++])
     
