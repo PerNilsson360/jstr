@@ -82,15 +82,6 @@ public:
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
-class Path : public Expr, public MultiExpr {
-public:
-    Path(Expr* e);
-    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
-    void addAbsoluteDescendant();
-    void addRelativeDescendant(Expr* Step);
-    void addRelativeDescendant();
-};
-
 class Step : public Expr, public StrExpr {
 public:
     Step(const std::string& s);
@@ -101,6 +92,17 @@ public:
 protected:
 };
 
+class Path : public Expr, public MultiExpr {
+public:
+    Path(Expr* e);
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
+    void addAbsoluteDescendant();
+    void addRelativeDescendant(Expr* Step);
+    void addRelativeDescendant();
+private:
+    Step* createDescendant();
+};
+    
 class AllStep : public Step {
 public:
     AllStep(const std::string& s);

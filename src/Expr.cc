@@ -184,9 +184,8 @@ Path::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) con
     return result;
 }
 
-// TODO can the 3 funs belo be stream-lined?
-void
-Path::addAbsoluteDescendant() {
+Step*
+Path::createDescendant() {
     // The grammar ensures there is at least one step
     Expr* step = _exprs.front();
     Step* descendant;
@@ -206,7 +205,13 @@ Path::addAbsoluteDescendant() {
         _exprs.pop_front();
        delete step;
     }
-    _exprs.push_front(descendant);
+    return descendant;
+}
+    
+void
+Path::addAbsoluteDescendant() {
+    Step* step = createDescendant();
+    _exprs.push_front(step);
     _exprs.push_front(new Root);
 }
 
@@ -233,26 +238,8 @@ Path::addRelativeDescendant(Expr* step) {
 
 void
 Path::addRelativeDescendant() {
-    // The grammar ensures there is at least one step
-    Expr* step = _exprs.front();
-    Step* descendant;
-    if (Step::isAllStep(step)) {
-        Step* s = static_cast<Step*>(step);
-        descendant = new DescendantAll();
-        descendant->addPredicates(s->takePredicates());
-        _exprs.pop_front();
-       delete step;
-    } else if (Step::isSelfOrParentStep(step)) {
-        descendant = new DescendantAll();
-    } else {
-        Step* s = static_cast<Step*>(step);
-        const std::string& stepName = s->getString();
-        descendant = new DescendantSearch(stepName);
-        descendant->addPredicates(s->takePredicates());
-        _exprs.pop_front();
-       delete step;
-    }
-    _exprs.push_back(descendant);
+    Step* step = createDescendant();
+    _exprs.push_back(step);
 }
 
 // Step
