@@ -73,8 +73,12 @@ Expr::~Expr() {
 
 Value
 Expr::eval(const Env& e, const Value& v, size_t pos, bool firstStep) const {
-    Value val = evalExpr(e, v, pos, firstStep);
-    return evalFilter(e, val);
+    if (_preds == nullptr) {
+        return evalExpr(e, v, pos, firstStep);
+    } else {
+        const Value& val = evalExpr(e, v, pos, firstStep);
+        return evalFilter(e, val);
+    }
 }
 
 void
@@ -91,9 +95,6 @@ Expr::takePredicates() {
 
 Value
 Expr::evalFilter(const Env& env, const Value& val) const {
-    if (_preds == nullptr) {
-        return val;
-    }
     if (val.getType() != Value::NodeSet) {
         bool keep(true);
         for (const Expr* pred : *_preds) {
@@ -101,26 +102,25 @@ Expr::evalFilter(const Env& env, const Value& val) const {
             keep &= r.getBoolean();
         }
         return keep ? val : Value();
-    } else {
-        std::vector<const Node*> result = val.getNodeSet();
-        for (const Expr* pred : *_preds) {
-            std::vector<size_t> keepIndexes;
-            for (int i = 0; i < result.size(); i++) {
-                Value r = pred->eval(env, result, i);
-                if (r.getType() == Value::Number) {
-                    if (i + 1 == r.getNumber()) {
-                        keepIndexes.emplace_back(i);
-                    }
-                } else {
-                    if (r.getBoolean()) {
-                        keepIndexes.emplace_back(i);
-                    }
+    }
+    std::vector<const Node*> result = val.getNodeSet();
+    for (const Expr* pred : *_preds) {
+        std::vector<size_t> keepIndexes;
+        for (int i = 0; i < result.size(); i++) {
+            Value r = pred->eval(env, result, i);
+            if (r.getType() == Value::Number) {
+                if (i + 1 == r.getNumber()) {
+                    keepIndexes.emplace_back(i);
+                }
+            } else {
+                if (r.getBoolean()) {
+                    keepIndexes.emplace_back(i);
                 }
             }
-            result = filter(result, keepIndexes);
         }
-        return Value(result);
+        result = filter(result, keepIndexes);
     }
+    return Value(result);
 }
 
 // BinaryExpr
