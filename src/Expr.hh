@@ -76,20 +76,9 @@ protected:
     std::string _s;
 };
 
-class Root : public Expr {
+class PathItem : public Expr {
 public:
-    Root() = default;
-    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
-};
-
-class Step : public Expr, public StrExpr {
-public:
-    Step(const std::string& s);
-    static Expr* create(const std::string& axisName, const std::string& nodeTest);
-    // TODO make this better
-    static bool isAllStep(const Expr* step);
-    static bool isSelfOrParentStep(const Expr* step);
-protected:
+    PathItem() = default;
 };
 
 class Path : public Expr, public MultiExpr {
@@ -100,12 +89,28 @@ public:
     void addRelativeDescendant(Expr* Step);
     void addRelativeDescendant();
 private:
-    Step* createDescendant();
+    PathItem* createDescendant();
+};
+
+class Root : public PathItem {
+public:
+    Root() = default;
+    Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
     
-class AllStep : public Step {
+class Step : public PathItem, public StrExpr {
 public:
-    AllStep(const std::string& s);
+    Step(const std::string& s);
+    static Expr* create(const std::string& axisName, const std::string& nodeTest);
+    // TODO make this better
+    static bool isAllStep(const Expr* step);
+    static bool isSelfOrParentStep(const Expr* step);
+protected:
+};
+    
+class AllStep : public PathItem {
+public:
+    AllStep() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
@@ -147,7 +152,7 @@ private:
     std::unique_ptr<const Expr> _e; 
 };
 
-class DescendantAll : public Step { // TODO not really a step
+class DescendantAll : public PathItem { 
 public:
     DescendantAll();
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
@@ -202,7 +207,7 @@ private:
     double _d;
 };
 
-class Args : public Expr, public MultiExpr {
+class Args : public Expr, public MultiExpr { // TODO move to functions
 public:
     Args(const Expr* e);
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;

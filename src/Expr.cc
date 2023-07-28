@@ -184,11 +184,11 @@ Path::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) con
     return result;
 }
 
-Step*
+PathItem*
 Path::createDescendant() {
     // The grammar ensures there is at least one step
     Expr* step = _exprs.front();
-    Step* descendant;
+    PathItem* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
         descendant = new DescendantAll();
@@ -210,14 +210,14 @@ Path::createDescendant() {
     
 void
 Path::addAbsoluteDescendant() {
-    Step* step = createDescendant();
-    _exprs.push_front(step);
+    PathItem* item = createDescendant();
+    _exprs.push_front(item);
     _exprs.push_front(new Root);
 }
 
 void
 Path::addRelativeDescendant(Expr* step) {
-    Step* descendant;
+    PathItem* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
         descendant = new DescendantAll();
@@ -238,8 +238,8 @@ Path::addRelativeDescendant(Expr* step) {
 
 void
 Path::addRelativeDescendant() {
-    Step* step = createDescendant();
-    _exprs.push_back(step);
+    PathItem* item = createDescendant();
+    _exprs.push_back(item);
 }
 
 // Step
@@ -254,7 +254,7 @@ Step::create(const std::string& axisName, const std::string& nodeTest) {
         } else if (nodeTest == ".") {
             return new SelfStep("");
         } else if (nodeTest == "*") {
-            return new AllStep("");
+            return new AllStep();
         } else {
             return new ChildStep(nodeTest);
         }
@@ -265,7 +265,7 @@ Step::create(const std::string& axisName, const std::string& nodeTest) {
         return new AncestorSelfStep(nodeTest);
     } else if (axisName == "child") {
         if (nodeTest == "*") {
-            return new AllStep(nodeTest);
+            return new AllStep();
         } else {
             return new ChildStep(nodeTest);
         }
@@ -358,10 +358,6 @@ AncestorSelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool fi
         }
     }
     return Value(result);
-}
-
-AllStep::AllStep(const std::string& s) :
-    Step(s) {
 }
 
 Value
@@ -464,7 +460,7 @@ Predicate::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep
 }
 
 // Descendant
-DescendantAll::DescendantAll() : Step("") {
+DescendantAll::DescendantAll() {
 }
 
 Value

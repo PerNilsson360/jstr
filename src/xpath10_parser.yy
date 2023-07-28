@@ -263,7 +263,7 @@ Expr:
 //                                               | Number	
 //                                               | FunctionCall
 PrimaryExpr :
-  VariableReference                               { $$ = $1; }
+  VariableReference                              { $$ = $1; }
 | "(" Expr ")"	                                 { $$ = $2; }
 | "literal"	                                     { $$ = new Literal(stripLiteral($1)); }
 | "number"	                                     { $$ = new Number($1); }
