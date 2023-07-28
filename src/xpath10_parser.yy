@@ -166,7 +166,7 @@ LocationPath :
 
 AbsoluteLocationPath :
   "/"                                           { $$ = new Path(new Root()); }
-| "/" RelativeLocationPath                      { static_cast<MultiExpr*>($2)->addFront(new Root()); $$ = $2; } 
+| "/" RelativeLocationPath                      { $2->addFront(new Root()); $$ = $2; } 
 | AbbreviatedAbsoluteLocationPath               { $$ = $1; };
 
 // [3]   	RelativeLocationPath	   ::=   	Step	
