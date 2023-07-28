@@ -250,9 +250,9 @@ Expr*
 Step::create(const std::string& axisName, const std::string& nodeTest) {
     if (axisName.empty()) {
         if (nodeTest == "..") {
-            return new ParentStep("");
+            return new ParentStep();
         } else if (nodeTest == ".") {
-            return new SelfStep("");
+            return new SelfStep();
         } else if (nodeTest == "*") {
             return new AllStep();
         } else {
@@ -288,9 +288,17 @@ Step::create(const std::string& axisName, const std::string& nodeTest) {
             return new FollowingSiblingSearch(nodeTest);
         }
     } else if (axisName == "parent") {
-        return new ParentStep(nodeTest);
+        if (nodeTest == "*") {
+            return new ParentStep();
+        } else {
+            return new ParentMatchStep(nodeTest);
+        }
     } else if (axisName == "self") {
-        return new SelfStep(nodeTest);
+        if (nodeTest == "*") {
+            return new SelfStep();
+        } else {
+            return new SelfMatchStep(nodeTest);
+        }
     }else {
         throw std::runtime_error("Step::create not a supported step");
     }
@@ -302,7 +310,9 @@ bool Step::isAllStep(const Expr* step) {
 bool Step::isSelfOrParentStep(const Expr* step) {
     return
         dynamic_cast<const SelfStep*>(step) != nullptr ||
-        dynamic_cast<const ParentStep*>(step) != nullptr;
+        dynamic_cast<const SelfMatchStep*>(step) != nullptr || // TODO maybe this can be optimised
+        dynamic_cast<const ParentStep*>(step) != nullptr ||
+        dynamic_cast<const ParentMatchStep*>(step) != nullptr;
 }
 
 AncestorStep::AncestorStep(const std::string& s) : Step(s) {
@@ -394,12 +404,32 @@ ChildStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep
     return result;
 }
 
-ParentStep::ParentStep(const std::string& s) :
-    Step(s) {
+Value
+ParentStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    const std::vector<const Node*>& nodeSet = val.getNodeSet();
+    std::vector<const Node*> result;
+    if (firstStep) {
+        const Node* n = nodeSet[pos];
+        const Node* parent = n->getParent();
+        if (parent != nullptr) {
+            addIfUnique(result, parent);
+        }
+    } else {
+        for (const Node* n : nodeSet) {
+            const Node* parent = n->getParent();
+            if (parent != nullptr) {
+                addIfUnique(result, parent);
+            }
+        }
+    }
+    return Value(result);
+}
+
+ParentMatchStep::ParentMatchStep(const std::string& s) : Step(s) {
 }
 
 Value
-ParentStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+ParentMatchStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
     const std::vector<const Node*>& nodeSet = val.getNodeSet();
     std::vector<const Node*> result;
     if (firstStep) {
@@ -419,10 +449,6 @@ ParentStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstSte
     return Value(result);
 }
 
-SelfStep::SelfStep(const std::string& s) :
-    Step(s) {
-}
-
 Value
 SelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
     if (val.getType() != Value::NodeSet) {
@@ -432,24 +458,41 @@ SelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep)
         std::vector<const Node*> result;
         if (firstStep) {
             const Node* n = nodeSet[pos];
+            result.emplace_back(nodeSet[pos]);
+        } else {
+            result = nodeSet;
+        }
+        return Value(result);
+    }
+}
+
+SelfMatchStep::SelfMatchStep(const std::string& s) :
+    Step(s) {
+}
+
+Value
+SelfMatchStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
+    if (val.getType() != Value::NodeSet) {
+        return Value();
+    } else {
+        const std::vector<const Node*>& nodeSet = val.getNodeSet();
+        std::vector<const Node*> result;
+        if (firstStep) {
+            const Node* n = nodeSet[pos];
             if (checkLocalName(n, _s)) {
                 result.emplace_back(nodeSet[pos]);
             }
         } else {
-            if (_s.empty() || _s == "*") {
-                result = nodeSet;
-            } else {
-                for (const Node* n : nodeSet) {
-                    if (n->getLocalName() == _s) {
-                        result.emplace_back(n);
-                    }
+            for (const Node* n : nodeSet) {
+                if (n->getLocalName() == _s) {
+                    result.emplace_back(n);
                 }
             }
         }
         return Value(result);
     }
 }
-
+    
 // Predicate
 Predicate::Predicate(const Expr* e) : _e(e) {
 }

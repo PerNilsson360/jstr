@@ -132,18 +132,30 @@ public:
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
-class ParentStep : public Step {
+class ParentStep : public PathItem {
 public:
-    ParentStep(const std::string& s);
+    ParentStep() = default;
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
+};
+    
+class ParentMatchStep : public Step {
+public:
+    ParentMatchStep(const std::string& s);
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
-class SelfStep : public Step {
+class SelfStep : public PathItem {
 public:
-    SelfStep(const std::string& s);
+    SelfStep() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
+class SelfMatchStep : public Step {
+public:
+    SelfMatchStep(const std::string& s);
+    Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
+};
+    
 class Predicate : public Expr {
 public:
     Predicate(const Expr* e);
