@@ -36,7 +36,7 @@ main (int argc, char *argv[])
     // Here we are using the simple eval interface.
     Value val = eval("//b", document);
     // Here we are using the more complex Expression, Env interface.
-    // first "compile" a XPath expression.
+    // First "compile" a XPath expression.
     Expression exp("count(../b) = 1");
     // Create an Env object. It represents the XPath context.
     Env env(val);

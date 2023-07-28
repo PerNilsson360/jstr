@@ -1,7 +1,8 @@
 # jstr - JSON Schematron
 
-An implementation of XPath 1.0 and a subset of Schematron for JSON. It
-contains a library libjstr and two binaries **jxp** and **jstr**.
+This software implements XPath 1.0 and a subset of Schematron for
+JSON. It contains a library libjstr and two binaries **jxp** and
+**jstr**.
 
 ## Installation
 
@@ -25,9 +26,10 @@ prefixed with "sudo".
 
 ``` 
 jxp --help
-Usage: jxp --xpath="xpath"
+Usage: jxp --json=<optional file> --xpath="xpath"
 Evaluates a xpath expression against a JSON object.
-JSON data is read from stdin and result is printed on stdout. 
+JSON data is either read from stdin or file.
+Result is printed on stdout.
 ```
 
 ``` 
@@ -62,7 +64,7 @@ main (int argc, char *argv[])
     // Here we are using the simple eval interface.
     Value val = eval("//b", document);
     // Here we are using the more complex Expression, Env interface.
-    // first "compile" a XPath expression.
+    // First "compile" a XPath expression.
     Expression exp("count(../b) = 1");
     // Create an Env object. It represents the XPath context.
     Env env(val);
@@ -79,7 +81,7 @@ XPath [1] is a domain specific language that is designed for XML. It
 has been extensivly used as an embedded language in other
 languages. The following are some examples.
 
-- XSLT [3], XPath is used when doing transformation of XML to XML.
+- XSLT [3], XPath is used when doing transformation of XML.
 - YANG [4], XPath is used as a constraint language (semantic validation). 
 - Netconf [5], XPath is used as a query language for data.
 - Schematron [6], XPath is used for semantic validation.
@@ -102,9 +104,9 @@ this implementation. The following are some examples:
 
 Also since there are differences between the internal data trees used
 by JSON and XML there might be subtle semantic differences between
-this implementation of XPath 1.0 and a standard compliant XML
-implementation. Having said that the intention is to follow [1] as
-much as possible.
+this implementation of XPath 1.0 and a standard compliant
+implementation targeting XML. Having said that the intention is to
+follow [1] as much as possible.
 
 Also note that XPath 1.0 is a small language compared to XPath
 3.1. This has some benefits and of course also some drawbacks.
@@ -135,8 +137,8 @@ It shows how to use the command line program *jxp*. Since *jxp* can
 read JSON from stdin we use *echo* to pipe a trivial JSON object to
 *jxp*. The result of the command is shown on the second line.
 
-XPath 1.0 does not support boolean literals supported there are
-functions that can be used instead.
+XPath 1.0 does not support boolean literals but there are functions
+that can be used instead.
 
 ``` 
 echo '{}' | jxp --xpath="(false() and false()) or not(false())"
@@ -147,7 +149,8 @@ This example also illustrates boolean connectives. Also note that the
 output from *jxp* is compatible with JSON syntax.
 
 XPath supports string literals enclosed in single and double
-quotes. The following example also shows some string functions.
+quotes. The following examplifies this also shows some string
+functions.
 
 ```
 echo '{}' | jxp --xpath="string-length('foo') + string-length(substring-before(\"foo-bar\", 'bar'))"
@@ -181,8 +184,9 @@ example showing a result with a node set with cardinality one.
 echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/"
 [{"a":{"b":1,"c":true,"d":"foo"}}] 
 ```
-Note that array notation is used and nodes sets are printed as json and "/" 
-denotes the root node.
+
+Note that array notation is used and nodes sets are printed as
+json. Also note that "/" denotes the root node.
 
 ## Abbreviated path expressions
 
@@ -274,11 +278,12 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/b/.."
 ## Comparing values
 
 One of the most powerful XPath features are the equality operators "="
-and "!=". On primitive values they work pretty much as expected. There
-are some conversions between types that needs to be considered [2]. If
-at least one value is of node set type, these operators are similar to
-existential quantification in logic. This means that it can be used as
-universal quantification using a well known conversion shown below.
+and "!=". On primitive values they work pretty much as expected, but
+there are some conversions between types that needs to be considered
+for more information see [2]. If at least one value is of node set
+type, these operators are similar to existential quantification in
+logic. This means that it can be used as universal quantification
+using a well known conversion shown below.
 
 Assume X is a set of numbers and we want to assert that all these
 values are equal to 1 then we can write the following (in pseudo logic
@@ -316,6 +321,7 @@ false
 ```
 
 All b nodes are not equal to 1.
+
 ```
 echo '{"a":{"b":[1, 1, 1]}}' | jxp --xpath="not(/a/b != 1)"
 true
@@ -330,7 +336,7 @@ jxp, exception: Value::checkOrderingRelationArgs, can not compare node sets
 ```
 
 The following example shows that if there is one value in a node set
-it is allowed when using oredering relations.
+it is allowed when using ordering relations.
 
 ```
 echo '{"a":{"b":[1]}}' | jxp --xpath="/a/b < 1"
@@ -340,9 +346,9 @@ false
 ## Filters
 
 A filter in XPath is denoted by a pair of square brackets. It is
-typically applied to path expressions which returns node sets. But
+typically applied to path expressions which returns node sets, but
 they can also be applied on primitive values. Conceptually each filter
-expressions is evaluated on each value of a node set and if it
+expressions is evaluated on each value of a node set and if the filter
 evaluates to true the corresponding node is kept, otherwise it is
 filtered away. The following example filters away all "b" nodes that
 are not equal to 1.
@@ -351,7 +357,7 @@ are not equal to 1.
 echo '{"a":{"b":[1, 2, 3]}}' | jxp --xpath="/a/b[. = 1]"
 [1]
 ```
-
+Note that . represents the current context item in the filter.
 Using the count function we can check if all b nodes are less than 4.
 
 ```
@@ -391,8 +397,8 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/child::a/child::b"
 In the above XPath expression we have two steps separated by the '/'
 character. Looking at the grammar in [2] we can see that a non
 abbreviated step contains an axis name and a node test separated by
-"::". The attribute axis and the namspace axis are not supported for
-obvious reasons. And node names and the wild card '*' are the only
+"::". The "attribute" axis and the "namspace" axis are not supported
+for obvious reasons. Also node names and the wild card '*' are the only
 supported node tests. The following illustrates the wild chard node
 test.
 
@@ -430,6 +436,7 @@ jxp: waiting for data on stdin.
 [{"b":1,"c":true,"d":"foo"}]
 ```
 # Schematron
+
 The following Schematron example illustrates how XPath expressions are
 used to validate semantic constraints using schematron.
 
@@ -491,10 +498,11 @@ used. The following is a part of a the xml payload (the json was similar).
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="example.xsl"?>
 <root><upper-limit>2</upper-limit><a><b>1</b></a><a><b>1</b></a><a><b>1</b></a>
+...
 ```
 
-So it is a bunch of b nodes with a 1 as text element. The xslt is like
-this.
+So it is a bunch of b nodes with a 1 as text element. The following
+was the xslt that was used.
 
 ```
 cat example.xsl
@@ -550,7 +558,6 @@ sys	0m0,305s
 real	0m1,724s
 user	0m0,804s
 sys	0m0,920s
-
 ```
 
 So in this case Xalan is faster. In any case jxp seems reasonable fast.
