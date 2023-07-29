@@ -265,8 +265,8 @@ Expr:
 PrimaryExpr :
   VariableReference                              { $$ = $1; }
 | "(" Expr ")"	                                 { $$ = $2; }
-| "literal"	                                     { $$ = new Literal(stripLiteral($1)); }
-| "number"	                                     { $$ = new Number($1); }
+| "literal"	                                     { $$ = new StringLiteral(stripLiteral($1)); }
+| "number"	                                     { $$ = new NumericLiteral($1); }
 | FunctionCall                                   { $$ = $1; }
 
 //[16] FunctionCall	                       ::=   FunctionName "(" ( Argument ( "," Argument )* )? ")"

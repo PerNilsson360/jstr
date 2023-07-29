@@ -204,15 +204,15 @@ public:
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
-class Literal : public Expr, StrExpr {
+class StringLiteral : public Expr, StrExpr {
 public:
-    Literal(const std::string& l);
+    StringLiteral(const std::string& l);
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
 
-class Number : public Expr {
+class NumericLiteral : public Expr {
 public:
-    Number(double d);
+    NumericLiteral(double d);
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 private:
     double _d;

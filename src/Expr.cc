@@ -627,19 +627,18 @@ FollowingSiblingSearch::evalExpr(const Env& env, const Value& val, size_t pos, b
     return Value(result);
 }
 
-// Literal
-Literal::Literal(const std::string& l) : StrExpr(l) {}
+// Literals
+StringLiteral::StringLiteral(const std::string& l) : StrExpr(l) {}
 
 Value
-Literal::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+StringLiteral::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
   return Value(_s);
 }
 
-// Number
-Number::Number(double d) : _d(d) {}
+NumericLiteral::NumericLiteral(double d) : _d(d) {}
 
 Value
-Number::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
+NumericLiteral::evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep) const {
     return Value(_d);
 }
 
