@@ -166,7 +166,7 @@ LocationPath :
 
 AbsoluteLocationPath :
   "/"                                           { $$ = new Path(new Root()); }
-| "/" RelativeLocationPath                      { $2->addFront(new Root()); $$ = $2; } 
+| "/" RelativeLocationPath                      { $$ = $2;  $$->addFront(new Root());} 
 | AbbreviatedAbsoluteLocationPath               { $$ = $1; };
 
 // [3]   	RelativeLocationPath	   ::=   	Step	
@@ -174,7 +174,7 @@ AbsoluteLocationPath :
 //                                              | AbbreviatedRelativeLocationPath
 RelativeLocationPath :
   Step	                                        { $$ = new Path($1); } 
-| RelativeLocationPath "/" Step	                { $1->addBack($3); $$ = $1; }
+| RelativeLocationPath "/" Step	                { $$ = $1; $$->addBack($3); }
 | AbbreviatedRelativeLocationPath               { $$ = $1; };
 
 
@@ -227,7 +227,7 @@ NodeTest :
 // [8] Predicate	                      ::=    '[' PredicateExpr ']'	
 Predicates:
   Predicate                                      { $$ = new std::list<const Expr*>(1, $1); }
-| Predicate Predicates                           { $2->push_front($1); $$ = $2; }
+| Predicate Predicates                           { $$ = $2; $$->push_front($1);  }
 
 // [9] PredicateExpr	                  ::=    Expr
 Predicate:
@@ -277,7 +277,7 @@ FunctionCall :
 // [17]  Argument	                       ::=   Expr
 Arguments :
   Expr                                           { $$ = new std::list<const Expr*>(1, $1); }
-| Expr "," Arguments                             { $3->push_front($1); $$ = $3; }
+| Expr "," Arguments                             { $$ = $3; $$->push_front($1); }
 
 // [18] UnionExpr	                       ::=   PathExpr	
 //                                               | UnionExpr '|' PathExpr	
@@ -293,7 +293,7 @@ PathExpr :
   LocationPath	                                 { $$ = $1; }
 | FilterExpr	                                 { $$ = $1; }
 | FilterExpr "/" RelativeLocationPath	         { $3->addFront($1); $$ = $3; }
-| FilterExpr "//" RelativeLocationPath	         { $3->addRelativeDescendant(); $3->addFront($1); $$ = $3;};
+| FilterExpr "//" RelativeLocationPath	         { $$ = $3; $3->addRelativeDescendant(); $3->addFront($1); };
 
 //[20] FilterExpr	                       ::=   PrimaryExpr	
 //                                               | FilterExpr Predicate
