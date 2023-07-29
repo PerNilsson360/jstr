@@ -353,21 +353,21 @@ AncestorSelfStep::AncestorSelfStep(const std::string& s) :
 Value
 AncestorSelfStep::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) const {
     const std::vector<const Node*>& nodeSet = val.getNodeSet();
-    Value tmp = AncestorStep::evalExpr(env, val, pos, firstStep);
-    std::vector<const Node*> result = tmp.getNodeSet();
+    std::vector<const Node*> result;
     if (firstStep) {
         const Node* n = nodeSet[pos];
         if (checkLocalName(n, _s)) {
-            result.emplace_back(n); // TODO should this not be added front
+            result.emplace_back(n);
         }
     } else {
         for (const Node* n : nodeSet) {
-            if (checkLocalName(n, _s)) { // TODO: dont need to check every iteration or?
+            if (checkLocalName(n, _s)) {
                 result.emplace_back(n);
             }
         }
     }
-    return Value(result);
+    Value tmp = AncestorStep::evalExpr(env, val, pos, firstStep);
+    return Value(concatenate(result, tmp.getNodeSet()));
 }
 
 Value
