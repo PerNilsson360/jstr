@@ -190,9 +190,8 @@ Path::createDescendant() {
     Expr* step = _exprs.front();
     PathItem* descendant;
     if (Step::isAllStep(step)) {
-        Step* s = static_cast<Step*>(step);
         descendant = new DescendantAll();
-        descendant->addPredicates(s->takePredicates());
+        descendant->addPredicates(step->takePredicates());
         _exprs.pop_front();
        delete step;
     } else if (Step::isSelfOrParentStep(step)) {
