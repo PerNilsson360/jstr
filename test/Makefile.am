@@ -5,7 +5,7 @@ test_schematron_SOURCES = test_schematron.cc
 test_schematron_LDADD = $(top_srcdir)/src/libnljp.a
 small_xpath_example_SOURCES = small_xpath_example.cc
 small_xpath_example_LDADD = $(top_srcdir)/src/libnljp.a
-TESTS = $(check_PROGRAMS) test_schematron_1.sh test_schematron_2.sh 
+TESTS = $(check_PROGRAMS) test_schematron_1.sh test_schematron_2.sh test_schematron_3.sh 
 
 AM_CPPFLAGS = -g -I$(top_srcdir)/include
 

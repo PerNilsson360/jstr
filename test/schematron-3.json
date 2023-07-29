@@ -1,0 +1,18 @@
+{
+  "pattern": [
+    {
+      "name": "test-a",
+      "rule": [
+        {
+          "context": "/ipv4",
+          "assert": [
+            {
+                "test": "not(. = ./following-sibling::ipv4)",
+              "message": "All ipv4 addresses must be equal"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

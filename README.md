@@ -517,9 +517,10 @@ cat example.xsl
 
 It is essentially summing up all the text nodes after filtering out
 all the ones that are not less than two. When running the following
-script (on my office type laptop).
+script (on an office type laptop).
 
 ```
+cat timed-test.sh
 #! /bin/bash
 JSON_FILE=data.json
 XML_FILE=data.xml
@@ -529,9 +530,9 @@ time jxp --json=$JSON_FILE --xpath="sum(/root/a/b[. < ../../upper-limit])"
 
 I get this.
 
-/timed-test.sh
-
 ```
+./timed-test.sh
+
     Sum - 30000
 real	0m12,871s
 user	0m12,545s
@@ -543,11 +544,12 @@ user	0m0,984s
 sys	0m0,972s
 ```
 
-In this case jxp is significatly faster. If I change the xpath to
-compare with literal 2 i.e. "sum(/root/a/b[. < 2])" I get the following..
+In this case jxp is significatly faster. If the xpath is changed so it
+compares with literal 2 i.e. "sum(/root/a/b[. < 2])" The following is
+printed.
 
 ```
-/timed-test.sh
+./timed-test.sh
 
     Sum - 30000
 real	0m0,670s
