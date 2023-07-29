@@ -76,11 +76,6 @@ protected:
     std::string _s;
 };
 
-class PathItem : public Expr {
-public:
-    PathItem() = default;
-};
-
 class Path : public Expr, public MultiExpr {
 public:
     Path(Expr* e);
@@ -89,16 +84,20 @@ public:
     void addRelativeDescendant(Expr* Step);
     void addRelativeDescendant();
 private:
-    PathItem* createDescendant();
+    Expr* createDescendant();
 };
 
-class Root : public PathItem {
+class Root : public Expr {
 public:
     Root() = default;
     Value evalExpr(const Env& e, const Value& d, size_t pos, bool firstStep = false) const override;
 };
-    
-class Step : public PathItem, public StrExpr {
+
+/**
+ * A Step is a step in a path with a name. Example "*" in "/*" is not a step since
+ * the "*" string is not needed to evaluate the "step".
+ */
+class Step : public Expr, public StrExpr {
 public:
     Step(const std::string& s);
     static Expr* create(const std::string& axisName, const std::string& nodeTest);
@@ -108,7 +107,7 @@ public:
 protected:
 };
     
-class AllStep : public PathItem {
+class AllStep : public Expr {
 public:
     AllStep() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
@@ -132,7 +131,7 @@ public:
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
-class ParentStep : public PathItem {
+class ParentStep : public Expr {
 public:
     ParentStep() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
@@ -144,7 +143,7 @@ public:
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
-class SelfStep : public PathItem {
+class SelfStep : public Expr {
 public:
     SelfStep() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
@@ -164,7 +163,7 @@ private:
     std::unique_ptr<const Expr> _e; 
 };
 
-class DescendantAll : public PathItem { 
+class DescendantAll : public Expr { 
 public:
     DescendantAll();
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
@@ -188,9 +187,9 @@ public:
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 
-class FollowingSiblingAll : public Step {
+class FollowingSiblingAll : public Expr {
 public:
-    FollowingSiblingAll();
+    FollowingSiblingAll() = default;
     Value evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep = false) const override;
 };
 

@@ -184,11 +184,11 @@ Path::evalExpr(const Env& env, const Value& val, size_t pos, bool firstStep) con
     return result;
 }
 
-PathItem*
+Expr*
 Path::createDescendant() {
     // The grammar ensures there is at least one step
     Expr* step = _exprs.front();
-    PathItem* descendant;
+    Expr* descendant;
     if (Step::isAllStep(step)) {
         descendant = new DescendantAll();
         descendant->addPredicates(step->takePredicates());
@@ -209,14 +209,14 @@ Path::createDescendant() {
     
 void
 Path::addAbsoluteDescendant() {
-    PathItem* item = createDescendant();
+    Expr* item = createDescendant();
     _exprs.push_front(item);
     _exprs.push_front(new Root);
 }
 
 void
 Path::addRelativeDescendant(Expr* step) {
-    PathItem* descendant;
+    Expr* descendant;
     if (Step::isAllStep(step)) {
         Step* s = static_cast<Step*>(step);
         descendant = new DescendantAll();
@@ -237,7 +237,7 @@ Path::addRelativeDescendant(Expr* step) {
 
 void
 Path::addRelativeDescendant() {
-    PathItem* item = createDescendant();
+    Expr* item = createDescendant();
     _exprs.push_back(item);
 }
 
@@ -575,9 +575,6 @@ findPosition(const Node* node, std::vector<const Node*>& children) {
     }
     return i;
 }
-}
-
-FollowingSiblingAll::FollowingSiblingAll() : Step("") {
 }
 
 Value
