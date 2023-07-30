@@ -44,7 +44,7 @@ JSON data is read from stdin and the result is printed on stdout.
 - Include Jstr.hh
 - Link with libjstr.a
 
-The following is a complete small example that is using libjstr to
+The following is small complete example that is using libjstr to
 evaluate XPath expressions.
 
 ```
