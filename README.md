@@ -1,14 +1,14 @@
 # jstr - JSON Schematron
 
 This software implements XPath 1.0 and a subset of Schematron for
-JSON. It contains a library libjstr and two binaries **jxp** and
-**jstr**.
+JSON. It contains a library libjstr and two binaries *jxp* and
+*jstr*.
 
 ## Installation
 
 The library depends on nlohmann json [1]. The following commands will
-install **jxp** and **jstr** binaries, the **libjstr.a** library and
-the header file **Jstr.hh**.
+install *jxp* and *jstr* binaries, the *libjstr.a* library and
+the header file *Jstr.hh*.
 
 ./configure\
 ./make\
@@ -114,7 +114,7 @@ Also note that XPath 1.0 is a small language compared to XPath
 ## XPath 1.0 tutorial
 
 The following is a XPath 1.0 tutorial. It also shows how to use the
-tool jxp.
+tool *jxp*.
 
 ### Basic types
 
@@ -149,7 +149,7 @@ This example also illustrates boolean connectives. Also note that the
 output from *jxp* is compatible with JSON syntax.
 
 XPath supports string literals enclosed in single and double
-quotes. The following examplifies this also shows some string
+quotes. The following examplifies this and also shows some string
 functions.
 
 ```
@@ -157,7 +157,7 @@ echo '{}' | jxp --xpath="string-length('foo') + string-length(substring-before(\
 7
 ```
 
-The primitive types has casting functions.
+The primitive types has "casting" functions.
 
 
 ``` 
@@ -218,8 +218,8 @@ echo '{"a":{"b":1,"c":true,"d":"foo"}}' | jxp --xpath="/a/*"
 [1, true, "foo"] 
 ```
 
-Now we can explore what string function returns for a node set, from
-[2].
+Now we can explore what the "string" function returns for a node set,
+the following is from [2].
 
 "The string function converts an object to a string as follows:
  - A node-set is converted to a string by returning the string-value
